@@ -56,10 +56,12 @@ class StudentForm(forms.ModelForm):
 class PaymentForm(forms.ModelForm):
     class Meta:
         model = Payment
-        fields = ['method_pay','date_pay', 'price', 'student_id', 'branch', 'course_id']
+        fields = ['method_pay', 'date_pay', 'price', 'student_id', 'branch', 'course_id']
         widgets = {
-            'date_pay' : forms.DateInput(attrs={'type': 'date'}),
+            'date_pay': forms.DateInput(attrs={'type': 'date'}),
         }
+
+
 class AudienceForm(forms.ModelForm):
     class Meta:
         model = Audience
@@ -70,13 +72,13 @@ class GroupForm(forms.ModelForm):
     students_id = forms.ModelMultipleChoiceField(
         queryset=Student.objects.all(),
         widget=forms.CheckboxSelectMultiple,
-        required=False,
         label="Студенты"
     )
 
     class Meta:
         model = Group
-        fields = '__all__'
+        fields = ['name_group', 'start_date', 'end_date', 'teacher_id', 'audience_id', 'students_id', 'status_group',
+                  'branch', 'course_id']
         widgets = {
             'start_date': forms.DateInput(attrs={'type': 'date'}),
             'end_date': forms.DateInput(attrs={'type': 'date'}),

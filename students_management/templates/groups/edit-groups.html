@@ -1,25 +1,19 @@
 {% extends 'professors/all-professors.html' %}
 {% load static %}
 
-
 <!doctype html>
 <html class="no-js" lang="en">
-{% load static %}
 <head>
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="description" content="">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <!-- favicon
-		============================================ -->
 </head>
-
 <body>
 
 {% block menu_center %}
 {% endblock %}
 
-<!-- Single pro tab review Start-->
 {% block content %}
     <div class="page-wrapper">
         <div style="margin: 10px;">
@@ -34,6 +28,7 @@
                     {{ group_form.audience_id.label_tag }} {{ group_form.audience_id }}
                     {{ group_form.status_group.label_tag }} {{ group_form.status_group }}
                     {{ group_form.branch.label_tag }} {{ group_form.branch }}
+                    {{ group_form.course_id.label_tag }} {{ group_form.course_id }}
                 </div>
                 <div class="form-group">
                     <label for="students_id">Студенты</label>
@@ -42,13 +37,11 @@
                     </div>
                 </div>
                 <button type="submit" class="btn btn-lg btn-success">Сохранить</button>
+
             </form>
         </div>
     </div>
-
 {% endblock %}
 
-
 </body>
-
 </html>

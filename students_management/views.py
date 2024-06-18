@@ -343,13 +343,13 @@ def update_group(request, id_group):
         if group_form.is_valid():
             group_form.save()
             return redirect('all_groups')
+        else:
+            print(group_form.errors)
     else:
         group_form = GroupForm(instance=group)
 
     data = {"group_form": group_form, 'current_year': current_year}
     return render(request, 'groups/edit-groups.html', data)
-
-
 def delete_group(request, id_group):
     group = get_object_or_404(Group, pk=id_group)
     current_year = datetime.today().year
