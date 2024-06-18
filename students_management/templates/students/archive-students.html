@@ -1,0 +1,51 @@
+{% extends 'professors/all-professors.html' %}
+{% load static %}
+
+{% block menu_center %}
+{% endblock %}
+
+{% block content %}
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="hpanel hblue contact-panel contact-panel-cs responsive-mg-b-10">
+                    <div class="panel-body custom-panel-jw">
+                        <table class="table table-striped">
+                            <thead>
+                            <tr>
+                                <th>Имя</th>
+                                <th>Фамилия</th>
+                                <th>Телефон</th>
+                                <th>Телефон родителей</th>
+                                <th>Дата присоединения</th>
+                                <th>Дата архивирования</th>
+                                <th>Комментарии</th>
+                                <th>Действия</th>  <!-- Добавляем столбец для действий -->
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for student in archived_students %}
+                                <tr>
+                                    <td>{{ student.first_name_s }}</td>
+                                    <td>{{ student.last_name_s }}</td>
+                                    <td>{{ student.phone_number_s }}</td>
+                                    <td>{{ student.parents_phone_number }}</td>
+                                    <td>{{ student.joined_date }}</td>
+                                    <td>{{ student.archived_date }}</td>
+                                    <td>{{ student.comments }}</td>
+                                    <td>
+                                        <a href="{% url 'restore_student' student.original_id %}"
+                                           class="btn btn-success">
+                                            Восстановить
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

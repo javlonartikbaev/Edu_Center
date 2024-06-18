@@ -1,0 +1,18 @@
+{% extends 'professors/all-professors.html' %}
+
+{% block menu_center %}
+
+
+{% endblock %}
+
+{% block content %}
+    <div class="page-wrapper">
+        <div style="margin: 10px; ">
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                {{ professor_form.as_p }}
+                <button type="submit" class="btn btn-lg btn-success">Сохранить
+            </form>
+        </div>
+    </div>
+{% endblock %}

@@ -1,0 +1,18 @@
+{% extends 'professors/all-professors.html' %}
+{% load static %}
+
+{% block menu_center %}
+
+
+{% endblock %}
+{% block content %}
+    <div class="page-wrapper">
+        <div style="margin: 10px; ">
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                {{ audience_form.as_p }}
+                <button type="submit" class="btn btn-lg btn-success">Добавить
+            </form>
+        </div>
+    </div>
+{% endblock %}

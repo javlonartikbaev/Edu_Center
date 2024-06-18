@@ -1,0 +1,46 @@
+{% extends 'professors/all-professors.html' %}
+{% load static %}
+
+<!-- Mobile Menu start -->
+{% block menu_center %}
+
+{% endblock %}
+
+<!-- Mobile Menu end -->
+
+
+{% block content %}
+
+    <div class="contacts-area mg-b-15">
+        <div class="container-fluid">
+            <div class="row">
+                {% for status in status %}
+                    <div class="col-lg-3 col-md-6 col-sm-6 col-xs-10">
+                        <div class="hpanel hblue contact-panel contact-panel-cs responsive-mg-b-10">
+                            <div class="panel-body custom-panel-jw">
+
+                                <h1 style="font-size: 15px">
+                                    <a href="{{ status.get_absolute_url }}">{{ status.name_status }} </a>
+                                </h1>
+
+
+                                <a href="{% url 'delete_status' status.id %}">
+                                    <button type="button" class="btn btn-danger delete-button">
+                                        Удалить
+                                    </button>
+                                </a>
+
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+
+
+{% endblock %}
+
+
+

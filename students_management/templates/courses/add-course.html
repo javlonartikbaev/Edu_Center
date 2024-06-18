@@ -1,0 +1,51 @@
+<!doctype html>
+{% extends 'professors/all-professors.html' %}
+<html class="no-js" lang="en">
+{% load static %}
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <title>Add Courses | Softium</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- favicon
+		============================================ -->
+</head>
+
+<body>
+<!--[if lt IE 8]>
+
+<![endif]-->
+<!-- Start Left menu area -->
+
+<!-- Mobile Menu start -->
+
+
+<!-- Mobile Menu end -->
+
+
+{% block menu_center %}
+{% endblock %}
+{% block content %}
+    <div class="page-wrapper">
+        <div style="margin: 10px; ">
+            <form method="post" , enctype="multipart/form-data">
+                {% csrf_token %}
+                {{ course_form.as_p }}
+                <button type="submit" class="btn btn-lg btn-success">Добавить</button>
+            </form>
+        </div>
+    </div>
+{% endblock %}
+
+
+
+<!-- jquery
+    ============================================ -->
+
+<!-- tawk chat JS
+    ============================================ -->
+
+</body>
+
+</html>

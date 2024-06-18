@@ -1,0 +1,16 @@
+{% extends 'professors/all-professors.html' %}
+{% load static %}
+
+{% block menu_center %}
+
+{% endblock %}
+{% block content %}
+    <div class="page-wrapper">
+        <h2>Вы уверены, что хотите удалить "{{ course.name_course }},"?</h2>
+        <form method="post">
+            {% csrf_token %}
+            <button type="submit">Удалить</button>
+            <a href="{% url 'all_courses' %}">Отмена</a>
+        </form>
+    </div>
+{% endblock %}
