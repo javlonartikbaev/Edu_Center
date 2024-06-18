@@ -75,15 +75,15 @@ WSGI_APPLICATION = 'Educational_Center.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql',
+        'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'edu_center',
         'USER': 'root',
-        'PASSWORD': 'qwerty123',
+        'PASSWORD': 'softiumnukus',
         'HOST': 'localhost',
-        'PORT': '3306',
+        'PORT': '',
+    }
+}
 
-}
-}
 
 
 # Password validation
