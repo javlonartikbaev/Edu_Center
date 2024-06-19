@@ -6,7 +6,7 @@ from .models import *
 class TeacherForm(forms.ModelForm):
     class Meta:
         model = Teacher
-        fields = ['first_name', 'last_name', 'phone_number', 'img_teacher', 'course']
+        fields = ['first_name', 'last_name', 'phone_number', 'img_teacher', 'course', 'branch']
         widgets = {
             'first_name': forms.TextInput(attrs={'class': 'form-control'}),
             'last_name': forms.TextInput(attrs={'class': 'form-control'}),
@@ -27,7 +27,7 @@ class SearchForm(forms.Form):
 class CourseForm(forms.ModelForm):
     class Meta:
         model = Course
-        fields = ['name_course', 'price_course', 'duration', 'img_course', ]
+        fields = ['name_course', 'price_course', 'duration', 'img_course', 'branch']
         widgets = {
             'name_course': forms.TextInput(attrs={'class': 'form-control'}),
             'price_course': forms.TextInput(attrs={'class': 'form-control'}),
@@ -65,7 +65,7 @@ class PaymentForm(forms.ModelForm):
 class AudienceForm(forms.ModelForm):
     class Meta:
         model = Audience
-        fields = ['number_audience', 'capacity']
+        fields = ['number_audience', 'capacity', 'branch']
 
 
 class GroupForm(forms.ModelForm):
