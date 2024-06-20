@@ -21,7 +21,7 @@ def get_professor(request):
         else:
             found_professor = Teacher.objects.all()
 
-        paginator = Paginator(found_professor, 1)
+        paginator = Paginator(found_professor, 10)
         page_number = request.GET.get("page")
         page_obj = paginator.get_page(page_number)
         current_year = datetime.today().year
@@ -86,14 +86,14 @@ def get_courses(request):
             found_course = Course.objects.filter(name_course__icontains=search_course_name)
         else:
             found_course = Course.objects.all()
-        paginator = Paginator(found_course, 1)
+        paginator = Paginator(found_course, 10)
         page_number = request.GET.get("page")
         page_obj = paginator.get_page(page_number)
         current_year = datetime.today().year
         data = {'search': search, 'courses': page_obj, 'current_year': current_year}
     else:
         course = Course.objects.all()
-        paginator = Paginator(course, 1)
+        paginator = Paginator(course, 10)
 
         page_number = request.GET.get("page")
         page_obj = paginator.get_page(page_number)
@@ -199,7 +199,7 @@ def all_students(request):
     else:
         found_student = Student.objects.all()
 
-    paginator = Paginator(found_student, 3)
+    paginator = Paginator(found_student, 10)
     page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
     current_year = datetime.today().year
