@@ -1,0 +1,117 @@
+{% extends 'professors/all-professors.html' %}
+{% load static %}
+
+{% block menu_center %}
+{% endblock %}
+
+{% block content %}
+    <style>
+        .panel {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .panel-heading {
+            background-color: #f5f5f5;
+            border-bottom: 1px solid #ddd;
+            padding: 10px 15px;
+            border-top-left-radius: 3px;
+            border-top-right-radius: 3px;
+        }
+
+        .panel-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin: 0;
+        }
+
+        .panel-body {
+            padding: 15px;
+        }
+
+        .card {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            padding: 15px;
+        }
+
+        .card-header {
+            background-color: #f5f5f5;
+            border-bottom: 1px solid #ddd;
+            padding: 10px 15px;
+            border-top-left-radius: 3px;
+            border-top-right-radius: 3px;
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin: 0;
+        }
+
+        .card-body p {
+            margin: 0 0 10px;
+        }
+    </style>
+
+    <div class="container-fluid" style="margin-top: 30px">
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="hpanel hblue contact-panel contact-panel-cs responsive-mg-b-10">
+                    <div class="panel-body custom-panel-jw">
+                        <h2 class="text-center">Главная страница</h2>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="panel panel-primary">
+                                    <div class="panel-heading">
+                                        <h3 class="panel-title">Общее количество групп</h3>
+                                    </div>
+                                    <div class="panel-body">
+                                        <h1 class="text-center">{{ total_groups }}</h1>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="panel panel-primary">
+                                    <div class="panel-heading">
+                                        <h3 class="panel-title">Общее количество студентов</h3>
+                                    </div>
+                                    <div class="panel-body">
+                                        <h1 class="text-center">{{ total_students }}</h1>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row" style="margin-top: 30px">
+                            {% for item in group_data %}
+                                <div class="col-md-6 col-lg-4">
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <h3 class="card-title">{{ item.group.name_group }}</h3>
+                                        </div>
+                                        <div class="card-body">
+                                            <p><strong>Количество студентов:</strong> {{ item.students_count }}</p>
+                                            <p>
+                                                <strong>Учитель:</strong> {{ item.group.teacher_id.first_name }} {{ item.group.teacher_id.last_name }}
+                                            </p>
+                                            <p>
+                                                <strong>Аудитория:</strong> {{ item.group.audience_id.number_audience }}
+                                            </p>
+                                            <p><strong>Курс:</strong> {{ item.course.name_course }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

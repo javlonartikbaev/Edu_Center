@@ -4,6 +4,9 @@ from students_management import views
 
 urlpatterns = [
 
+    # main
+    path('', views.main_page, name='main_page'),
+
     # professor
     path('all-professors/', views.get_professor, name='all_professors'),
     path('update-professor/<int:id_professor>/', views.update_professor, name='update_professor'),

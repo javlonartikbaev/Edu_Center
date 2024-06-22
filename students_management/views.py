@@ -1,6 +1,5 @@
 from datetime import timedelta
 
-from django.contrib import messages
 from django.core.paginator import Paginator
 from django.db.models import Max
 from django.db.models import Q
@@ -234,22 +233,12 @@ def add_students(request, group_id=None):
         if student_form.is_valid():
             if group_id:
                 group = Group.objects.get(id=group_id)
-                audience_capacity = int(group.audience_id.capacity)
-                student_count = group.students_id.count()
 
-                if student_count >= audience_capacity:
-                    messages.error(request, "Невозможно добавить студента: группа уже полная.")
-                else:
-                    student = student_form.save(commit=False)
-                    student.save()
-                    group.students_id.add(student)
+                student = student_form.save(commit=False)
+                student.save()
+                group.students_id.add(student)
 
-                    if student_count + 1 >= audience_capacity:
-                        full_status = Status.objects.get(name_status='Группа полная')
-                        group.status_group = full_status
-                        group.save()
-
-                    return redirect('all_students')
+                return redirect('all_students')
             else:
                 student = student_form.save(commit=False)
                 student.save()
@@ -458,7 +447,7 @@ def mark_attendance(request, group_id):
 def info_group(request, id_group):
     group = get_object_or_404(Group, pk=id_group)
     students = group.students_id.all()
-
+    today = datetime.today().date()
     student_ids = students.values_list('id', flat=True)
 
     student_data = []
@@ -476,7 +465,8 @@ def info_group(request, id_group):
     data = {
         'group': group,
         'student_data': student_data,
-        'current_year': current_year
+        'current_year': current_year,
+        'today': today
     }
     return render(request, 'groups/info-group.html', data)
 
@@ -544,12 +534,12 @@ def delete_selected_students(request):
                     method_pay=payment.method_pay,
                     date_pay=payment.date_pay,
                     price=payment.price,
-                    branch = payment.branch
+                    branch=payment.branch
                 )
                 student.delete()
         return redirect('all_students')
 
-    # Архивация
+
 def archived_students(request):
     archived_students = ArchivedStudent.objects.all()
     current_year = datetime.today().year
@@ -559,7 +549,7 @@ def archived_students(request):
     }
     return render(request, 'students/archive-students.html', data)
 
-# удаляем данные из архива
+
 def restore_student(request, student_id):
     archived_student = get_object_or_404(ArchivedStudent, original_id=student_id)
 
@@ -576,9 +566,32 @@ def restore_student(request, student_id):
     archived_student.delete()
     return redirect('archived_students')
 
+
 def delete_archived_students_bulk(request):
     student_ids = request.POST.getlist('students_to_delete')
     for student_id in student_ids:
         archived_student = get_object_or_404(ArchivedStudent, original_id=student_id)
         archived_student.delete()
     return redirect('archived_students')
+
+
+def main_page(request):
+    groups = Group.objects.all()
+    group_data = []
+
+    for group in groups:
+        students_count = group.students_id.count()
+        group_data.append({
+            'group': group,
+            'students_count': students_count,
+            'course': group.course_id
+        })
+
+    data = {
+        'group_data': group_data,
+        'total_groups': groups.count(),
+        'total_students': Student.objects.count(),
+
+    }
+
+    return render(request, 'base.html', data)
