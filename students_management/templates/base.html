@@ -92,7 +92,7 @@
                                 <div class="col-md-6 col-lg-4">
                                     <div class="card">
                                         <div class="card-header">
-                                            <h3 class="card-title">{{ item.group.name_group }}</h3>
+                                            <a href="{% url 'info_group' item.group.id %}"><h3 class="card-title">{{ item.group.name_group }}</h3></a>
                                         </div>
                                         <div class="card-body">
                                             <p><strong>Количество студентов:</strong> {{ item.students_count }}</p>
