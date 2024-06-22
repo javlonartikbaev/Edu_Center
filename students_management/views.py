@@ -550,35 +550,35 @@ def delete_selected_students(request):
         return redirect('all_students')
 
     # Архивация
-    def archived_students(request):
-        archived_students = ArchivedStudent.objects.all()
-        current_year = datetime.today().year
-        data = {
-            'archived_students': archived_students,
-            'current_year': current_year
-        }
-        return render(request, 'students/archive-students.html', data)
+def archived_students(request):
+    archived_students = ArchivedStudent.objects.all()
+    current_year = datetime.today().year
+    data = {
+        'archived_students': archived_students,
+        'current_year': current_year
+    }
+    return render(request, 'students/archive-students.html', data)
 
-    # удаляем данные из архива
-    def restore_student(request, student_id):
+# удаляем данные из архива
+def restore_student(request, student_id):
+    archived_student = get_object_or_404(ArchivedStudent, original_id=student_id)
+
+    Student.objects.create(
+        first_name_s=archived_student.first_name_s,
+        last_name_s=archived_student.last_name_s,
+        phone_number_s=archived_student.phone_number_s,
+        parents_phone_number=archived_student.parents_phone_number,
+        paid_check=archived_student.paid_check,
+        joined_date=archived_student.joined_date,
+        branch=archived_student.branch
+    )
+
+    archived_student.delete()
+    return redirect('archived_students')
+
+def delete_archived_students_bulk(request):
+    student_ids = request.POST.getlist('students_to_delete')
+    for student_id in student_ids:
         archived_student = get_object_or_404(ArchivedStudent, original_id=student_id)
-
-        Student.objects.create(
-            first_name_s=archived_student.first_name_s,
-            last_name_s=archived_student.last_name_s,
-            phone_number_s=archived_student.phone_number_s,
-            parents_phone_number=archived_student.parents_phone_number,
-            paid_check=archived_student.paid_check,
-            joined_date=archived_student.joined_date,
-            branch=archived_student.branch
-        )
-
         archived_student.delete()
-        return redirect('archived_students')
-
-    def delete_archived_students_bulk(request):
-        student_ids = request.POST.getlist('students_to_delete')
-        for student_id in student_ids:
-            archived_student = get_object_or_404(ArchivedStudent, original_id=student_id)
-            archived_student.delete()
-        return redirect('archived_students')
+    return redirect('archived_students')
