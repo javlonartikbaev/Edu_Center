@@ -48,5 +48,6 @@ urlpatterns = [
     path('add-students-to-group/<int:group_id>', views.add_students, name='add_students_to_group'),
 
     path('group/<int:group_id>/mark-attendance/', views.mark_attendance, name='mark_attendance'),
+    path('delete-archived-students/', views.delete_archived_students_bulk, name='delete_archived_students_bulk')
 
 ]

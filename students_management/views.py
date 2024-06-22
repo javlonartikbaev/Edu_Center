@@ -302,7 +302,7 @@ def profile_students(request, id_student):
         attendance = Attendance.objects.filter(students_id=id_student, date_attendance__month=selected_month)
     else:
         attendance = Attendance.objects.filter(students_id=id_student)
-    # Ошибка
+# ошибка
     groups = Group.objects.filter(students_id=id_student)
 
     courses = Course.objects.filter(group__in=groups)
@@ -575,4 +575,12 @@ def restore_student(request, student_id):
     )
 
     archived_student.delete()
+    return redirect('archived_students')
+
+
+def delete_archived_students_bulk(request):
+    student_ids = request.POST.getlist('students_to_delete')
+    for student_id in student_ids:
+        archived_student = get_object_or_404(ArchivedStudent, original_id=student_id)
+        archived_student.delete()
     return redirect('archived_students')
