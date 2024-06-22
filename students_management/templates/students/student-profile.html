@@ -14,6 +14,17 @@
                         <p><b>Телефон родителей:</b> {{ student.parents_phone_number }}</p>
                         <p><b>Дата присоединения:</b> {{ student.joined_date }}</p>
 
+                        <h4>Курсы:</h4>
+                        {% if courses %}
+                            <ul>
+                                {% for course in courses %}
+                                    <li>{{ course.name_course }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% else %}
+                            <p>Нет данных о курсах.</p>
+                        {% endif %}
+
                         <!-- Форма для выбора месяца -->
                         <form method="GET" action="{% url 'profile_students' student.id %}" class="mb-3">
                             <div class="form-group">
@@ -73,6 +84,7 @@
                                     <td>{{ payment.method_pay }}</td>
                                     <td>{{ payment.date_pay }}</td>
                                     <td>{{ payment.course_id }}</td>
+                                    <!-- Замените на {{ payment.course_id.name_course }} для отображения имени курса -->
                                     <td>{{ payment.price }}</td>
                                 </tr>
                             {% empty %}

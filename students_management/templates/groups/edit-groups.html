@@ -1,16 +1,6 @@
 {% extends 'professors/all-professors.html' %}
 {% load static %}
 
-<!doctype html>
-<html class="no-js" lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta http-equiv="x-ua-compatible" content="ie=edge">
-    <meta name="description" content="">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-</head>
-<body>
-
 {% block menu_center %}
 {% endblock %}
 
@@ -31,17 +21,20 @@
                     {{ group_form.course_id.label_tag }} {{ group_form.course_id }}
                 </div>
                 <div class="form-group">
-                    <label for="students_id">Студенты</label>
+                    <label for="students_id">Студенты в группе:</label>
                     <div style="max-height: 150px; overflow-y: scroll; border: 1px solid #ccc; padding: 10px;">
-                        {{ group_form.students_id }}
+                        <ul>
+                            {% for student in students_in_group %}
+                                <li>
+                                    {{ student.first_name_s }} {{ student.last_name_s }}
+                                    <input type="checkbox" name="students_to_remove" value="{{ student.id }}"> Удалить
+                                </li>
+                            {% endfor %}
+                        </ul>
                     </div>
                 </div>
                 <button type="submit" class="btn btn-lg btn-success">Сохранить</button>
-
             </form>
         </div>
     </div>
 {% endblock %}
-
-</body>
-</html>

@@ -51,6 +51,13 @@ class StudentForm(forms.ModelForm):
     class Meta:
         model = Student
         exclude = ['paid_check', 'joined_date']
+        widgets = {
+            'first_name_s': forms.TextInput(attrs={'class': 'form-control'}),
+            'last_name_s': forms.TextInput(attrs={'class': 'form-control'}),
+            'phone_number_s': forms.TextInput(attrs={'class': 'form-control'}),
+            'parents_phone_number': forms.TextInput(attrs={'class': 'form-control'}),
+            'branch': forms.Select(attrs={'class': 'form-control'}),
+        }
 
 
 class PaymentForm(forms.ModelForm):

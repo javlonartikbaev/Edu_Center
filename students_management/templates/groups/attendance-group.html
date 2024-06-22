@@ -13,10 +13,8 @@
                 <tr>
                     <th>Имя</th>
                     <th>Фамилия</th>
-                    <th>Дата рождения</th>
-                    <th>Email</th>
-                    <th>Телефон</th>
-                    <th>Посещаемость</th>
+                    <th>Телефон Номер</th>
+                    <th>Телефон родителей</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -24,9 +22,9 @@
                     <tr>
                         <td>{{ student.first_name_s }}</td>
                         <td>{{ student.last_name_s }}</td>
-                        <td>{{ student.date_birth_s }}</td>
-                        <td>{{ student.email_s }}</td>
-                        <td>{{ student.phone_s }}</td>
+                        <td>{{ student.phone_number_s }}</td>
+                        <td>{{ student.parents_phone_number }}</td>
+
                         <td>
                             <label><input type="checkbox" name="student_{{ student.id }}"> Отсутствует</label>
                         </td>
