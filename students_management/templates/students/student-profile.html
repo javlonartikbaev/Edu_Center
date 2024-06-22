@@ -1,56 +1,69 @@
 {% extends 'professors/all-professors.html' %}
-<!doctype html>
-<html class="no-js" lang="en">
 {% load static %}
-
-<head>
-
-    <meta charset="utf-8">
-    <meta http-equiv="x-ua-compatible" content="ie=edge">
-    <title>All Professor | Kiaalap - Kiaalap Admin Template</title>
-    <meta name="description" content="">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <!-- favicon
-		============================================ -->
-
-</head>
-
-<body>
-<!--[if lt IE 8]>
-
-<![endif]-->
-<!-- Start Left menu area -->
-
-<!-- End Left menu area -->
-<!-- Start Welcome area -->
-
-<!-- Mobile Menu start -->
-
-
-<!-- Mobile Menu end -->
 
 {% block menu_center %}
 {% endblock %}
 {% block content %}
-
-    <div class="container-fluid">
+    <div class="container-fluid" style="margin-top: 30px">
         <div class="row">
             <div class="col-lg-12">
                 <div class="hpanel hblue contact-panel contact-panel-cs responsive-mg-b-10">
                     <div class="panel-body custom-panel-jw">
                         <h3>{{ student.first_name_s }} {{ student.last_name_s }}</h3>
-                        <p>Телефон: {{ student.phone_number_s }}</p>
-                        <p>Телефон родителей: {{ student.parents_phone_number }}</p>
-                        <p>Дата присоединения: {{ student.joined_date }}</p>
-                        <p>Посещаемость: {% for atd in attendance %}
-                            <br>{{ atd.date_attendance }} {{ atd.attendance_status }}
-                        {% endfor %}
-                        </p>
+                        <p><b>Телефон:</b> {{ student.phone_number_s }}</p>
+                        <p><b>Телефон родителей:</b> {{ student.parents_phone_number }}</p>
+                        <p><b>Дата присоединения:</b> {{ student.joined_date }}</p>
+
+                        <!-- Форма для выбора месяца -->
+                        <form method="GET" action="{% url 'profile_students' student.id %}" class="mb-3">
+                            <div class="form-group">
+                                <label for="monthSelect">Выберите месяц:</label>
+                                <select name="month" id="monthSelect" class="form-control">
+                                    <option value="1">Январь</option>
+                                    <option value="2">Февраль</option>
+                                    <option value="3">Март</option>
+                                    <option value="4">Апрель</option>
+                                    <option value="5">Май</option>
+                                    <option value="6">Июнь</option>
+                                    <option value="7">Июль</option>
+                                    <option value="8">Август</option>
+                                    <option value="9">Сентябрь</option>
+                                    <option value="10">Октябрь</option>
+                                    <option value="11">Ноябрь</option>
+                                    <option value="12">Декабрь</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Показать пропуски</button>
+                        </form>
+
+                        <h4>Посещаемость:</h4>
+                        {% if attendance %}
+                            {% if selected_month %}
+                                <p><strong>Пропуски за {{ selected_month }} месяц:</strong></p>
+                                <ul>
+                                    {% for atd in attendance %}
+                                        <li>{{ atd.date_attendance|date:"d.m.Y" }} - {{ atd.attendance_status }}</li>
+                                    {% endfor %}
+                                </ul>
+                            {% else %}
+                                <p><strong>Все пропуски:</strong></p>
+                                <ul>
+                                    {% for atd in attendance %}
+                                        <li>{{ atd.date_attendance|date:"d.m.Y" }} - {{ atd.attendance_status }}</li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+                        {% else %}
+                            <p>Нет данных о посещаемости.</p>
+                        {% endif %}
+
+                        <h4>Платежи:</h4>
                         <table class="table table-striped">
                             <thead>
                             <tr>
                                 <th>Метод оплаты</th>
                                 <th>Дата оплаты</th>
+                                <th>Курс</th>
                                 <th>Сумма</th>
                             </tr>
                             </thead>
@@ -59,11 +72,12 @@
                                 <tr>
                                     <td>{{ payment.method_pay }}</td>
                                     <td>{{ payment.date_pay }}</td>
+                                    <td>{{ payment.course_id }}</td>
                                     <td>{{ payment.price }}</td>
                                 </tr>
                             {% empty %}
                                 <tr>
-                                    <td colspan="3">Нет данных о платежах</td>
+                                    <td colspan="4">Нет данных о платежах</td>
                                 </tr>
                             {% endfor %}
                             </tbody>
@@ -78,9 +92,4 @@
             </div>
         </div>
     </div>
-
-
 {% endblock %}
-
-
-</html>

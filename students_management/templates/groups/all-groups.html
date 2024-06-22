@@ -5,7 +5,7 @@
 {% block menu_center %}
 {% endblock %}
 {% block content %}
-    <div class="container-fluid">
+    <div class="container-fluid" style="margin-top: 30px">
         <div class="row">
             <div class="col-lg-12">
                 <div class="hpanel hblue contact-panel contact-panel-cs responsive-mg-b-10">
@@ -47,6 +47,11 @@
                                         <a href="{% url 'mark_attendance'  group.id %}" style="color: #0a6aa1">
                                             <img
                                                     src="{% static 'img/free-icon-attendance-16612795.png' %}"
+                                                    style="width: 30px; height: 30px;">
+                                        </a>
+                                        <a href="{% url 'add_students_to_group' group.id %}" style="color: #0a6aa1">
+                                            <img
+                                                    src="{% static 'img/add.png' %}"
                                                     style="width: 30px; height: 30px;">
                                         </a>
                                     </td>

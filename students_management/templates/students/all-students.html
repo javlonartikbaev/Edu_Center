@@ -1,36 +1,9 @@
 {% extends 'professors/all-professors.html' %}
-<!doctype html>
-<html class="no-js" lang="en">
 {% load static %}
 
-<head>
-
-    <meta charset="utf-8">
-    <meta http-equiv="x-ua-compatible" content="ie=edge">
-    <title>All Professor | Kiaalap - Kiaalap Admin Template</title>
-    <meta name="description" content="">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <!-- favicon
-		============================================ -->
-
-</head>
-
-<body>
-<!--[if lt IE 8]>
-
-<![endif]-->
-<!-- Start Left menu area -->
-
-<!-- End Left menu area -->
-<!-- Start Welcome area -->
-
-<!-- Mobile Menu start -->
-
-
-<!-- Mobile Menu end -->
 {% block menu_center %}
     <div class="breadcome-area">
-        <div class="container-fluid">
+        <div class="container-fluid" style="margin-top: 30px">
             <div class="row">
                 <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
                     <div class="breadcome-list">
@@ -39,39 +12,45 @@
                                 <div class="breadcome-heading">
                                     <form action="{% url 'all_students' %}" method="GET">
                                         {{ search.as_p }}
-                                        <button type="submit">Найти</button>
+                                        <button type="submit" class="btn btn-primary">Найти</button>
                                     </form>
                                 </div>
                             </div>
-
+                            <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+                                <!-- Форма для фильтрации должников -->
+                                <form method="GET" action="{% url 'all_students' %}" style="float: right;">
+                                    {% csrf_token %}
+                                    <button type="submit" name="filter" value="not_paid" class="btn btn-danger">
+                                        Показать должников
+                                    </button>
+                                </form>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-
-    </body>
 {% endblock %}
 
-
 {% block content %}
-    {% if search %}
-        <div class="container-fluid">
-            <div class="row">
-                <div class="col-lg-12">
-                    <div class="hpanel hblue contact-panel contact-panel-cs responsive-mg-b-10">
-                        <div class="panel-body custom-panel-jw">
-                            <form method="POST" action="{% url 'delete_selected_students' %}">
-                                {% csrf_token %}
-                                <div class="form-group">
-                                    <label for="comments">Комментарии</label>
-                                    <select id="comments" name="comments" class="form-control">
-                                        <option value="окончил(а) курс">Окончил(а) Курс</option>
-                                        <option value="прекратил(а) обучение">Прекратил(а) обучение</option>
-                                    </select>
-                                </div>
-                                <button type="submit" class="btn btn-danger">Удалить выбранное</button>
+    <div class="container-fluid" style="margin-top: 60px">
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="hpanel hblue contact-panel contact-panel-cs responsive-mg-b-10">
+                    <div class="panel-body custom-panel-jw">
+                        <!-- Таблица со списком студентов -->
+                        <form method="POST" action="{% url 'delete_selected_students' %}">
+                            {% csrf_token %}
+                            <div class="form-group">
+                                <label for="comments">Комментарии</label>
+                                <select id="comments" name="comments" class="form-control">
+                                    <option value="окончил(а) курс">Окончил(а) Курс</option>
+                                    <option value="прекратил(а) обучение">Прекратил(а) обучение</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-danger">Удалить выбранное</button>
+                            <div class="table-responsive">
                                 <table class="table table-striped" style="margin-top: 10px;">
                                     <thead>
                                     <tr>
@@ -123,9 +102,12 @@
                                     {% endfor %}
                                     </tbody>
                                 </table>
-                            </form>
-                            <div class="pagination">
-                                <div class="pagination-second">
+                            </div>
+                        </form>
+
+                        <!-- Пагинация -->
+                        <div class="pagination">
+                            <div class="pagination-second">
                                 <span class="step-links">
                                     {% if student.has_previous %}
                                         <a href="?page=1">&laquo;</a>
@@ -139,21 +121,11 @@
                                         <a href="?page={{ student.paginator.num_pages }}">&raquo;</a>
                                     {% endif %}
                                 </span>
-                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    {% else %}
-        <div>Ничего не найдено</div>
-    {% endif %}
-
-
-
-
+    </div>
 {% endblock %}
-
-
-</html>

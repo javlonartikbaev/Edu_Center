@@ -4,36 +4,38 @@
 {% block menu_center %}
 {% endblock %}
 {% block content %}
-    <form method="post" action="{% url 'mark_attendance' group.id %}">
-        {% csrf_token %}
-        <input type="date" name="date_attendance" required>
-        <table class="table table-striped">
-            <thead>
-            <tr>
-                <th>Имя</th>
-                <th>Фамилия</th>
-                <th>Дата рождения</th>
-                <th>Email</th>
-                <th>Телефон</th>
-                <th>Посещаемость</th>
-            </tr>
-            </thead>
-            <tbody>
-            {% for student in group.students_id.all %}
+    <div class="container-fluid" style="margin-top: 60px">
+        <form method="post" action="{% url 'mark_attendance' group.id %}">
+            {% csrf_token %}
+            <input type="date" name="date_attendance" required>
+            <table class="table table-striped">
+                <thead>
                 <tr>
-                    <td>{{ student.first_name_s }}</td>
-                    <td>{{ student.last_name_s }}</td>
-                    <td>{{ student.date_birth_s }}</td>
-                    <td>{{ student.email_s }}</td>
-                    <td>{{ student.phone_s }}</td>
-                    <td>
-                        <label><input type="checkbox" name="student_{{ student.id }}"> Отсутствует</label>
-                    </td>
+                    <th>Имя</th>
+                    <th>Фамилия</th>
+                    <th>Дата рождения</th>
+                    <th>Email</th>
+                    <th>Телефон</th>
+                    <th>Посещаемость</th>
                 </tr>
-            {% endfor %}
-            </tbody>
-        </table>
-        <button type="submit" class="btn btn-primary">Сохранить посещаемость</button>
-    </form>
+                </thead>
+                <tbody>
+                {% for student in group.students_id.all %}
+                    <tr>
+                        <td>{{ student.first_name_s }}</td>
+                        <td>{{ student.last_name_s }}</td>
+                        <td>{{ student.date_birth_s }}</td>
+                        <td>{{ student.email_s }}</td>
+                        <td>{{ student.phone_s }}</td>
+                        <td>
+                            <label><input type="checkbox" name="student_{{ student.id }}"> Отсутствует</label>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            <button type="submit" class="btn btn-primary">Сохранить посещаемость</button>
+        </form>
+    </div>
 
 {% endblock %}

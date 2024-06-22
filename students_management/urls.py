@@ -24,7 +24,7 @@ urlpatterns = [
 
     # student
     path('all-students/', views.all_students, name='all_students'),
-    path('add-students/', views.add_students, name='add_students'),
+    # path('add-students/', views.add_students, name='add_students'),
     path('update-students/<int:id_student>/', views.update_students, name='update_students'),
     path('delete-students/<int:id_student>/', views.delete_students, name='delete_students'),
     path('profile-students/<int:id_student>/', views.profile_students, name='profile_students'),
@@ -45,6 +45,7 @@ urlpatterns = [
     path('update-group/<int:id_group>/', views.update_group, name='update_group'),
     path('delete-group/<int:id_group>/', views.delete_group, name='delete_group'),
     path('info-group/<int:id_group>/', views.info_group, name='info_group'),
+    path('add-students-to-group/<int:group_id>', views.add_students, name='add_students_to_group'),
 
     path('group/<int:group_id>/mark-attendance/', views.mark_attendance, name='mark_attendance'),
 

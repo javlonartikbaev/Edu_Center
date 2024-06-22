@@ -1,5 +1,6 @@
 from datetime import timedelta
 
+from django.contrib import messages
 from django.core.paginator import Paginator
 from django.db.models import Max
 from django.db.models import Q
@@ -199,6 +200,10 @@ def all_students(request):
     else:
         found_student = Student.objects.all()
 
+    filter_option = request.GET.get('filter')
+    if filter_option == 'not_paid':
+        found_student = found_student.filter(paid_check='Не оплатил')
+
     paginator = Paginator(found_student, 10)
     page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
@@ -222,16 +227,44 @@ def all_students(request):
     return render(request, 'students/all-students.html', data)
 
 
-def add_students(request):
-    student_form = StudentForm(request.POST)
+def add_students(request, group_id=None):
     current_year = datetime.today().year
-    if student_form.is_valid():
-        student = student_form.save(commit=False)
-        student.save()
-        return redirect('all_students')
-    student_form = StudentForm()
-    data = {"student_form": student_form, 'current_year': current_year}
-    return render(request, 'students/add-student.html', data)
+    if request.method == "POST":
+        student_form = StudentForm(request.POST)
+        if student_form.is_valid():
+            if group_id:
+                group = Group.objects.get(id=group_id)
+                audience_capacity = int(group.audience_id.capacity)
+                student_count = group.students_id.count()
+
+                if student_count >= audience_capacity:
+                    messages.error(request, "Невозможно добавить студента: группа уже полная.")
+                else:
+                    student = student_form.save(commit=False)
+                    student.save()
+                    group.students_id.add(student)
+
+                    if student_count + 1 >= audience_capacity:
+                        full_status = Status.objects.get(name_status='Группа полная')
+                        group.status_group = full_status
+                        group.save()
+
+                    return redirect('all_students')
+            else:
+                student = student_form.save(commit=False)
+                student.save()
+                return redirect('all_students')
+    else:
+        student_form = StudentForm()
+
+    groups = Group.objects.all()
+    data = {
+        "student_form": student_form,
+        'current_year': current_year,
+        'groups': groups,
+        'selected_group_id': group_id
+    }
+    return render(request, 'groups/add_students_to_group.html', data)
 
 
 def update_students(request, id_student):
@@ -260,10 +293,26 @@ def delete_students(request, id_student):
 
 def profile_students(request, id_student):
     student = get_object_or_404(Student, id=id_student)
-    attendance = Attendance.objects.filter(students_id=id_student)
     payments = Payment.objects.filter(student_id=student)
+
+    selected_month = request.GET.get('month')
+
+    if selected_month:
+        selected_month = int(selected_month)
+        attendance = Attendance.objects.filter(students_id=id_student, date_attendance__month=selected_month)
+    else:
+        attendance = Attendance.objects.filter(students_id=id_student)
+
     current_year = datetime.today().year
-    data = {'student': student, 'payments': payments, 'current_year': current_year, 'attendance': attendance}
+
+    data = {
+        'student': student,
+        'payments': payments,
+        'current_year': current_year,
+        'attendance': attendance,
+        'selected_month': selected_month
+    }
+
     return render(request, 'students/student-profile.html', data)
 
 
@@ -350,6 +399,8 @@ def update_group(request, id_group):
 
     data = {"group_form": group_form, 'current_year': current_year}
     return render(request, 'groups/edit-groups.html', data)
+
+
 def delete_group(request, id_group):
     group = get_object_or_404(Group, pk=id_group)
     current_year = datetime.today().year
@@ -395,17 +446,14 @@ def info_group(request, id_group):
 
     student_ids = students.values_list('id', flat=True)
 
-    attendance = Attendance.objects.filter(students_id__in=student_ids)
-    payment = Payment.objects.filter(student_id__in=student_ids)
-
     student_data = []
     for student in students:
-        student_attendance = attendance.filter(students_id=student).order_by('-date_attendance')
-        student_payments = payment.filter(student_id=student).order_by('-date_pay')
+        last_attendance = Attendance.objects.filter(students_id=student).order_by('-date_attendance').first()
+        student_payments = Payment.objects.filter(student_id=student).order_by('-date_pay')
 
         student_data.append({
             'student': student,
-            'attendance': student_attendance,
+            'attendance': last_attendance,
             'payments': student_payments
         })
 
@@ -431,7 +479,9 @@ def process_payment(request, student_id):
             payment.student_id = student
             payment.price = course_prices[int(form.cleaned_data['course_id'].id)]
             payment.save()
+
             student.paid_check = 'Оплатил'
+
             if not payments.exists():
                 student.save()
             else:
@@ -441,6 +491,7 @@ def process_payment(request, student_id):
                 if last_payment_date == next_month_date:
                     student.paid_check = 'Не оплатил'
                     student.save()
+
             return redirect('profile_students', student.id)
     else:
         form = PaymentForm()
@@ -452,6 +503,8 @@ def process_payment(request, student_id):
         'course_prices': course_prices
     }
     return render(request, 'students/payment.html', data)
+
+
 def delete_selected_students(request):
     selected_students = request.POST.getlist('selected_students')
     comments = request.POST.get('comments', '')

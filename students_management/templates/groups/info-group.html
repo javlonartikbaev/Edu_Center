@@ -4,7 +4,7 @@
 {% block menu_center %}
 {% endblock %}
 {% block content %}
-    <div class="container-fluid">
+    <div class="container-fluid" style="margin-top: 30px">
         <div class="row">
             <div class="col-lg-12">
                 <div class="hpanel hblue contact-panel contact-panel-cs responsive-mg-b-10">
@@ -19,7 +19,7 @@
                             <tr>
                                 <th>Имя</th>
                                 <th>Фамилия</th>
-                                <th>Дни пропусков занятий</th>
+                                <th>Последний день пропуска занятий</th>
                                 <th>Статус оплаты</th>
                             </tr>
                             </thead>
@@ -30,11 +30,11 @@
                                         {{ student.student.first_name_s }}</a></td>
                                     <td>{{ student.student.last_name_s }}</td>
                                     <td>
-                                        {% for atd in student.attendance %}
-                                            {% if atd.attendance_status.name_attendance_status == 'Отсутствует' %}
-                                                {{ atd.date_attendance }}<br>
-                                            {% endif %}
-                                        {% endfor %}
+                                        {% if student.attendance %}
+                                            {{ student.attendance.date_attendance }}
+                                        {% else %}
+                                            Нет пропусков
+                                        {% endif %}
                                     </td>
                                     <td>
                                         {% if student.payments %}

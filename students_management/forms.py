@@ -50,15 +50,18 @@ class StatusForm(forms.ModelForm):
 class StudentForm(forms.ModelForm):
     class Meta:
         model = Student
-        fields = '__all__'
+        exclude = ['paid_check', 'joined_date']
 
 
 class PaymentForm(forms.ModelForm):
     class Meta:
         model = Payment
-        fields = ['method_pay', 'date_pay', 'price', 'student_id', 'branch', 'course_id']
+        fields = ['method_pay', 'date_pay', 'course_id', 'branch']
         widgets = {
-            'date_pay': forms.DateInput(attrs={'type': 'date'}),
+            'date_pay': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'course_id': forms.Select(attrs={'class': 'form-control', }),
+            'branch': forms.Select(attrs={'class': 'form-control'}),
+            'method_pay': forms.Select(attrs={'class': 'form-control'}),
         }
 
 
@@ -69,19 +72,19 @@ class AudienceForm(forms.ModelForm):
 
 
 class GroupForm(forms.ModelForm):
-    students_id = forms.ModelMultipleChoiceField(
-        queryset=Student.objects.all(),
-        widget=forms.CheckboxSelectMultiple,
-        label="Студенты"
-    )
-
     class Meta:
         model = Group
-        fields = ['name_group', 'start_date', 'end_date', 'teacher_id', 'audience_id', 'students_id', 'status_group',
+        fields = ['name_group', 'start_date', 'end_date', 'teacher_id', 'audience_id', 'status_group',
                   'branch', 'course_id']
         widgets = {
-            'start_date': forms.DateInput(attrs={'type': 'date'}),
-            'end_date': forms.DateInput(attrs={'type': 'date'}),
+            'name_group': forms.TextInput(attrs={'class': 'form-control'}),
+            'start_date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'end_date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'teacher_id': forms.Select(attrs={'class': 'form-control'}),
+            'audience_id': forms.Select(attrs={'class': 'form-control'}),
+            'status_group': forms.Select(attrs={'class': 'form-control'}),
+            'branch': forms.Select(attrs={'class': 'form-control'}),
+            'course_id': forms.Select(attrs={'class': 'form-control'}),
         }
 
 

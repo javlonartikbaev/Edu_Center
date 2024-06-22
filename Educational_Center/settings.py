@@ -1,5 +1,3 @@
-
-
 import os
 from pathlib import Path
 
@@ -17,7 +15,6 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = 'django-insecure-uvpm^m2iq*#z30+2^%f-h!8qtsrt=%&vvz*3iuqupleq(g*h&@'
 
-
 DEBUG = True
 
 ALLOWED_HOSTS = ['localhost', '82.97.254.7']
@@ -33,6 +30,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'students_management',
     'django_select2',
+
 ]
 
 MIDDLEWARE = [
@@ -58,6 +56,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+
             ],
         },
     },
@@ -123,3 +122,12 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+from django.contrib.messages import constants as message_constants
+
+MESSAGE_TAGS = {
+    message_constants.DEBUG: 'debug',
+    message_constants.INFO: 'info',
+    message_constants.SUCCESS: 'success',
+    message_constants.WARNING: 'warning',
+    message_constants.ERROR: 'danger',
+}

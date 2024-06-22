@@ -154,7 +154,7 @@ class Group(models.Model):
     end_date = models.DateField(verbose_name='Дата завершения группы')
     teacher_id = models.ForeignKey(Teacher, on_delete=models.CASCADE, verbose_name='Преподаватель')
     audience_id = models.ForeignKey(Audience, on_delete=models.CASCADE, verbose_name='Аудитория')
-    students_id = models.ManyToManyField(Student, related_name='students', verbose_name='Студенты')
+    students_id = models.ManyToManyField(Student, related_name='students', verbose_name='Студенты', blank=True)
     status_group = models.ForeignKey(Status, on_delete=models.PROTECT, default='', verbose_name='Статус группы')
     branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='groups', verbose_name="Филиал")
     course_id = models.ForeignKey(Course, on_delete=models.CASCADE, default='', verbose_name="Курсы")

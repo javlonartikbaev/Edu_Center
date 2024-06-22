@@ -5,7 +5,7 @@
 
 {% endblock %}
 {% block content %}
-    <div class="page-wrapper">
+    <div class="page-wrapper" style="margin-top: 60px">
         <h2>Вы уверены, что хотите удалить "{{ course.name_course }},"?</h2>
         <form method="post">
             {% csrf_token %}

@@ -5,25 +5,35 @@
 
 {% endblock %}
 {% block content %}
-    <div class="page-wrapper">
-        <div style="margin: 10px;">
+    <div class="container-fluid" style="margin-top: 60px">
+        <div class="card p-4">
             <form method="post" enctype="multipart/form-data">
                 {% csrf_token %}
                 <div class="form-group">
-                    <p>{{ group_form.non_field_errors }}</p>
-                    <p>{{ group_form.name_group.label_tag }} {{ group_form.name_group }}</p>
-                    <p>{{ group_form.start_date.label_tag }} {{ group_form.start_date }}</p>
-                    <p>{{ group_form.end_date.label_tag }} {{ group_form.end_date }}</p>
-                    <p>{{ group_form.teacher_id.label_tag }} {{ group_form.teacher_id }}</p>
-                    <p>{{ group_form.audience_id.label_tag }} {{ group_form.audience_id }}</p>
-                    <p>{{ group_form.status_group.label_tag }} {{ group_form.status_group }}</p>
-                    <p>{{ group_form.course_id.label_tag }} {{ group_form.course_id }}</p>
-                    <p>{{ group_form.branch.label_tag }} {{ group_form.branch }}</p>
-                </div>
-                <div class="form-group">
-                    <label for="students_id">Студенты</label>
-                    <div style="max-height: 150px; overflow-y: scroll; border: 1px solid #ccc; padding: 10px;">
-                        {{ group_form.students_id }}
+                    {{ group_form.non_field_errors }}
+                    <div class="form-group">
+                        {{ group_form.name_group.label_tag }} {{ group_form.name_group }}
+                    </div>
+                    <div class="form-group">
+                        {{ group_form.start_date.label_tag }} {{ group_form.start_date }}
+                    </div>
+                    <div class="form-group">
+                        {{ group_form.end_date.label_tag }} {{ group_form.end_date }}
+                    </div>
+                    <div class="form-group">
+                        {{ group_form.teacher_id.label_tag }} {{ group_form.teacher_id }}
+                    </div>
+                    <div class="form-group">
+                        {{ group_form.audience_id.label_tag }} {{ group_form.audience_id }}
+                    </div>
+                    <div class="form-group">
+                        {{ group_form.status_group.label_tag }} {{ group_form.status_group }}
+                    </div>
+                    <div class="form-group">
+                        {{ group_form.course_id.label_tag }} {{ group_form.course_id }}
+                    </div>
+                    <div class="form-group">
+                        {{ group_form.branch.label_tag }} {{ group_form.branch }}
                     </div>
                 </div>
                 <button type="submit" class="btn btn-lg btn-success">Добавить</button>

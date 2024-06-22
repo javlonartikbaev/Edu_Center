@@ -4,8 +4,7 @@
 {% block menu_center %}
 {% endblock %}
 {% block content %}
-    <div class="container">
-
+    <div class="container" style="margin-top: 60px">
         <div class="row">
             <div class="col-md-8 offset-md-2">
                 <div class="card">
@@ -15,9 +14,26 @@
                     <div class="card-body">
                         <form method="post">
                             {% csrf_token %}
-                            {{ form.as_p }}
-
-
+                            <div class="form-group">
+                                <label for="id_method_pay">Метод оплаты:</label>
+                                {{ form.method_pay }}
+                            </div>
+                            <div class="form-group">
+                                <label for="id_date_pay">Дата оплаты:</label>
+                                {{ form.date_pay }}
+                            </div>
+                            <div class="form-group">
+                                <label for="id_course_id">Курс:</label>
+                                {{ form.course_id }}
+                            </div>
+                            <div class="form-group">
+                                <label for="id_price">Филиал:</label>
+                                {{ form.branch }}
+                            </div>
+                            <div class="form-group">
+                                <label for="id_price">Сумма (сум):</label>
+                                {{ course_prices. }}
+                            </div>
                             <button type="submit" class="btn btn-primary">Оплатить</button>
                             <a href="{% url 'profile_students' student.id %}" class="btn btn-secondary">Отмена</a>
                         </form>
@@ -39,6 +55,7 @@
                                 <tr>
                                     <th>Метод оплаты</th>
                                     <th>Дата оплаты</th>
+                                    <th>Курс</th>
                                     <th>Сумма</th>
                                 </tr>
                                 </thead>
@@ -47,11 +64,12 @@
                                     <tr>
                                         <td>{{ payment.get_method_pay_display }}</td>
                                         <td>{{ payment.date_pay }}</td>
+                                        <td>{{ payment.course_id }}</td>
                                         <td>{{ payment.price }} сум</td>
                                     </tr>
                                 {% empty %}
                                     <tr>
-                                        <td colspan="3">Нет данных о платежах</td>
+                                        <td colspan="4">Нет данных о платежах</td>
                                     </tr>
                                 {% endfor %}
                                 </tbody>

@@ -5,7 +5,7 @@
 
 {% endblock %}
 {% block content %}
-    <div class="page-wrapper">
+    <div class="page-wrapper" style="margin-top: 60px">
         <h2>Вы уверены, что хотите удалить "{{ professor.first_name }}, {{ professor.last_name }}"?</h2>
         <form method="post">
             {% csrf_token %}
