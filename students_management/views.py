@@ -232,13 +232,6 @@ def add_students(request, group_id=None):
     if request.method == "POST":
         student_form = StudentForm(request.POST)
         if student_form.is_valid():
-            student_data = student_form.cleaned_data
-            existing_student = Student.objects.filter(
-                Q(first_name_s=student_data['first_name_s']) &
-                Q(last_name_s=student_data['last_name_s']) &
-                Q(phone_number_s=student_data['phone_number_s'])
-            ).first()
-
             if group_id:
                 group = Group.objects.get(id=group_id)
                 audience_capacity = int(group.audience_id.capacity)
@@ -247,12 +240,8 @@ def add_students(request, group_id=None):
                 if student_count >= audience_capacity:
                     messages.error(request, "Невозможно добавить студента: группа уже полная.")
                 else:
-                    if existing_student:
-                        student = existing_student
-                    else:
-                        student = student_form.save(commit=False)
-                        student.save()
-
+                    student = student_form.save(commit=False)
+                    student.save()
                     group.students_id.add(student)
 
                     if student_count + 1 >= audience_capacity:
@@ -262,12 +251,9 @@ def add_students(request, group_id=None):
 
                     return redirect('all_students')
             else:
-                if existing_student:
-                    messages.error(request, "Студент уже существует. Выберите группу, чтобы добавить его в группу.")
-                else:
-                    student = student_form.save(commit=False)
-                    student.save()
-                    return redirect('all_students')
+                student = student_form.save(commit=False)
+                student.save()
+                return redirect('all_students')
     else:
         student_form = StudentForm()
 
@@ -316,7 +302,7 @@ def profile_students(request, id_student):
         attendance = Attendance.objects.filter(students_id=id_student, date_attendance__month=selected_month)
     else:
         attendance = Attendance.objects.filter(students_id=id_student)
-# Ошибка
+    # Ошибка
     groups = Group.objects.filter(students_id=id_student)
 
     courses = Course.objects.filter(group__in=groups)
