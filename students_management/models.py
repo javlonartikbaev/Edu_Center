@@ -82,6 +82,7 @@ class Payment(models.Model):
     student_id = models.ForeignKey(Student, on_delete=models.CASCADE, verbose_name='Студент')
     branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='payments', verbose_name="Филиал")
     course_id = models.ForeignKey(Course, on_delete=models.CASCADE, verbose_name='Курс')
+
     class Meta:
         db_table = 'payment'
         verbose_name = "Оплата"
@@ -128,6 +129,7 @@ class Status(models.Model):
 
 
 class Teacher(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
     first_name = models.CharField(max_length=45, verbose_name='Имя')
     last_name = models.CharField(max_length=45, verbose_name='Фамилия')
     phone_number = models.CharField(max_length=45, verbose_name='Номер телефона')
@@ -220,18 +222,15 @@ class ArchivedStudent(models.Model):
 
 
 class ArchivedPayment(models.Model):
-    STATUS_CHOICES = [
-        ("окончил(а) курс", "Окончил(а) Курс"),
-        ("прекратил(а) обучение", "Прекратил(а) обучение"),
-    ]
-    student = models.ForeignKey(ArchivedStudent, on_delete=models.CASCADE, verbose_name="Студент")
+    student_id = models.ForeignKey(Student, on_delete=models.CASCADE)
     method_pay = models.CharField("Метод оплаты", max_length=55)
     date_pay = models.DateField("Дата оплаты")
     price = models.CharField("Сумма", max_length=69)
     archived_date = models.DateTimeField("Дата архивирования", auto_now_add=True)
-    comments = models.CharField(choices=STATUS_CHOICES, max_length=45)
+    comments = models.TextField(max_length=100, default='')
     branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='archived_payments',
                                verbose_name="Филиал")
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, verbose_name='Курс')  # Добавлено поле для курса
 
     class Meta:
         db_table = 'archived_payment'
@@ -240,22 +239,23 @@ class ArchivedPayment(models.Model):
 
 
 class ArchivedGroup(models.Model):
-    STATUS_CHOICES = [
-        ("окончил(а) курс", "Окончил(а) Курс"),
-        ("прекратил(а) обучение", "Прекратил(а) обучение"),
-    ]
-    original_id = models.IntegerField()
-    name_group = models.CharField("Название группы", max_length=45)
-    start_date = models.DateField("Дата начала")
-    end_date = models.DateField("Дата окончания")
-    teacher_name = models.CharField("Преподаватель", max_length=90)
-    audience_number = models.CharField("Аудитория", max_length=45)
-    status_group = models.CharField("Статус группы", max_length=45)
-    archived_date = models.DateTimeField("Дата архивирования", auto_now_add=True)
-    comments = models.CharField(choices=STATUS_CHOICES, max_length=45)
+    name_group = models.CharField(max_length=45, verbose_name='Название группы')
+    start_date = models.DateField(verbose_name='Дата начала группы', default=datetime.today)
+    end_date = models.DateField(verbose_name='Дата окончания группы')
+    teacher_id = models.ForeignKey(Teacher, on_delete=models.CASCADE, verbose_name='Преподаватель')
+    audience_id = models.ForeignKey(Audience, on_delete=models.CASCADE, verbose_name='Аудитория')
+    students_id = models.ManyToManyField(Student, related_name='archived_groups_students', verbose_name='Студенты',
+                                         blank=True)
+    status_group = models.ForeignKey(Status, on_delete=models.PROTECT, verbose_name='Статус группы')
     branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='archived_groups', verbose_name="Филиал")
+    course_id = models.ForeignKey(Course, on_delete=models.CASCADE, verbose_name='Курс')
+    comments = models.TextField(max_length=100, default='', verbose_name='Комментарии')
+    archived_date = models.DateField(verbose_name='Дата архивации', default=datetime.today)
 
     class Meta:
         db_table = 'archived_group'
         verbose_name = 'Архивированная группа'
         verbose_name_plural = 'Архивированные группы'
+
+    def __str__(self):
+        return self.name_group

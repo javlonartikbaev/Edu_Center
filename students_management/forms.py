@@ -6,7 +6,7 @@ from .models import *
 class TeacherForm(forms.ModelForm):
     class Meta:
         model = Teacher
-        fields = ['first_name', 'last_name', 'phone_number', 'img_teacher', 'course', 'branch']
+        fields = ['first_name', 'last_name', 'phone_number', 'img_teacher', 'course', 'branch', 'user']
         widgets = {
             'first_name': forms.TextInput(attrs={'class': 'form-control'}),
             'last_name': forms.TextInput(attrs={'class': 'form-control'}),
@@ -99,3 +99,14 @@ class AttendanceForm(forms.ModelForm):
     class Meta:
         model = Attendance
         fields = ['date_attendance', 'attendance_status']
+
+
+
+class CommentForm(forms.Form):
+    comment = forms.CharField(
+        label='Комментарий',
+        widget=forms.Textarea(attrs={'rows': 4, 'class': "form-control", 'placeholder': 'Причина удаления ...'}),
+        required=False
+    )
+
+

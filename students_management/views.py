@@ -1,5 +1,8 @@
 from datetime import timedelta
 
+from django.contrib import messages
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.db.models import Max
 from django.db.models import Q
@@ -11,6 +14,7 @@ from .forms import *
 
 
 # Professor
+@login_required()
 def get_professor(request):
     search = SearchForm(request.GET)
     if search.is_valid():
@@ -25,7 +29,7 @@ def get_professor(request):
         page_number = request.GET.get("page")
         page_obj = paginator.get_page(page_number)
         current_year = datetime.today().year
-        data = {'search': search, 'professor': page_obj, 'current_year': current_year}
+        data = {'search': search, 'professor': page_obj, 'current_year': current_year, 'user': request.user}
     else:
         professor = Teacher.objects.all()
         paginator = Paginator(professor, 10)
@@ -33,11 +37,12 @@ def get_professor(request):
         page_number = request.GET.get("page")
         page_obj = paginator.get_page(page_number)
         current_year = datetime.today().year
-        data = {'search': search, 'professor': page_obj, 'current_year': current_year}
+        data = {'search': search, 'professor': page_obj, 'current_year': current_year, 'user': request.user}
 
     return render(request, 'professors/all-professors.html', data)
 
 
+@login_required()
 def delete_professor(request, id_professor):
     professor = get_object_or_404(Teacher, id=id_professor)
     current_year = datetime.today().year
@@ -48,6 +53,7 @@ def delete_professor(request, id_professor):
     return render(request, 'professors/delete-professor.html', data)
 
 
+@login_required()
 def update_professor(request, id_professor):
     professor = get_object_or_404(Teacher, pk=id_professor)
     current_year = datetime.today().year
@@ -62,6 +68,7 @@ def update_professor(request, id_professor):
     return render(request, 'professors/edit-professor.html', data)
 
 
+@login_required()
 def add_professor(request):
     professor_form = TeacherForm()
     if request.method == 'POST':
@@ -77,7 +84,7 @@ def add_professor(request):
 
 
 # Course
-
+@login_required()
 def get_courses(request):
     search = SearchForm(request.GET)
     if search.is_valid():
@@ -103,6 +110,7 @@ def get_courses(request):
     return render(request, 'courses/all-courses.html', data)
 
 
+@login_required()
 def add_course(request):
     course_form = CourseForm()
     current_year = datetime.today().year
@@ -118,6 +126,7 @@ def add_course(request):
         return render(request, 'courses/add-course.html', data)
 
 
+@login_required()
 def update_course(request, id_course):
     course = get_object_or_404(Course, pk=id_course)
     current_year = datetime.today().year
@@ -132,6 +141,7 @@ def update_course(request, id_course):
     return render(request, 'courses/edit-course.html', data)
 
 
+@login_required()
 def delete_course(request, id_course):
     course = get_object_or_404(Course, pk=id_course)
     current_year = datetime.today().year
@@ -142,6 +152,7 @@ def delete_course(request, id_course):
     return render(request, 'courses/delete-course.html', data)
 
 
+@login_required()
 def all_status(request):
     status = Status.objects.all()
     current_year = datetime.today().year
@@ -149,6 +160,7 @@ def all_status(request):
     return render(request, 'status/all-status.html', data)
 
 
+@login_required()
 def add_status(request):
     status_form = StatusForm(request.POST)
     current_year = datetime.today().year
@@ -162,6 +174,7 @@ def add_status(request):
     return render(request, 'status/add-status.html', data)
 
 
+@login_required()
 def update_status(request, id_status):
     status = get_object_or_404(Status, pk=id_status)
     current_year = datetime.today().year
@@ -177,6 +190,7 @@ def update_status(request, id_status):
     return render(request, 'status/update-status.html', data)
 
 
+@login_required()
 def delete_status(request, id_status):
     status = get_object_or_404(Status, pk=id_status)
     current_year = datetime.today().year
@@ -187,6 +201,7 @@ def delete_status(request, id_status):
     return render(request, 'status/delete-status.html', data)
 
 
+@login_required()
 def all_students(request):
     search = SearchForm(request.GET)
     if search.is_valid():
@@ -226,6 +241,7 @@ def all_students(request):
     return render(request, 'students/all-students.html', data)
 
 
+@login_required()
 def add_students(request, group_id=None):
     current_year = datetime.today().year
     if request.method == "POST":
@@ -238,11 +254,11 @@ def add_students(request, group_id=None):
                 student.save()
                 group.students_id.add(student)
 
-                return redirect('all_students')
+                return redirect('all_groups')
             else:
                 student = student_form.save(commit=False)
                 student.save()
-                return redirect('all_students')
+                return redirect('all_groups')
     else:
         student_form = StudentForm()
 
@@ -256,6 +272,7 @@ def add_students(request, group_id=None):
     return render(request, 'groups/add_students_to_group.html', data)
 
 
+@login_required()
 def update_students(request, id_student):
     student = get_object_or_404(Student, pk=id_student)
     current_year = datetime.today().year
@@ -270,6 +287,7 @@ def update_students(request, id_student):
     return render(request, 'students/edit-student.html', data)
 
 
+@login_required()
 def delete_students(request, id_student):
     student = get_object_or_404(Student, pk=id_student)
     current_year = datetime.today().year
@@ -280,6 +298,7 @@ def delete_students(request, id_student):
     return render(request, 'students/delete-student.html', data)
 
 
+@login_required()
 def profile_students(request, id_student):
     student = get_object_or_404(Student, id=id_student)
     payments = Payment.objects.filter(student_id=student)
@@ -310,6 +329,7 @@ def profile_students(request, id_student):
     return render(request, 'students/student-profile.html', data)
 
 
+@login_required()
 def all_audience(request):
     audience = Audience.objects.all()
     current_year = datetime.today().year
@@ -317,6 +337,7 @@ def all_audience(request):
     return render(request, 'audience/all-audience.html', data)
 
 
+@login_required()
 def add_audience(request):
     audience_form = AudienceForm(request.POST)
     audience = Audience.objects.all()
@@ -331,6 +352,7 @@ def add_audience(request):
     return render(request, 'audience/add-audience.html', data)
 
 
+@login_required()
 def update_audience(request, id_audience):
     audience = get_object_or_404(Audience, pk=id_audience)
     current_year = datetime.today().year
@@ -346,6 +368,7 @@ def update_audience(request, id_audience):
     return render(request, 'audience/edit-audience.html', data)
 
 
+@login_required()
 def delete_audience(request, id_audience):
     audience = get_object_or_404(Audience, pk=id_audience)
     current_year = datetime.today().year
@@ -356,15 +379,18 @@ def delete_audience(request, id_audience):
     return render(request, 'audience/delete-audience.html', data)
 
 
+@login_required()
 def all_groups(request):
     groups = Group.objects.all()
     current_year = datetime.today().year
-    data = {'groups': groups, 'current_year': current_year}
+    data = {'groups': groups, 'current_year': current_year, }
     return render(request, 'groups/all-groups.html', data)
 
 
+@login_required()
 def add_group(request):
     if request.method == 'POST':
+
         group_form = GroupForm(request.POST)
         if group_form.is_valid():
             group = group_form.save()
@@ -373,15 +399,17 @@ def add_group(request):
         group_form = GroupForm()
 
     current_year = datetime.today().year
-    data = {"group_form": group_form, 'current_year': current_year}
+    data = {"group_form": group_form, 'current_year': current_year, }
     return render(request, 'groups/add-groups.html', data)
 
 
+@login_required()
 def update_group(request, id_group):
     group = get_object_or_404(Group, pk=id_group)
     current_year = datetime.today().year
 
     if request.method == 'POST':
+
         group_form = GroupForm(request.POST, instance=group)
         if group_form.is_valid():
             group_form.save()
@@ -401,20 +429,44 @@ def update_group(request, id_group):
         'current_year': current_year,
         'students_in_group': students_in_group,
         'group': group,
+
     }
     return render(request, 'groups/edit-groups.html', data)
 
 
+@login_required()
 def delete_group(request, id_group):
     group = get_object_or_404(Group, pk=id_group)
-    current_year = datetime.today().year
+
     if request.method == 'POST':
+        comment = request.POST.get('comment', '')
+        status_instance = get_object_or_404(Status, id=2)
+
+        archived_group = ArchivedGroup.objects.create(
+            name_group=group.name_group,
+            start_date=group.start_date,
+            end_date=group.end_date,
+            teacher_id=group.teacher_id,
+            audience_id=group.audience_id,
+            status_group=status_instance,
+            branch=group.branch,
+            course_id=group.course_id,
+            comments=comment,
+        )
+
+        archived_group.students_id.set(group.students_id.all())
+        group.students_id.clear()
         group.delete()
-        return redirect('all_groups')
-    data = {"group": group, 'current_year': current_year}
+
+        return redirect('archived_students')
+
+    comment_form = CommentForm()
+
+    data = {"group": group, 'comment_form': comment_form, }
     return render(request, 'groups/delete-groups.html', data)
 
 
+@login_required()
 def mark_attendance(request, group_id):
     group = get_object_or_404(Group, pk=group_id)
 
@@ -433,23 +485,26 @@ def mark_attendance(request, group_id):
                     attendance_status=attendance_status,
                     students_id=student,
                     groups_id=group,
-                    branch=group.branch
+                    branch=group.branch,
+
                 )
 
         return redirect('all_groups')
 
     data = {
         'group': group,
+
     }
     return render(request, 'groups/attendance-group.html', data)
 
 
+@login_required()
 def info_group(request, id_group):
     group = get_object_or_404(Group, pk=id_group)
     students = group.students_id.all()
     today = datetime.today().date()
     student_ids = students.values_list('id', flat=True)
-
+    teacher = request.user.teacher
     student_data = []
     for student in students:
         last_attendance = Attendance.objects.filter(students_id=student).order_by('-date_attendance').first()
@@ -459,6 +514,7 @@ def info_group(request, id_group):
             'student': student,
             'attendance': last_attendance,
             'payments': student_payments
+
         })
 
     current_year = datetime.today().year
@@ -466,11 +522,13 @@ def info_group(request, id_group):
         'group': group,
         'student_data': student_data,
         'current_year': current_year,
-        'today': today
+        'today': today,
+        'teacher': teacher
     }
     return render(request, 'groups/info-group.html', data)
 
 
+@login_required()
 def process_payment(request, student_id):
     student = get_object_or_404(Student, id=student_id)
     payments = Payment.objects.filter(student_id=student_id).order_by('-date_pay')
@@ -510,6 +568,7 @@ def process_payment(request, student_id):
     return render(request, 'students/payment.html', data)
 
 
+@login_required()
 def delete_selected_students(request):
     selected_students = request.POST.getlist('selected_students')
     comments = request.POST.get('comments', '')
@@ -540,6 +599,7 @@ def delete_selected_students(request):
         return redirect('all_students')
 
 
+@login_required()
 def archived_students(request):
     archived_students = ArchivedStudent.objects.all()
     current_year = datetime.today().year
@@ -550,6 +610,7 @@ def archived_students(request):
     return render(request, 'students/archive-students.html', data)
 
 
+@login_required()
 def restore_student(request, student_id):
     archived_student = get_object_or_404(ArchivedStudent, original_id=student_id)
 
@@ -567,6 +628,7 @@ def restore_student(request, student_id):
     return redirect('archived_students')
 
 
+@login_required()
 def delete_archived_students_bulk(request):
     student_ids = request.POST.getlist('students_to_delete')
     for student_id in student_ids:
@@ -575,6 +637,7 @@ def delete_archived_students_bulk(request):
     return redirect('archived_students')
 
 
+@login_required()
 def main_page(request):
     groups = Group.objects.all()
     group_data = []
@@ -595,3 +658,122 @@ def main_page(request):
     }
 
     return render(request, 'base.html', data)
+
+
+@login_required()
+def archived_groups(request):
+    archived_groups = ArchivedGroup.objects.all()
+    return render(request, 'groups/archived_group.html', {'archived_groups': archived_groups})
+
+
+@login_required()
+def delete_archived_group(request, id_archived_group):
+    archived_group = get_object_or_404(ArchivedGroup, pk=id_archived_group)
+    if request.method == 'POST':
+        archived_group.delete()
+        return redirect('archived_groups')
+
+
+@login_required()
+def restore_group(request, group_id):
+    archived_group = get_object_or_404(ArchivedGroup, pk=group_id)
+    status_instance = get_object_or_404(Status, id=2)
+
+    instance_teacher = get_object_or_404(Teacher, id=archived_group.teacher_id.id)
+    instance_audience = get_object_or_404(Audience, id=archived_group.audience_id.id)
+
+    restored_group = Group.objects.create(
+        name_group=archived_group.name_group,
+        start_date=archived_group.start_date,
+        end_date=archived_group.end_date,
+        teacher_id=instance_teacher,
+        audience_id=instance_audience,
+        status_group=status_instance,
+        branch=archived_group.branch,
+        course_id=archived_group.course_id
+    )
+
+    restored_group.students_id.set(archived_group.students_id.all())
+
+    archived_group.delete()
+
+    return redirect('archived_students')
+
+
+@login_required()
+def delete_payment(request, payment_id):
+    payment = get_object_or_404(Payment, id=payment_id)
+    student_id = payment.student_id.id
+
+    if request.method == 'POST':
+        comment_form = CommentForm(request.POST)
+
+        comment = request.POST.get('comment', '')
+        ArchivedPayment.objects.create(
+            student_id=payment.student_id,
+            method_pay=payment.method_pay,
+            date_pay=payment.date_pay,
+            price=payment.price,
+            branch=payment.branch,
+            comments=comment,
+            course_id=payment.course_id.id
+
+        )
+        payment.delete()
+        return redirect('profile_students', id_student=student_id)
+    comment_form = CommentForm()
+
+    return render(request, 'students/delete_payment.html', {'payment': payment, 'comment_form': comment_form})
+
+
+@login_required()
+def archived_payments(request):
+    archived_payments = ArchivedPayment.objects.all()
+    context = {
+        'archived_payments': archived_payments
+    }
+    return render(request, 'students/payment_archive.html', context)
+
+
+@login_required()
+def restore_payment(request, archived_payment_id):
+    archived_payment = get_object_or_404(ArchivedPayment, id=archived_payment_id)
+
+    Payment.objects.create(
+        student_id=archived_payment.student_id,
+        method_pay=archived_payment.method_pay,
+        date_pay=archived_payment.date_pay,
+        price=archived_payment.price,
+        branch=archived_payment.branch,
+        course_id=archived_payment.course
+    )
+
+    archived_payment.delete()
+
+    return redirect('all_students')
+
+
+def logout_view(request):
+    logout(request)
+    return redirect('login_page')
+
+
+def login_page(request):
+    if request.method == "POST":
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+
+        if not User.objects.filter(username=username).exists():
+            messages.error(request, 'Invalid Username')
+            return redirect('/login/')
+
+        user = authenticate(username=username, password=password)
+
+        if user is None:
+            messages.error(request, "Invalid Password")
+            return redirect('login_page')
+        else:
+            login(request, user)
+            return redirect('main_page')
+
+    return render(request, 'login/logIn.html')

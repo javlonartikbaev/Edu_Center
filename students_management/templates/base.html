@@ -56,6 +56,23 @@
         .card-body p {
             margin: 0 0 10px;
         }
+
+        .pay-button {
+            display: inline-block;
+            padding: 10px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            text-align: center;
+            text-decoration: none;
+            color: #fff;
+            background-color: #007bff;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+
+        .pay-button:hover {
+            background-color: #0056b3;
+        }
     </style>
 
     <div class="container-fluid" style="margin-top: 30px">
@@ -92,17 +109,19 @@
                                 <div class="col-md-6 col-lg-4">
                                     <div class="card">
                                         <div class="card-header">
-                                            <a href="{% url 'info_group' item.group.id %}"><h3 class="card-title">{{ item.group.name_group }}</h3></a>
+                                            <a href="{% url 'info_group' item.group.id %}">
+                                                <h3 class="card-title">{{ item.group.name_group }}</h3>
+                                            </a>
                                         </div>
                                         <div class="card-body">
                                             <p><strong>Количество студентов:</strong> {{ item.students_count }}</p>
                                             <p>
                                                 <strong>Учитель:</strong> {{ item.group.teacher_id.first_name }} {{ item.group.teacher_id.last_name }}
                                             </p>
-                                            <p>
-                                                <strong>Аудитория:</strong> {{ item.group.audience_id.number_audience }}
+                                            <p><strong>Аудитория:</strong> {{ item.group.audience_id.number_audience }}
                                             </p>
                                             <p><strong>Курс:</strong> {{ item.course.name_course }}</p>
+
                                         </div>
                                     </div>
                                 </div>

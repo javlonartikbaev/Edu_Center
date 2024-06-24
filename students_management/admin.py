@@ -5,10 +5,13 @@ from students_management.models import *
 
 # Create your models here.
 class StudentAdmin(admin.ModelAdmin):
-    list_display = ('first_name_s', 'last_name_s', 'phone_number_s', 'paid_check', 'parents_phone_number', 'joined_date')
+    list_display = (
+        'first_name_s', 'last_name_s', 'phone_number_s', 'paid_check', 'parents_phone_number', 'joined_date')
+
 
 class PaymentAdmin(admin.ModelAdmin):
     list_display = ('method_pay', 'date_pay', 'price', 'student_id')
+
 
 class CourseAdmin(admin.ModelAdmin):
     list_display = ('name_course', 'price_course', 'duration', 'slug_course')
@@ -44,6 +47,34 @@ class BranchAdmin(admin.ModelAdmin):
     list_display = ('name', 'address', 'phone_number', 'admin')
 
 
+class ArchivedStudentAdmin(admin.ModelAdmin):
+    list_display = (
+        'first_name_s', 'last_name_s', 'phone_number_s', 'paid_check', 'parents_phone_number', 'joined_date',
+        'archived_date', 'comments', 'branch')
+    search_fields = ('first_name_s', 'last_name_s', 'phone_number_s', 'parents_phone_number')
+    list_filter = ('branch', 'comments', 'archived_date')
+    ordering = ('-archived_date',)
+
+
+class ArchivedPaymentAdmin(admin.ModelAdmin):
+    list_display = ('student_id', 'method_pay', 'date_pay', 'price', 'archived_date', 'comments', 'branch')
+    search_fields = ('student', 'method_pay', 'price')
+    list_filter = ('branch', 'method_pay', 'archived_date')
+    ordering = ('-archived_date',)
+
+
+class ArchivedGroupAdmin(admin.ModelAdmin):
+    list_display = (
+        'name_group', 'start_date', 'end_date', 'teacher_id', 'audience_id', 'status_group', 'branch', 'course_id',
+        'archived_date')
+    search_fields = ('name_group', 'teacher_id__first_name', 'teacher_id__last_name')
+    list_filter = ('branch', 'status_group', 'archived_date')
+    ordering = ('-archived_date',)
+
+
+admin.site.register(ArchivedStudent, ArchivedStudentAdmin)
+admin.site.register(ArchivedPayment, ArchivedPaymentAdmin)
+admin.site.register(ArchivedGroup, ArchivedGroupAdmin)
 admin.site.register(Student, StudentAdmin)
 admin.site.register(Course, CourseAdmin)
 admin.site.register(Audience, AudienceAdmin)
