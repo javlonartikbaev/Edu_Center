@@ -14,11 +14,16 @@ from .forms import *
 
 
 # Professor
-@login_required()
+@login_required
 def get_professor(request):
+    if not request.user.is_superuser:
+        messages.error(request, 'У вас нет прав доступа.')
+        return redirect(
+            'main_page')
+
     search = SearchForm(request.GET)
     if search.is_valid():
-        search_professor_name = search.cleaned_data.get('search_input', )
+        search_professor_name = search.cleaned_data.get('search_input', '')
         if search_professor_name:
             found_professor = Teacher.objects.filter(Q(first_name__icontains=search_professor_name) |
                                                      Q(last_name__icontains=search_professor_name))
@@ -42,8 +47,13 @@ def get_professor(request):
     return render(request, 'professors/all-professors.html', data)
 
 
-@login_required()
+@login_required
 def delete_professor(request, id_professor):
+    if not request.user.is_superuser:
+        messages.error(request, 'У вас нет прав доступа.')
+        return redirect(
+            'main_page')
+
     professor = get_object_or_404(Teacher, id=id_professor)
     current_year = datetime.today().year
     if request.method == 'POST':
@@ -53,8 +63,12 @@ def delete_professor(request, id_professor):
     return render(request, 'professors/delete-professor.html', data)
 
 
-@login_required()
+@login_required
 def update_professor(request, id_professor):
+    if not request.user.is_superuser:
+        messages.error(request, 'У вас нет прав доступа.')
+        return redirect(
+            'main_page')
     professor = get_object_or_404(Teacher, pk=id_professor)
     current_year = datetime.today().year
     if request.method == 'POST':
@@ -68,8 +82,12 @@ def update_professor(request, id_professor):
     return render(request, 'professors/edit-professor.html', data)
 
 
-@login_required()
+@login_required
 def add_professor(request):
+    if not request.user.is_superuser:
+        messages.error(request, 'У вас нет прав доступа.')
+        return redirect(
+            'main_page')
     professor_form = TeacherForm()
     if request.method == 'POST':
         professor_form = TeacherForm(request.POST, request.FILES)
@@ -77,18 +95,23 @@ def add_professor(request):
             professor = professor_form.save(commit=False)
             professor.save()
             return redirect('all_professors')
-    return render(request, 'professors/add-professor.html', {'professor_form': professor_form})
+
+    if request.user.is_superuser:
+        template_name = 'professors/all-professors.html'
+    else:
+        template_name = 'teachers/teachers-profile.html'
+    return render(request, template_name, {'professor_form': professor_form})
 
 
-# end Professor
-
-
-# Course
-@login_required()
+@login_required
 def get_courses(request):
+    if not request.user.is_superuser:
+        messages.error(request, 'У вас нет прав доступа.')
+        return redirect(
+            'main_page')
     search = SearchForm(request.GET)
     if search.is_valid():
-        search_course_name = search.cleaned_data.get('search_input', )
+        search_course_name = search.cleaned_data.get('search_input', '')
         if search_course_name:
             found_course = Course.objects.filter(name_course__icontains=search_course_name)
         else:
@@ -110,8 +133,12 @@ def get_courses(request):
     return render(request, 'courses/all-courses.html', data)
 
 
-@login_required()
+@login_required
 def add_course(request):
+    if not request.user.is_superuser:
+        messages.error(request, 'У вас нет прав доступа.')
+        return redirect(
+            'main_page')
     course_form = CourseForm()
     current_year = datetime.today().year
     if request.method == 'POST':
@@ -126,8 +153,12 @@ def add_course(request):
         return render(request, 'courses/add-course.html', data)
 
 
-@login_required()
+@login_required
 def update_course(request, id_course):
+    if not request.user.is_superuser:
+        messages.error(request, 'У вас нет прав доступа.')
+        return redirect(
+            'main_page')
     course = get_object_or_404(Course, pk=id_course)
     current_year = datetime.today().year
     if request.method == 'POST':
@@ -141,8 +172,12 @@ def update_course(request, id_course):
     return render(request, 'courses/edit-course.html', data)
 
 
-@login_required()
+@login_required
 def delete_course(request, id_course):
+    if not request.user.is_superuser:
+        messages.error(request, 'У вас нет прав доступа.')
+        return redirect(
+            'main_page')
     course = get_object_or_404(Course, pk=id_course)
     current_year = datetime.today().year
     if request.method == 'POST':
@@ -152,8 +187,12 @@ def delete_course(request, id_course):
     return render(request, 'courses/delete-course.html', data)
 
 
-@login_required()
+@login_required
 def all_status(request):
+    if not request.user.is_superuser:
+        messages.error(request, 'У вас нет прав доступа.')
+        return redirect(
+            'main_page')
     status = Status.objects.all()
     current_year = datetime.today().year
     data = {'status': status, 'current_year': current_year}
@@ -162,6 +201,10 @@ def all_status(request):
 
 @login_required()
 def add_status(request):
+    if not request.user.is_superuser:
+        messages.error(request, 'У вас нет прав доступа.')
+        return redirect(
+            'main_page')
     status_form = StatusForm(request.POST)
     current_year = datetime.today().year
     if status_form.is_valid():
@@ -176,6 +219,10 @@ def add_status(request):
 
 @login_required()
 def update_status(request, id_status):
+    if not request.user.is_superuser:
+        messages.error(request, 'У вас нет прав доступа.')
+        return redirect(
+            'main_page')
     status = get_object_or_404(Status, pk=id_status)
     current_year = datetime.today().year
     if request.method == 'POST':
@@ -192,6 +239,10 @@ def update_status(request, id_status):
 
 @login_required()
 def delete_status(request, id_status):
+    if not request.user.is_superuser:
+        messages.error(request, 'У вас нет прав доступа.')
+        return redirect(
+            'main_page')
     status = get_object_or_404(Status, pk=id_status)
     current_year = datetime.today().year
     if request.method == 'POST':
@@ -203,6 +254,10 @@ def delete_status(request, id_status):
 
 @login_required()
 def all_students(request):
+    if not request.user.is_superuser:
+        messages.error(request, 'У вас нет прав доступа.')
+        return redirect(
+            'main_page')
     search = SearchForm(request.GET)
     if search.is_valid():
         search_student_name = search.cleaned_data.get('search_input', )
@@ -243,6 +298,10 @@ def all_students(request):
 
 @login_required()
 def add_students(request, group_id=None):
+    if not request.user.is_superuser:
+        messages.error(request, 'У вас нет прав доступа.')
+        return redirect(
+            'main_page')
     current_year = datetime.today().year
     if request.method == "POST":
         student_form = StudentForm(request.POST)
@@ -274,6 +333,10 @@ def add_students(request, group_id=None):
 
 @login_required()
 def update_students(request, id_student):
+    if not request.user.is_superuser:
+        messages.error(request, 'У вас нет прав доступа.')
+        return redirect(
+            'main_page')
     student = get_object_or_404(Student, pk=id_student)
     current_year = datetime.today().year
     if request.method == 'POST':
@@ -289,6 +352,10 @@ def update_students(request, id_student):
 
 @login_required()
 def delete_students(request, id_student):
+    if not request.user.is_superuser:
+        messages.error(request, 'У вас нет прав доступа.')
+        return redirect(
+            'main_page')
     student = get_object_or_404(Student, pk=id_student)
     current_year = datetime.today().year
     if request.method == 'POST':
@@ -300,6 +367,7 @@ def delete_students(request, id_student):
 
 @login_required()
 def profile_students(request, id_student):
+
     student = get_object_or_404(Student, id=id_student)
     payments = Payment.objects.filter(student_id=student)
 
@@ -310,10 +378,10 @@ def profile_students(request, id_student):
         attendance = Attendance.objects.filter(students_id=id_student, date_attendance__month=selected_month)
     else:
         attendance = Attendance.objects.filter(students_id=id_student)
-    # ошибка
+
     groups = Group.objects.filter(students_id=id_student)
 
-    courses = Course.objects.filter(group__in=groups)
+    courses = Course.objects.filter(group__in=groups).distinct()
 
     current_year = datetime.today().year
 
@@ -323,14 +391,23 @@ def profile_students(request, id_student):
         'current_year': current_year,
         'attendance': attendance,
         'selected_month': selected_month,
-        'courses': courses
+        'courses': courses,
     }
 
-    return render(request, 'students/student-profile.html', data)
+    if request.user.is_superuser:
+        template_name = 'students/student-profile.html'
+    else:
+        template_name = 'teachers-group/teachers-st-profile.html'
+
+    return render(request, template_name, data)
 
 
 @login_required()
 def all_audience(request):
+    if not request.user.is_superuser:
+        messages.error(request, 'У вас нет прав доступа.')
+        return redirect(
+            'main_page')
     audience = Audience.objects.all()
     current_year = datetime.today().year
     data = {'audience': audience, 'current_year': current_year}
@@ -339,6 +416,10 @@ def all_audience(request):
 
 @login_required()
 def add_audience(request):
+    if not request.user.is_superuser:
+        messages.error(request, 'У вас нет прав доступа.')
+        return redirect(
+            'main_page')
     audience_form = AudienceForm(request.POST)
     audience = Audience.objects.all()
     current_year = datetime.today().year
@@ -354,6 +435,10 @@ def add_audience(request):
 
 @login_required()
 def update_audience(request, id_audience):
+    if not request.user.is_superuser:
+        messages.error(request, 'У вас нет прав доступа.')
+        return redirect(
+            'main_page')
     audience = get_object_or_404(Audience, pk=id_audience)
     current_year = datetime.today().year
     if request.method == 'POST':
@@ -370,6 +455,10 @@ def update_audience(request, id_audience):
 
 @login_required()
 def delete_audience(request, id_audience):
+    if not request.user.is_superuser:
+        messages.error(request, 'У вас нет прав доступа.')
+        return redirect(
+            'main_page')
     audience = get_object_or_404(Audience, pk=id_audience)
     current_year = datetime.today().year
     if request.method == 'POST':
@@ -381,9 +470,21 @@ def delete_audience(request, id_audience):
 
 @login_required()
 def all_groups(request):
-    groups = Group.objects.all()
     current_year = datetime.today().year
-    data = {'groups': groups, 'current_year': current_year, }
+    req_user = Teacher.objects.filter(
+        user_id=request.user.id).first()
+
+    if request.user.is_superuser:
+        groups = Group.objects.all()
+        data = {'groups': groups, 'current_year': current_year}
+        return render(request, 'groups/all-groups.html', data)
+
+    if req_user:
+        groups = Group.objects.filter(teacher_id=req_user.id)
+        data = {'groups': groups, 'current_year': current_year}
+        return render(request, 'teachers-group/teachers_group.html', data)
+
+    data = {"current_year": current_year}
     return render(request, 'groups/all-groups.html', data)
 
 
@@ -408,34 +509,33 @@ def update_group(request, id_group):
     group = get_object_or_404(Group, pk=id_group)
     current_year = datetime.today().year
 
-    if request.method == 'POST':
-
-        group_form = GroupForm(request.POST, instance=group)
-        if group_form.is_valid():
-            group_form.save()
-            students_to_remove = request.POST.getlist('students_to_remove')
-            if students_to_remove:
-                group.students_id.remove(*students_to_remove)
-            return redirect('all_groups')
+    if request.user.is_superuser:
+        if request.method == 'POST':
+            group_form = GroupForm(request.POST, instance=group)
+            if group_form.is_valid():
+                group_form.save()
+                students_to_remove = request.POST.getlist('students_to_remove')
+                if students_to_remove:
+                    group.students_id.remove(*students_to_remove)
+                return redirect('all_groups')
+            else:
+                messages.error(request, group_form.errors)
         else:
-            print(group_form.errors)
+            group_form = GroupForm(instance=group)
     else:
-        group_form = GroupForm(instance=group)
+        messages.error(request, 'У вас нет прав')
+        return redirect('all_groups')
 
-    students_in_group = group.students_id.all()
-
-    data = {
-        "group_form": group_form,
-        'current_year': current_year,
-        'students_in_group': students_in_group,
-        'group': group,
-
-    }
+    data = {"group_form": group_form, 'current_year': current_year, 'messages': messages}
     return render(request, 'groups/edit-groups.html', data)
 
 
 @login_required()
 def delete_group(request, id_group):
+    if not request.user.is_superuser:
+        messages.error(request, 'У вас нет прав доступа.')
+        return redirect(
+            'main_page')
     group = get_object_or_404(Group, pk=id_group)
 
     if request.method == 'POST':
@@ -466,7 +566,7 @@ def delete_group(request, id_group):
     return render(request, 'groups/delete-groups.html', data)
 
 
-@login_required()
+@login_required
 def mark_attendance(request, group_id):
     group = get_object_or_404(Group, pk=group_id)
 
@@ -486,25 +586,28 @@ def mark_attendance(request, group_id):
                     students_id=student,
                     groups_id=group,
                     branch=group.branch,
-
                 )
 
         return redirect('all_groups')
 
     data = {
         'group': group,
-
     }
-    return render(request, 'groups/attendance-group.html', data)
+
+    if request.user.is_superuser:
+        template_name = 'groups/attendance-group.html'
+    else:
+        template_name = 'teachers-group/teachers-mark-att.html'
+
+    return render(request, template_name, data)
 
 
-@login_required()
+@login_required
 def info_group(request, id_group):
     group = get_object_or_404(Group, pk=id_group)
     students = group.students_id.all()
     today = datetime.today().date()
     student_ids = students.values_list('id', flat=True)
-    teacher = request.user.teacher
     student_data = []
     for student in students:
         last_attendance = Attendance.objects.filter(students_id=student).order_by('-date_attendance').first()
@@ -523,13 +626,23 @@ def info_group(request, id_group):
         'student_data': student_data,
         'current_year': current_year,
         'today': today,
-        'teacher': teacher
+
     }
-    return render(request, 'groups/info-group.html', data)
+
+    if request.user.is_superuser:
+        template_name = 'groups/info-group.html'
+    else:
+        template_name = 'teachers-group/teachers-group-info.html'
+
+    return render(request, template_name, data)
 
 
 @login_required()
 def process_payment(request, student_id):
+    if not request.user.is_superuser:
+        messages.error(request, 'У вас нет прав доступа.')
+        return redirect(
+            'main_page')
     student = get_object_or_404(Student, id=student_id)
     payments = Payment.objects.filter(student_id=student_id).order_by('-date_pay')
     courses = Course.objects.all()
@@ -570,6 +683,10 @@ def process_payment(request, student_id):
 
 @login_required()
 def delete_selected_students(request):
+    if not request.user.is_superuser:
+        messages.error(request, 'У вас нет прав доступа.')
+        return redirect(
+            'main_page')
     selected_students = request.POST.getlist('selected_students')
     comments = request.POST.get('comments', '')
     if selected_students:
@@ -601,6 +718,10 @@ def delete_selected_students(request):
 
 @login_required()
 def archived_students(request):
+    if not request.user.is_superuser:
+        messages.error(request, 'У вас нет прав доступа.')
+        return redirect(
+            'main_page')
     archived_students = ArchivedStudent.objects.all()
     current_year = datetime.today().year
     data = {
@@ -612,6 +733,10 @@ def archived_students(request):
 
 @login_required()
 def restore_student(request, student_id):
+    if not request.user.is_superuser:
+        messages.error(request, 'У вас нет прав доступа.')
+        return redirect(
+            'main_page')
     archived_student = get_object_or_404(ArchivedStudent, original_id=student_id)
 
     Student.objects.create(
@@ -630,6 +755,10 @@ def restore_student(request, student_id):
 
 @login_required()
 def delete_archived_students_bulk(request):
+    if not request.user.is_superuser:
+        messages.error(request, 'У вас нет прав доступа.')
+        return redirect(
+            'main_page')
     student_ids = request.POST.getlist('students_to_delete')
     for student_id in student_ids:
         archived_student = get_object_or_404(ArchivedStudent, original_id=student_id)
@@ -639,6 +768,10 @@ def delete_archived_students_bulk(request):
 
 @login_required()
 def main_page(request):
+    if not request.user.is_superuser:
+        messages.error(request, 'У вас нет прав доступа.')
+        return redirect(
+            'all_groups')
     groups = Group.objects.all()
     group_data = []
 
@@ -662,12 +795,20 @@ def main_page(request):
 
 @login_required()
 def archived_groups(request):
+    if not request.user.is_superuser:
+        messages.error(request, 'У вас нет прав доступа.')
+        return redirect(
+            'main_page')
     archived_groups = ArchivedGroup.objects.all()
     return render(request, 'groups/archived_group.html', {'archived_groups': archived_groups})
 
 
 @login_required()
 def delete_archived_group(request, id_archived_group):
+    if not request.user.is_superuser:
+        messages.error(request, 'У вас нет прав доступа.')
+        return redirect(
+            'main_page')
     archived_group = get_object_or_404(ArchivedGroup, pk=id_archived_group)
     if request.method == 'POST':
         archived_group.delete()
@@ -676,6 +817,10 @@ def delete_archived_group(request, id_archived_group):
 
 @login_required()
 def restore_group(request, group_id):
+    if not request.user.is_superuser:
+        messages.error(request, 'У вас нет прав доступа.')
+        return redirect(
+            'main_page')
     archived_group = get_object_or_404(ArchivedGroup, pk=group_id)
     status_instance = get_object_or_404(Status, id=2)
 
@@ -702,6 +847,10 @@ def restore_group(request, group_id):
 
 @login_required()
 def delete_payment(request, payment_id):
+    if not request.user.is_superuser:
+        messages.error(request, 'У вас нет прав доступа.')
+        return redirect(
+            'main_page')
     payment = get_object_or_404(Payment, id=payment_id)
     student_id = payment.student_id.id
 
@@ -759,6 +908,8 @@ def logout_view(request):
 
 
 def login_page(request):
+    req_user = Teacher.objects.filter(
+        user_id=request.user.id).first()
     if request.method == "POST":
         username = request.POST.get('username')
         password = request.POST.get('password')
@@ -772,6 +923,9 @@ def login_page(request):
         if user is None:
             messages.error(request, "Invalid Password")
             return redirect('login_page')
+        elif req_user:
+            login(request, user)
+            return redirect('all_groups')
         else:
             login(request, user)
             return redirect('main_page')

@@ -1,0 +1,55 @@
+{% extends 'teachers-group/teachers_group.html' %}
+{% load static %}
+{% block content %}
+    <div class="container-fluid" style="margin-top: 30px">
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="hpanel hblue contact-panel contact-panel-cs responsive-mg-b-10">
+                    <div class="panel-body custom-panel-jw">
+                        <!-- Заголовок с именем группы и учителя -->
+                        <h1>Группа: {{ group.name_group }}</h1>
+                        <h2>Преподаватель: {{ group.teacher_id.first_name }} {{ group.teacher_id.last_name }}</h2>
+                        <h2>Сегодня: {{ today }}</h2>
+                        <!-- Таблица со списком студентов -->
+                        <table class="table table-striped">
+                            <thead>
+                            <tr>
+                                <th>Имя</th>
+                                <th>Фамилия</th>
+                                <th>Последний день пропуска занятий</th>
+                                <th>Статус оплаты</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for student in student_data %}
+                                <tr>
+                                    <td><a href="{% url 'profile_students' student.student.id %}">
+                                        {{ student.student.first_name_s }}</a></td>
+                                    <td>{{ student.student.last_name_s }}</td>
+                                    <td>
+                                        {% if student.attendance %}
+                                            {{ student.attendance.date_attendance }}
+                                        {% else %}
+                                            Нет пропусков
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if student.payments %}
+                                            {% for payment in student.payments %}
+                                                {{ payment.date_pay }} - {{ payment.method_pay }} - {{ payment.price }}
+                                                <br>
+                                            {% endfor %}
+                                        {% else %}
+                                            Нет данных о платежах
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

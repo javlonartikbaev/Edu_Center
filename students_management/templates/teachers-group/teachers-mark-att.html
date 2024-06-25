@@ -1,0 +1,36 @@
+{% extends 'teachers-group/teachers_group.html' %}
+{% load static %}
+{% block content %}
+    <div class="container-fluid" style="margin-top: 60px">
+        <form method="post" action="{% url 'mark_attendance' group.id %}">
+            {% csrf_token %}
+            <input type="date" name="date_attendance" required>
+            <table class="table table-striped">
+                <thead>
+                <tr>
+                    <th>Имя</th>
+                    <th>Фамилия</th>
+                    <th>Телефон Номер</th>
+                    <th>Телефон родителей</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for student in group.students_id.all %}
+                    <tr>
+                        <td>{{ student.first_name_s }}</td>
+                        <td>{{ student.last_name_s }}</td>
+                        <td>{{ student.phone_number_s }}</td>
+                        <td>{{ student.parents_phone_number }}</td>
+
+                        <td>
+                            <label><input type="checkbox" name="student_{{ student.id }}"> Отсутствует</label>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            <button type="submit" class="btn btn-primary">Сохранить посещаемость</button>
+        </form>
+    </div>
+
+{% endblock %}
