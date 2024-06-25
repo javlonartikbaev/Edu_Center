@@ -97,7 +97,7 @@ def add_professor(request):
             return redirect('all_professors')
 
     if request.user.is_superuser:
-        template_name = 'professors/all-professors.html'
+        template_name = 'professors/add-professor.html'
     else:
         template_name = 'teachers/teachers-profile.html'
     return render(request, template_name, {'professor_form': professor_form})
