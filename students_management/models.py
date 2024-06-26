@@ -6,9 +6,13 @@ from django.urls import reverse
 
 
 class Branch(models.Model):
+    first_name_d = models.CharField(max_length=50)
+    last_name_d = models.CharField(max_length=50)
     name = models.CharField("Название филиала", max_length=255)
     address = models.CharField("Адрес", max_length=255)
     phone_number = models.CharField("Телефон", max_length=55)
+    logo_branch = models.ImageField(upload_to="logo", verbose_name='Лого филиала')
+    short_logo_branch = models.ImageField(upload_to="logo", verbose_name='Короткий логотип филиала')
     admin = models.ForeignKey(User, on_delete=models.CASCADE, related_name='admin_branches',
                               verbose_name="Админ филиала")
 
@@ -151,9 +155,16 @@ class Teacher(models.Model):
 
 
 class Group(models.Model):
+    DAYS_CHOICES = [
+        ('четные', 'Четные'),
+        ('нечетные', 'Нечетные')
+    ]
     name_group = models.CharField(max_length=45, verbose_name='Название группы')
     start_date = models.DateField(verbose_name='Дата начала группы', default=datetime.today)
     end_date = models.DateField(verbose_name='Дата завершения группы')
+    start_time = models.TimeField(default=datetime.today().time())
+    end_time = models.TimeField(default=datetime.today().time())
+    lesson_days = models.CharField(choices=DAYS_CHOICES, default='')
     teacher_id = models.ForeignKey(Teacher, on_delete=models.CASCADE, verbose_name='Преподаватель')
     audience_id = models.ForeignKey(Audience, on_delete=models.CASCADE, verbose_name='Аудитория')
     students_id = models.ManyToManyField(Student, related_name='students', verbose_name='Студенты', blank=True)

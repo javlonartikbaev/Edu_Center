@@ -62,10 +62,10 @@ w{% block categories %}
                             </ul>
                         </li>
                         <li>
-                            <a class="has-arrow" href="{% url 'all_groups' %}" aria-expanded="false"><span
-                                    class="educate-icon educate-course icon-wrap"></span> <span class="mini-click-non">Группы</span></a>
+                            <a class="has-arrow" href="{% url 'update_professor' professors.id %}" aria-expanded="false"><span
+                                    class="educate-icon educate-course icon-wrap"></span> <span class="mini-click-non">Профиль</span></a>
                             <ul class="submenu-angle" aria-expanded="false">
-                                <li><a title="All Courses" href="{% url 'all_groups' %}"><span
+                                <li><a title="All Courses" href="{% url 'update_professor' professors.id %}"><span
                                         class="mini-sub-pro">Профиль</span></a>
                                 </li>
 

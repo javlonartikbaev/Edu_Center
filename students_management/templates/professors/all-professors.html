@@ -80,12 +80,13 @@
     <div class="left-sidebar-pro">
         <nav id="sidebar" class="">
             <div class="sidebar-header">
-                <a href="{% url 'main_page' %}"><img class="main-logo" style="height:70px;width: 170px "
-                                                     src="{% static 'img/logo/Ico.png' %}"
-                                                     alt=""/></a>
-                <strong><a href="{% url 'main_page' %}"><img style="height:50px;width: 50px "
-                                                             src="{% static 'img/logo/logosn.png' %}"
-                                                             alt=""/></a></strong>
+
+                    <a href="{% url 'main_page' %}"><img class="main-logo" style="height:70px;width: 170px "
+                                                         src="{% static 'img/logo/Ico.png' %}"
+                                                         alt=""/></a>
+                    <strong><a href="{% url 'main_page' %}"><img style="height:50px;width: 50px "
+                                                                 src="{% static 'img/logo/logosn.png' %}"
+                                                                 alt=""/></a></strong>
             </div>
             <div class="left-custom-menu-adp-wrap comment-scrollbar">
                 <nav class="sidebar-nav left-sidebar-menu-pro">
@@ -233,10 +234,10 @@
                             <div class="col-lg-6 col-md-7 col-sm-6 col-xs-12">
 
                             </div>
-                            <div class="col-lg-5 col-md-5 col-sm-12 col-xs-12" >
+                            <div class="col-lg-5 col-md-5 col-sm-12 col-xs-12">
                                 <div class="header-right-info">
                                     <ul class="nav navbar-nav mai-top-nav header-right-menu">
-                                        <li class="nav-item dropdown" >
+                                        <li class="nav-item dropdown">
                                             <a href="#" data-toggle="dropdown" role="button" aria-expanded="false"
                                                class="nav-link dropdown-toggle"><i
                                                     class="educate-icon educate-message edu-chat-pro"
@@ -244,15 +245,15 @@
 
                                         </li>
                                         {% if user.is_authenticated %}
-                                            <li class="nav-item" >
+                                            <li class="nav-item">
                                                 <a href="#" data-toggle="dropdown" role="button" aria-expanded="false"
                                                    class="nav-link dropdown-toggle">
 
-                                                    <span class="admin-name" > {{ user.username }}</span>
+                                                    <span class="admin-name"> {{ user.username }}</span>
                                                     <i class="fa fa-angle-down edu-icon edu-down-arrow"></i>
                                                 </a>
                                                 <ul role="menu"
-                                                    class="dropdown-header-top author-log dropdown-menu animated zoomIn" >
+                                                    class="dropdown-header-top author-log dropdown-menu animated zoomIn">
                                                     <li><a href="{% url 'logOut' %}"><span
                                                             class="edu-icon edu-locked author-log-ic"></span>Log
                                                         Out</a>
@@ -432,7 +433,7 @@
                             <div class="hpanel hblue contact-panel contact-panel-cs responsive-mg-b-10">
                                 <div class="panel-body custom-panel-jw">
                                     <img alt="logo" class="img-circle m-b" style="width: 550px; height: 250px"
-                                         src="{{ MEDIA_URL }}{{professor.img_teacher.url }}">
+                                         src="{{ MEDIA_URL }}{{ professor.img_teacher.url }}">
                                     <h3>
                                         <a href="{{ professor.get_absolute_url }}">{{ professor.first_name }} {{ professor.last_name }}</a>
                                     </h3>

@@ -1,11 +1,13 @@
+from collections import defaultdict
 from datetime import timedelta
 
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
-from django.db.models import Max
+from django.db.models import Max, Count
 from django.db.models import Q
+from django.db.models.functions import ExtractYear, TruncMonth
 # Create your views here.
 from django.shortcuts import get_object_or_404
 from django.shortcuts import render, redirect
@@ -29,21 +31,19 @@ def get_professor(request):
                                                      Q(last_name__icontains=search_professor_name))
         else:
             found_professor = Teacher.objects.all()
-
         paginator = Paginator(found_professor, 10)
         page_number = request.GET.get("page")
         page_obj = paginator.get_page(page_number)
         current_year = datetime.today().year
-        data = {'search': search, 'professor': page_obj, 'current_year': current_year, 'user': request.user}
+        data = {'search': search, 'professor': page_obj, 'current_year': current_year, 'user': request.user,
+                }
     else:
         professor = Teacher.objects.all()
         paginator = Paginator(professor, 10)
-
         page_number = request.GET.get("page")
         page_obj = paginator.get_page(page_number)
         current_year = datetime.today().year
         data = {'search': search, 'professor': page_obj, 'current_year': current_year, 'user': request.user}
-
     return render(request, 'professors/all-professors.html', data)
 
 
@@ -85,14 +85,17 @@ def update_professor(request, id_professor):
 @login_required
 def add_professor(request):
     if not request.user.is_superuser:
-        messages.error(request, 'У вас нет прав доступа.')
-        return redirect(
-            'main_page')
+        branch = request.user.admin_branches.first()
+        if not branch:
+            messages.error(request, 'У вас нет прав доступа.')
+            return redirect('main_page')
     professor_form = TeacherForm()
     if request.method == 'POST':
         professor_form = TeacherForm(request.POST, request.FILES)
         if professor_form.is_valid():
             professor = professor_form.save(commit=False)
+            if not request.user.is_superuser:
+                professor.branch = branch  # Назначаем филиал текущего пользователя
             professor.save()
             return redirect('all_professors')
 
@@ -367,7 +370,6 @@ def delete_students(request, id_student):
 
 @login_required()
 def profile_students(request, id_student):
-
     student = get_object_or_404(Student, id=id_student)
     payments = Payment.objects.filter(student_id=student)
 
@@ -480,8 +482,9 @@ def all_groups(request):
         return render(request, 'groups/all-groups.html', data)
 
     if req_user:
+        professors = Teacher.objects.all()
         groups = Group.objects.filter(teacher_id=req_user.id)
-        data = {'groups': groups, 'current_year': current_year}
+        data = {'groups': groups, 'current_year': current_year, 'professors': professors}
         return render(request, 'teachers-group/teachers_group.html', data)
 
     data = {"current_year": current_year}
@@ -768,10 +771,14 @@ def delete_archived_students_bulk(request):
 
 @login_required()
 def main_page(request):
+    paid_students = Student.objects.filter(paid_check='Оплатил').count()
+    no_paid_students = Student.objects.filter(paid_check='Не оплатил').count()
+    other_students = Student.objects.filter(paid_check=None).count()
+
     if not request.user.is_superuser:
         messages.error(request, 'У вас нет прав доступа.')
-        return redirect(
-            'all_groups')
+        return redirect('all_groups')
+
     groups = Group.objects.all()
     group_data = []
 
@@ -780,14 +787,38 @@ def main_page(request):
         group_data.append({
             'group': group,
             'students_count': students_count,
-            'course': group.course_id
+            'course': group.course_id,
         })
+
+    years = Student.objects.annotate(year=ExtractYear('joined_date')).values_list('year',
+                                                                                  flat=True).distinct().order_by('year')
+
+    current_year = request.GET.get('year', None)
+    if current_year:
+        students_per_month = Student.objects.filter(joined_date__year=current_year).annotate(
+            month=TruncMonth('joined_date')).values('month').annotate(count=Count('id')).order_by('month')
+    else:
+        students_per_month = Student.objects.annotate(month=TruncMonth('joined_date')).values('month').annotate(
+            count=Count('id')).order_by('month')
+
+    month_data = defaultdict(lambda: 0)
+    for item in students_per_month:
+        month_data[item['month'].strftime('%B')] = item['count']
+
+    all_months = [datetime.strptime(str(month), "%m").strftime("%B") for month in range(1, 13)]
+    students_per_month_full = [(month, month_data[month]) for month in all_months]
+
 
     data = {
         'group_data': group_data,
         'total_groups': groups.count(),
         'total_students': Student.objects.count(),
-
+        'paid_students': paid_students,
+        'no_paid_students': no_paid_students,
+        'other_students': other_students,
+        'students_per_month': students_per_month_full,
+        'years': years,
+        'current_year': current_year,
     }
 
     return render(request, 'base.html', data)

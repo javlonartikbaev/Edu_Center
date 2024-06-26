@@ -81,12 +81,16 @@ class AudienceForm(forms.ModelForm):
 class GroupForm(forms.ModelForm):
     class Meta:
         model = Group
-        fields = ['name_group', 'start_date', 'end_date', 'teacher_id', 'audience_id', 'status_group',
+        fields = ['name_group', 'start_date', 'end_date', 'start_time', 'end_time', 'lesson_days', 'teacher_id',
+                  'audience_id', 'status_group',
                   'branch', 'course_id']
         widgets = {
             'name_group': forms.TextInput(attrs={'class': 'form-control'}),
             'start_date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
             'end_date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'lesson_days': forms.Select(attrs={'class': 'form-control'}),
+            'start_time': forms.TimeInput(attrs={'type': 'time', 'class': 'form-control'}),
+            'end_time': forms.TimeInput(attrs={'type': 'time', 'class': 'form-control'}),
             'teacher_id': forms.Select(attrs={'class': 'form-control'}),
             'audience_id': forms.Select(attrs={'class': 'form-control'}),
             'status_group': forms.Select(attrs={'class': 'form-control'}),
@@ -101,12 +105,9 @@ class AttendanceForm(forms.ModelForm):
         fields = ['date_attendance', 'attendance_status']
 
 
-
 class CommentForm(forms.Form):
     comment = forms.CharField(
         label='Комментарий',
         widget=forms.Textarea(attrs={'rows': 4, 'class': "form-control", 'placeholder': 'Причина удаления ...'}),
         required=False
     )
-
-
