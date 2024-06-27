@@ -1,8 +1,7 @@
 {% extends 'professors/all-professors.html' %}
 {% load static %}
 
-w{% block categories %}
-
+{% block categories %}
     <!-- Mobile Menu start -->
     <div class="mobile-menu-area">
         <div class="container">
@@ -16,15 +15,27 @@ w{% block categories %}
                                             class="educate-icon educate-course icon-wrap"></span> <span
                                             class="mini-click-non">Группы</span></a>
                                     <ul class="submenu-angle" aria-expanded="false">
-                                        <li><a title="All Courses" href="#"><span
-                                                class="mini-sub-pro">Все Группы</span></a>
+                                        <li><a title="All Courses" href="#"><span class="mini-sub-pro">Все Группы</span></a>
                                         </li>
-
-                                        <!-- <li><a title="course Payment" href="course-payment.html"><span class="mini-sub-pro">Courses Payment</span></a></li> -->
                                     </ul>
-
                                 </li>
+                                <li>
 
+
+                                    <a class="has-arrow" href="{{ professor.get_absolute_url }}"
+                                       aria-expanded="false"><span
+                                            class="educate-icon educate-course icon-wrap"></span>
+                                        <span
+                                                class="mini-click-non">Профиль</span></a>
+                                    {% for professor in professors %}
+                                        <ul class="submenu-angle" aria-expanded="false">
+                                            <li><a title="All Courses"
+                                                   href="{{ professor.get_absolute_url }}"><span
+                                                    class="mini-sub-pro">{{ professor.first_name }} {{ professor.last_name }}</span></a>
+                                            </li>
+                                        </ul>
+                                    {% endfor %}
+                                </li>
                             </ul>
                         </nav>
                     </div>
@@ -33,19 +44,16 @@ w{% block categories %}
         </div>
     </div>
 {% endblock %}
-{#{% block welcome_area %}#}
-{#{% endblock %}#}
-{% block Left_Menu %}
 
+{% block Left_Menu %}
     <div class="left-sidebar-pro">
         <nav id="sidebar" class="">
             <div class="sidebar-header">
-                <a href="{% url 'main_page' %}"><img class="main-logo" style="height:70px;width: 170px "
-                                                     src="{% static 'img/logo/Ico.png' %}"
-                                                     alt=""/></a>
-                <strong><a href="{% url 'main_page' %}"><img style="height:50px;width: 50px "
-                                                             src="{% static 'img/logo/logosn.png' %}"
-                                                             alt=""/></a></strong>
+                <a href="{% url 'all_groups' %}"><img class="main-logo" style="height:70px;width: 170px "
+                                                      src="{% static 'img/logo/Ico.png' %}" alt=""/></a>
+                <strong><a href="{% url 'all_groups' %}"><img style="height:50px;width: 50px "
+                                                              src="{% static 'img/logo/logosn.png' %}"
+                                                              alt=""/></a></strong>
             </div>
             <div class="left-custom-menu-adp-wrap comment-scrollbar">
                 <nav class="sidebar-nav left-sidebar-menu-pro">
@@ -54,23 +62,27 @@ w{% block categories %}
                             <a class="has-arrow" href="{% url 'all_groups' %}" aria-expanded="false"><span
                                     class="educate-icon educate-course icon-wrap"></span> <span class="mini-click-non">Группы</span></a>
                             <ul class="submenu-angle" aria-expanded="false">
-                                <li><a title="All Courses" href="{% url 'all_groups' %}"><span
-                                        class="mini-sub-pro">Все Группы</span></a>
+                                <li><a title="All Courses" href="{% url 'all_groups' %}"><span class="mini-sub-pro">Все Группы</span></a>
                                 </li>
-
-                                <!-- <li><a title="course Payment" href="course-payment.html"><span class="mini-sub-pro">Courses Payment</span></a></li> -->
                             </ul>
                         </li>
                         <li>
-                            <a class="has-arrow" href="{% url 'update_professor' professors.id %}" aria-expanded="false"><span
-                                    class="educate-icon educate-course icon-wrap"></span> <span class="mini-click-non">Профиль</span></a>
-                            <ul class="submenu-angle" aria-expanded="false">
-                                <li><a title="All Courses" href="{% url 'update_professor' professors.id %}"><span
-                                        class="mini-sub-pro">Профиль</span></a>
-                                </li>
 
-                                <!-- <li><a title="course Payment" href="course-payment.html"><span class="mini-sub-pro">Courses Payment</span></a></li> -->
-                            </ul>
+
+                            <a class="has-arrow" href="{{ professor.get_absolute_url }}"
+                               aria-expanded="false"><span class="educate-icon educate-course icon-wrap"></span>
+                                <span
+                                        class="mini-click-non">Профиль</span></a>
+                            {% for professor in professors %}
+                                <ul class="submenu-angle" aria-expanded="false">
+                                    <li><a title="All Courses"
+                                           href="{{ professor.get_absolute_url }}"><span
+                                            class="mini-sub-pro">{{ professor.first_name }} {{ professor.last_name }}</span></a>
+                                    </li>
+                                </ul>
+
+                            {% endfor %}
+
                         </li>
                     </ul>
                 </nav>
@@ -78,10 +90,9 @@ w{% block categories %}
         </nav>
     </div>
 {% endblock %}
+
 {% block menu_center %}
 {% endblock %}
-
-
 
 {% block content %}
     <div class="container-fluid" style="margin-top: 30px">
@@ -117,8 +128,8 @@ w{% block categories %}
                             <tbody>
                             {% for group in groups %}
                                 <tr>
-                                    <td><a href="{% url 'info_group'  group.id %}" style="color: #0a6aa1">
-                                        {{ group.name_group }}</a></td>
+                                    <td><a href="{% url 'info_group' group.id %}"
+                                           style="color: #0a6aa1">{{ group.name_group }}</a></td>
                                     <td>{{ group.start_date }}</td>
                                     <td>{{ group.end_date }}</td>
                                     <td>{{ group.teacher_id.first_name }} {{ group.teacher_id.last_name }}</td>
@@ -127,13 +138,10 @@ w{% block categories %}
                                     <td>{{ group.status_group.name_status }}</td>
                                     <td>{{ group.branch.name }}</td>
                                     <td>
-
-                                        <a href="{% url 'mark_attendance'  group.id %}" style="color: #0a6aa1">
-                                            <img
-                                                    src="{% static 'img/free-icon-attendance-16612795.png' %}"
-                                                    style="width: 30px; height: 30px;">
+                                        <a href="{% url 'mark_attendance' group.id %}" style="color: #0a6aa1">
+                                            <img src="{% static 'img/free-icon-attendance-16612795.png' %}"
+                                                 style="width: 30px; height: 30px;">
                                         </a>
-
                                     </td>
                                 </tr>
                             {% endfor %}

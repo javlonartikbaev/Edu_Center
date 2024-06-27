@@ -15,6 +15,17 @@ class TeacherForm(forms.ModelForm):
             'course': forms.Select(attrs={'class': 'form-control'}),
         }
 
+class TeacherUpdateForm(forms.ModelForm):
+    class Meta:
+        model = Teacher
+        fields = ['first_name', 'last_name', 'phone_number', 'img_teacher', 'course', 'branch']
+        widgets = {
+            'first_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'last_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'phone_number': forms.TextInput(attrs={'class': 'form-control'}),
+            'img_teacher': forms.ClearableFileInput(attrs={'class': 'form-control-file'}),
+            'course': forms.Select(attrs={'class': 'form-control'}),
+        }
 
 class SearchForm(forms.Form):
     search_input = forms.CharField(

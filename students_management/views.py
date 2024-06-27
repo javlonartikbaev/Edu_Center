@@ -53,6 +53,10 @@ def delete_professor(request, id_professor):
         messages.error(request, 'У вас нет прав доступа.')
         return redirect(
             'main_page')
+    if not request.user.is_superuser:
+        messages.error(request, 'У вас нет прав доступа.')
+        return redirect(
+            'main_page')
 
     professor = get_object_or_404(Teacher, id=id_professor)
     current_year = datetime.today().year
@@ -63,24 +67,31 @@ def delete_professor(request, id_professor):
     return render(request, 'professors/delete-professor.html', data)
 
 
+
 @login_required
 def update_professor(request, id_professor):
-    if not request.user.is_superuser:
-        messages.error(request, 'У вас нет прав доступа.')
-        return redirect(
-            'main_page')
     professor = get_object_or_404(Teacher, pk=id_professor)
     current_year = datetime.today().year
+
+    if not request.user.is_superuser and professor.user != request.user:
+        return redirect('all_groups')
+
     if request.method == 'POST':
-        form = TeacherForm(request.POST, instance=professor)
+        form = TeacherUpdateForm(request.POST, instance=professor)
         if form.is_valid():
             form.save()
             return redirect('all_professors')
     else:
-        form = TeacherForm(instance=professor)
-    data = {"form": form, "current_year": current_year}
-    return render(request, 'professors/edit-professor.html', data)
+        form = TeacherUpdateForm(instance=professor)
 
+    data = {"form": form, "current_year": current_year, 'professor': professor}
+
+    if request.user.is_superuser:
+        template_name = 'professors/edit-professor.html'
+    else:
+        template_name = 'teachers-group/teachers-profile.html'
+
+    return render(request, template_name, data)
 
 @login_required
 def add_professor(request):
@@ -807,7 +818,6 @@ def main_page(request):
 
     all_months = [datetime.strptime(str(month), "%m").strftime("%B") for month in range(1, 13)]
     students_per_month_full = [(month, month_data[month]) for month in all_months]
-
 
     data = {
         'group_data': group_data,
