@@ -537,11 +537,13 @@ def update_group(request, id_group):
                 messages.error(request, group_form.errors)
         else:
             group_form = GroupForm(instance=group)
+        students_in_group = group.students_id.all()
     else:
         messages.error(request, 'У вас нет прав')
         return redirect('all_groups')
 
-    data = {"group_form": group_form, 'current_year': current_year, 'messages': messages}
+    data = {"group_form": group_form, 'current_year': current_year, 'messages': messages,
+            'students_in_group': students_in_group}
     return render(request, 'groups/edit-groups.html', data)
 
 
@@ -595,6 +597,7 @@ def delete_group(request, id_group):
 
     data = {"group": group, 'comment_form': comment_form}
     return render(request, 'groups/delete-groups.html', data)
+
 
 @login_required
 def mark_attendance(request, group_id):
@@ -676,7 +679,6 @@ def process_payment(request, student_id):
     student = get_object_or_404(Student, id=student_id)
     payments = Payment.objects.filter(student_id=student_id).order_by('-date_pay')
 
-
     group = Group.objects.filter(students_id=student).first()
     if not group:
         messages.error(request, 'Студент не зарегистрирован ни в одной группе.')
@@ -741,9 +743,7 @@ def delete_selected_students(request):
                     branch=student.branch
                 )
 
-
                 payments_to_archive = Payment.objects.filter(student_id=student.id)
-
 
                 print(payments_to_archive)
                 for payment in payments_to_archive:
@@ -758,7 +758,6 @@ def delete_selected_students(request):
                     )
 
                 payments_to_archive.delete()
-
 
                 student.delete()
 
@@ -1013,6 +1012,3 @@ def login_page(request):
             login(request, user)
             return redirect('main_page')
     return render(request, 'login/logIn.html')
-
-
-
