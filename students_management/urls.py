@@ -51,7 +51,7 @@ urlpatterns = [
     path('add-students-to-group/<int:group_id>', views.add_students, name='add_students_to_group'),
 
     path('group/<int:group_id>/mark-attendance/', views.mark_attendance, name='mark_attendance'),
-    path('delete-archived-students/', views.delete_archived_students_bulk, name='delete_archived_students_bulk'),
+    path('delete-archived-students/', views.delete_archived_students, name='delete_archived_students_bulk'),
     path('delete-archived-group/<int:id_archived_group>/', views.delete_archived_group, name='delete_archived_group'),
 
     path('archived-groups/', views.archived_groups, name='archived_groups'),

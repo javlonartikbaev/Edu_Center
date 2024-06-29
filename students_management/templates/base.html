@@ -75,6 +75,7 @@
         }
     </style>
     <script src="https://www.google.com/jsapi"></script>
+
     <script>
         google.load("visualization", "1", {packages: ["corechart"]});
         google.setOnLoadCallback(drawChart);
@@ -96,7 +97,26 @@
             chart.draw(data, options);
         }
     </script>
+    <script>
+        google.load("visualization", "1", {packages: ["corechart"]});
+        google.setOnLoadCallback(drawChart);
 
+        function drawChart() {
+            var data = google.visualization.arrayToDataTable([
+                ['Статус учебы', 'Количество студентов'],
+                ['Успешно окончили кус', {{ completed_the_course }}],
+                ['Бросили обучение', {{ dropped_lesson }}],
+            ]);
+
+            var options = {
+                title: 'Все студенты',
+                is3D: true,
+                pieResidueSliceLabel: 'Остальное'
+            };
+            var chart = new google.visualization.PieChart(document.getElementById('archived_students'));
+            chart.draw(data, options);
+        }
+    </script>
 
     <script>
         google.load("visualization", "1", {packages: ["corechart"]});
@@ -134,7 +154,12 @@
                             </button>
                         </form>
                         <div class="row">
-                            <div id="students" style="width: 500px; height: 400px;"></div>
+                            <div class="container" style="display: flex">
+                                <div id="students" class="side-by-side"
+                                     style="width: 500px; height: 400px; "></div>
+                                <div id="archived_students" class="side-by-side"
+                                     style="width: 500px; height: 400px;"></div>
+                            </div>
                             <div>
                                 <form method="get">
                                     <label for="year">Выберите год:</label>
@@ -146,6 +171,7 @@
                                         {% endfor %}
                                     </select>
                                 </form>
+
                             </div>
 
                             <div id="students_per_month" style="width: 100%; height: 500px;"></div>

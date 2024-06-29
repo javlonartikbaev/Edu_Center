@@ -8,6 +8,7 @@ from django.core.paginator import Paginator
 from django.db.models import Max, Count
 from django.db.models import Q
 from django.db.models.functions import ExtractYear, TruncMonth
+from django.http import HttpResponseBadRequest
 # Create your views here.
 from django.shortcuts import get_object_or_404
 from django.shortcuts import render, redirect
@@ -67,7 +68,6 @@ def delete_professor(request, id_professor):
     return render(request, 'professors/delete-professor.html', data)
 
 
-
 @login_required
 def update_professor(request, id_professor):
     professor = get_object_or_404(Teacher, pk=id_professor)
@@ -92,6 +92,7 @@ def update_professor(request, id_professor):
         template_name = 'teachers-group/teachers-profile.html'
 
     return render(request, template_name, data)
+
 
 @login_required
 def add_professor(request):
@@ -305,8 +306,8 @@ def all_students(request):
         else:
             student.paid_check = "Не оплатил"
         student.save()
-
-    data = {'search': search, 'student': page_obj, 'current_year': current_year}
+    groups = Group.objects.all()
+    data = {'search': search, 'student': page_obj, 'current_year': current_year, 'groups': groups}
     return render(request, 'students/all-students.html', data)
 
 
@@ -548,14 +549,16 @@ def update_group(request, id_group):
 def delete_group(request, id_group):
     if not request.user.is_superuser:
         messages.error(request, 'У вас нет прав доступа.')
-        return redirect(
-            'main_page')
+        return redirect('main_page')
+
     group = get_object_or_404(Group, pk=id_group)
 
     if request.method == 'POST':
         comment = request.POST.get('comment', '')
-        status_instance = get_object_or_404(Status, id=2)
 
+        status_instance = get_object_or_404(Status, name_status='Курс окончен')
+
+        # Create the archived group
         archived_group = ArchivedGroup.objects.create(
             name_group=group.name_group,
             start_date=group.start_date,
@@ -568,6 +571,20 @@ def delete_group(request, id_group):
             comments=comment,
         )
 
+        # Archive the students
+        for student in group.students_id.all():
+            ArchivedStudent.objects.create(
+                first_name_s=student.first_name_s,
+                last_name_s=student.last_name_s,
+                phone_number_s=student.phone_number_s,
+                paid_check=student.paid_check,
+                parents_phone_number=student.parents_phone_number,
+                joined_date=student.joined_date,
+                comments="окончил(а) курс",
+                branch=student.branch,
+            )
+            student.delete()
+
         archived_group.students_id.set(group.students_id.all())
         group.students_id.clear()
         group.delete()
@@ -576,9 +593,8 @@ def delete_group(request, id_group):
 
     comment_form = CommentForm()
 
-    data = {"group": group, 'comment_form': comment_form, }
+    data = {"group": group, 'comment_form': comment_form}
     return render(request, 'groups/delete-groups.html', data)
-
 
 @login_required
 def mark_attendance(request, group_id):
@@ -655,29 +671,35 @@ def info_group(request, id_group):
 def process_payment(request, student_id):
     if not request.user.is_superuser:
         messages.error(request, 'У вас нет прав доступа.')
-        return redirect(
-            'main_page')
+        return redirect('main_page')
+
     student = get_object_or_404(Student, id=student_id)
     payments = Payment.objects.filter(student_id=student_id).order_by('-date_pay')
-    courses = Course.objects.all()
-    course_prices = {course.id: course.price_course for course in courses}
+
+
+    group = Group.objects.filter(students_id=student).first()
+    if not group:
+        messages.error(request, 'Студент не зарегистрирован ни в одной группе.')
+        return redirect('main_page')
+
+    course = group.course_id
+    course_price = course.price_course
 
     if request.method == 'POST':
         form = PaymentForm(request.POST)
         if form.is_valid():
             payment = form.save(commit=False)
             payment.student_id = student
-            payment.price = course_prices[int(form.cleaned_data['course_id'].id)]
+            payment.course_id = course
+            payment.price = course_price
             payment.save()
 
             student.paid_check = 'Оплатил'
-
             if not payments.exists():
                 student.save()
             else:
                 last_payment_date = payments.first().date_pay
                 next_month_date = datetime.now().replace(day=1) + timedelta(days=32 - datetime.now().day)
-
                 if last_payment_date == next_month_date:
                     student.paid_check = 'Не оплатил'
                     student.save()
@@ -690,7 +712,7 @@ def process_payment(request, student_id):
         'student': student,
         'form': form,
         'payments': payments,
-        'course_prices': course_prices
+        'course_price': course_price,
     }
     return render(request, 'students/payment.html', data)
 
@@ -699,35 +721,55 @@ def process_payment(request, student_id):
 def delete_selected_students(request):
     if not request.user.is_superuser:
         messages.error(request, 'У вас нет прав доступа.')
-        return redirect(
-            'main_page')
-    selected_students = request.POST.getlist('selected_students')
-    comments = request.POST.get('comments', '')
-    if selected_students:
-        students_to_archive = Student.objects.filter(id__in=selected_students)
-        for student in students_to_archive:
-            archived_student = ArchivedStudent.objects.create(
-                original_id=student.id,
-                first_name_s=student.first_name_s,
-                last_name_s=student.last_name_s,
-                phone_number_s=student.phone_number_s,
-                parents_phone_number=student.parents_phone_number,
-                paid_check=student.paid_check,
-                joined_date=student.joined_date,
-                comments=comments,
-                branch=student.branch
-            )
-            payments_to_archive = Payment.objects.filter(student_id=student)
-            for payment in payments_to_archive:
-                ArchivedPayment.objects.create(
-                    student=archived_student,
-                    method_pay=payment.method_pay,
-                    date_pay=payment.date_pay,
-                    price=payment.price,
-                    branch=payment.branch
+        return redirect('main_page')
+
+    if request.method == 'POST':
+        selected_students = request.POST.getlist('selected_students')
+        comments = request.POST.get('comments', '')
+        for student_id in selected_students:
+            try:
+                student = Student.objects.get(id=student_id)
+
+                archived_student = ArchivedStudent.objects.create(
+                    first_name_s=student.first_name_s,
+                    last_name_s=student.last_name_s,
+                    phone_number_s=student.phone_number_s,
+                    parents_phone_number=student.parents_phone_number,
+                    paid_check=student.paid_check,
+                    joined_date=student.joined_date,
+                    comments=comments,
+                    branch=student.branch
                 )
+
+
+                payments_to_archive = Payment.objects.filter(student_id=student.id)
+
+
+                print(payments_to_archive)
+                for payment in payments_to_archive:
+                    ArchivedPayment.objects.create(
+                        student_id=student,
+                        method_pay=payment.method_pay,
+                        date_pay=payment.date_pay,
+                        price=payment.price,
+                        branch=payment.branch,
+                        course=payment.course_id,
+
+                    )
+
+                payments_to_archive.delete()
+
+
                 student.delete()
+
+
+            except Student.DoesNotExist:
+                messages.error(request, f'Студент с ID {student_id} не найден.')
+
         return redirect('all_students')
+
+    else:
+        return HttpResponseBadRequest('Метод запроса должен быть POST.')
 
 
 @login_required()
@@ -751,7 +793,7 @@ def restore_student(request, student_id):
         messages.error(request, 'У вас нет прав доступа.')
         return redirect(
             'main_page')
-    archived_student = get_object_or_404(ArchivedStudent, original_id=student_id)
+    archived_student = get_object_or_404(ArchivedStudent, pk=student_id)
 
     Student.objects.create(
         first_name_s=archived_student.first_name_s,
@@ -768,20 +810,22 @@ def restore_student(request, student_id):
 
 
 @login_required()
-def delete_archived_students_bulk(request):
+def delete_archived_students(request):
     if not request.user.is_superuser:
         messages.error(request, 'У вас нет прав доступа.')
         return redirect(
             'main_page')
     student_ids = request.POST.getlist('students_to_delete')
     for student_id in student_ids:
-        archived_student = get_object_or_404(ArchivedStudent, original_id=student_id)
+        archived_student = get_object_or_404(ArchivedStudent, id=student_id)
         archived_student.delete()
     return redirect('archived_students')
 
 
 @login_required()
 def main_page(request):
+    completed_the_course = ArchivedStudent.objects.filter(comments='окончил(а) курс').count()
+    dropped_lesson = ArchivedStudent.objects.filter(comments='прекратил(а) обучение').count()
     paid_students = Student.objects.filter(paid_check='Оплатил').count()
     no_paid_students = Student.objects.filter(paid_check='Не оплатил').count()
     other_students = Student.objects.filter(paid_check=None).count()
@@ -829,6 +873,9 @@ def main_page(request):
         'students_per_month': students_per_month_full,
         'years': years,
         'current_year': current_year,
+        'completed_the_course': completed_the_course,
+        'dropped_lesson': dropped_lesson,
+        'archived_students': ArchivedStudent.objects.count()
     }
 
     return render(request, 'base.html', data)
@@ -863,7 +910,7 @@ def restore_group(request, group_id):
         return redirect(
             'main_page')
     archived_group = get_object_or_404(ArchivedGroup, pk=group_id)
-    status_instance = get_object_or_404(Status, id=2)
+    status_instance = get_object_or_404(Status, name_status='Курс окончен')
 
     instance_teacher = get_object_or_404(Teacher, id=archived_group.teacher_id.id)
     instance_audience = get_object_or_404(Audience, id=archived_group.audience_id.id)
@@ -937,9 +984,7 @@ def restore_payment(request, archived_payment_id):
         branch=archived_payment.branch,
         course_id=archived_payment.course
     )
-
     archived_payment.delete()
-
     return redirect('all_students')
 
 
@@ -954,13 +999,10 @@ def login_page(request):
     if request.method == "POST":
         username = request.POST.get('username')
         password = request.POST.get('password')
-
         if not User.objects.filter(username=username).exists():
             messages.error(request, 'Invalid Username')
             return redirect('/login/')
-
         user = authenticate(username=username, password=password)
-
         if user is None:
             messages.error(request, "Invalid Password")
             return redirect('login_page')
@@ -970,5 +1012,7 @@ def login_page(request):
         else:
             login(request, user)
             return redirect('main_page')
-
     return render(request, 'login/logIn.html')
+
+
+

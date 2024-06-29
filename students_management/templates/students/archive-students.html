@@ -31,7 +31,7 @@
                                     <tr>
                                         <td>
                                             <input type="checkbox" name="students_to_delete"
-                                                   value="{{ student.original_id }}">
+                                                   value="{{ student.id }}">
                                         </td>
                                         <td>{{ student.first_name_s }}</td>
                                         <td>{{ student.last_name_s }}</td>
@@ -41,7 +41,7 @@
                                         <td>{{ student.archived_date }}</td>
                                         <td>{{ student.comments }}</td>
                                         <td>
-                                            <a href="{% url 'restore_student' student.original_id %}"
+                                            <a href="{% url 'restore_student' student.id %}"
                                                class="btn btn-success">
                                                 Восстановить
                                             </a>

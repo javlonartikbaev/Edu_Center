@@ -213,7 +213,7 @@ class ArchivedStudent(models.Model):
         ("прекратил(а) обучение", "Прекратил(а) обучение"),
     ]
 
-    original_id = models.IntegerField()
+
     first_name_s = models.CharField("Имя", max_length=55)
     last_name_s = models.CharField("Фамилия", max_length=55)
     phone_number_s = models.CharField("Телефон", max_length=55)

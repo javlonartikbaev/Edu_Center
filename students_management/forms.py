@@ -74,10 +74,10 @@ class StudentForm(forms.ModelForm):
 class PaymentForm(forms.ModelForm):
     class Meta:
         model = Payment
-        fields = ['method_pay', 'date_pay', 'course_id', 'branch']
+        fields = ['method_pay', 'date_pay', 'branch']
         widgets = {
             'date_pay': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
-            'course_id': forms.Select(attrs={'class': 'form-control', }),
+            #'course_id': forms.Select(attrs={'class': 'form-control', }),
             'branch': forms.Select(attrs={'class': 'form-control'}),
             'method_pay': forms.Select(attrs={'class': 'form-control'}),
         }

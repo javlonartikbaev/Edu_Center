@@ -18,6 +18,7 @@
                                 <th>Дата начала</th>
                                 <th>Дата окончания</th>
                                 <th>Преподаватель</th>
+                                <th>Курс</th>
                                 <th>Аудитория</th>
                                 <th>Количество студентов</th>
                                 <th>Статус</th>
@@ -33,6 +34,7 @@
                                     <td>{{ group.start_date }}</td>
                                     <td>{{ group.end_date }}</td>
                                     <td>{{ group.teacher_id.first_name }} {{ group.teacher_id.last_name }}</td>
+                                    <td>{{ group.course_id }}</td>
                                     <td>{{ group.audience_id.number_audience }}</td>
                                     <td>{{ group.students_id.count }}</td>
                                     <td>{{ group.status_group.name_status }}</td>
