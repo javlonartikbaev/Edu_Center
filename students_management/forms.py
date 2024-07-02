@@ -6,7 +6,7 @@ from .models import *
 class TeacherForm(forms.ModelForm):
     class Meta:
         model = Teacher
-        fields = ['first_name', 'last_name', 'phone_number', 'img_teacher', 'course', 'branch', 'user']
+        fields = ['first_name', 'last_name', 'phone_number', 'img_teacher', 'course', 'user']
         widgets = {
             'first_name': forms.TextInput(attrs={'class': 'form-control'}),
             'last_name': forms.TextInput(attrs={'class': 'form-control'}),
@@ -15,10 +15,11 @@ class TeacherForm(forms.ModelForm):
             'course': forms.Select(attrs={'class': 'form-control'}),
         }
 
+
 class TeacherUpdateForm(forms.ModelForm):
     class Meta:
         model = Teacher
-        fields = ['first_name', 'last_name', 'phone_number', 'img_teacher', 'course', 'branch']
+        fields = ['first_name', 'last_name', 'phone_number', 'img_teacher', 'course', ]
         widgets = {
             'first_name': forms.TextInput(attrs={'class': 'form-control'}),
             'last_name': forms.TextInput(attrs={'class': 'form-control'}),
@@ -26,6 +27,7 @@ class TeacherUpdateForm(forms.ModelForm):
             'img_teacher': forms.ClearableFileInput(attrs={'class': 'form-control-file'}),
             'course': forms.Select(attrs={'class': 'form-control'}),
         }
+
 
 class SearchForm(forms.Form):
     search_input = forms.CharField(
@@ -38,7 +40,7 @@ class SearchForm(forms.Form):
 class CourseForm(forms.ModelForm):
     class Meta:
         model = Course
-        fields = ['name_course', 'price_course', 'duration', 'img_course', 'branch']
+        fields = ['name_course', 'price_course', 'duration', 'img_course', ]
         widgets = {
             'name_course': forms.TextInput(attrs={'class': 'form-control'}),
             'price_course': forms.TextInput(attrs={'class': 'form-control'}),
@@ -61,24 +63,24 @@ class StatusForm(forms.ModelForm):
 class StudentForm(forms.ModelForm):
     class Meta:
         model = Student
-        exclude = ['paid_check', 'joined_date']
+        exclude = ['paid_check', 'joined_date', 'branch']
         widgets = {
             'first_name_s': forms.TextInput(attrs={'class': 'form-control'}),
             'last_name_s': forms.TextInput(attrs={'class': 'form-control'}),
             'phone_number_s': forms.TextInput(attrs={'class': 'form-control'}),
             'parents_phone_number': forms.TextInput(attrs={'class': 'form-control'}),
-            'branch': forms.Select(attrs={'class': 'form-control'}),
+
         }
 
 
 class PaymentForm(forms.ModelForm):
     class Meta:
         model = Payment
-        fields = ['method_pay', 'date_pay', 'branch']
+        fields = ['method_pay', 'date_pay', ]
         widgets = {
             'date_pay': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
-            #'course_id': forms.Select(attrs={'class': 'form-control', }),
-            'branch': forms.Select(attrs={'class': 'form-control'}),
+            # 'course_id': forms.Select(attrs={'class': 'form-control', }),
+
             'method_pay': forms.Select(attrs={'class': 'form-control'}),
         }
 
@@ -86,7 +88,7 @@ class PaymentForm(forms.ModelForm):
 class AudienceForm(forms.ModelForm):
     class Meta:
         model = Audience
-        fields = ['number_audience', 'capacity', 'branch']
+        fields = ['number_audience', 'capacity', ]
 
 
 class GroupForm(forms.ModelForm):
@@ -94,7 +96,7 @@ class GroupForm(forms.ModelForm):
         model = Group
         fields = ['name_group', 'start_date', 'end_date', 'start_time', 'end_time', 'lesson_days', 'teacher_id',
                   'audience_id', 'status_group',
-                  'branch', 'course_id']
+                  'course_id']
         widgets = {
             'name_group': forms.TextInput(attrs={'class': 'form-control'}),
             'start_date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
@@ -105,9 +107,31 @@ class GroupForm(forms.ModelForm):
             'teacher_id': forms.Select(attrs={'class': 'form-control'}),
             'audience_id': forms.Select(attrs={'class': 'form-control'}),
             'status_group': forms.Select(attrs={'class': 'form-control'}),
-            'branch': forms.Select(attrs={'class': 'form-control'}),
+
             'course_id': forms.Select(attrs={'class': 'form-control'}),
         }
+
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user')
+        super(GroupForm, self).__init__(*args, **kwargs)
+        if user.is_superuser:
+            branch = user.admin_branches.first()
+            if branch:
+                self.fields['course_id'].queryset = Course.objects.filter(branch_id=branch.id)
+                self.fields['teacher_id'].queryset = Teacher.objects.filter(branch_id=branch.id)
+                self.fields['audience_id'].queryset = Audience.objects.filter(branch_id=branch.id)
+            else:
+                self.fields['course_id'].queryset = Course.objects.none()
+                self.fields['teacher_id'].queryset = Teacher.objects.none()
+                self.fields['audience_id'].queryset = Audience.objects.none()
+        else:
+            self.fields['course_id'].queryset = Course.objects.all()
+            self.fields['teacher_id'].queryset = Teacher.objects.all()
+            self.fields['audience_id'].queryset = Audience.objects.all()
+
+
+
+
 
 
 class AttendanceForm(forms.ModelForm):

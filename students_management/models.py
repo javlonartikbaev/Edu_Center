@@ -1,8 +1,10 @@
 from datetime import datetime
 
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, AbstractUser
 from django.db import models
 from django.urls import reverse
+
+
 
 
 class Branch(models.Model):
@@ -24,6 +26,9 @@ class Branch(models.Model):
 
     def __str__(self):
         return self.name
+
+    def is_admin(self):
+        return self.admin
 
 
 # Create your models here.
@@ -212,7 +217,6 @@ class ArchivedStudent(models.Model):
         ("окончил(а) курс", "Окончил(а) Курс"),
         ("прекратил(а) обучение", "Прекратил(а) обучение"),
     ]
-
 
     first_name_s = models.CharField("Имя", max_length=55)
     last_name_s = models.CharField("Фамилия", max_length=55)

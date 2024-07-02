@@ -2,11 +2,12 @@ from django.contrib import admin
 
 from students_management.models import *
 
-
+from django.contrib import admin
+from django.contrib.auth.admin import UserAdmin
 # Create your models here.
 class StudentAdmin(admin.ModelAdmin):
     list_display = (
-        'first_name_s', 'last_name_s', 'phone_number_s', 'paid_check', 'parents_phone_number', 'joined_date')
+        'id','first_name_s', 'last_name_s', 'phone_number_s', 'paid_check', 'parents_phone_number', 'joined_date')
 
 
 class PaymentAdmin(admin.ModelAdmin):
@@ -70,6 +71,7 @@ class ArchivedGroupAdmin(admin.ModelAdmin):
     search_fields = ('name_group', 'teacher_id__first_name', 'teacher_id__last_name')
     list_filter = ('branch', 'status_group', 'archived_date')
     ordering = ('-archived_date',)
+
 
 
 admin.site.register(ArchivedStudent, ArchivedStudentAdmin)

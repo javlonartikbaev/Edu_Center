@@ -31,7 +31,7 @@ def get_professor(request):
             found_professor = Teacher.objects.filter(Q(first_name__icontains=search_professor_name) |
                                                      Q(last_name__icontains=search_professor_name))
         else:
-            found_professor = Teacher.objects.all()
+            found_professor = Teacher.objects.filter(branch__admin=request.user)
         paginator = Paginator(found_professor, 10)
         page_number = request.GET.get("page")
         page_obj = paginator.get_page(page_number)
@@ -39,12 +39,14 @@ def get_professor(request):
         data = {'search': search, 'professor': page_obj, 'current_year': current_year, 'user': request.user,
                 }
     else:
-        professor = Teacher.objects.all()
+        professor = Teacher.objects.filter(branch__admin=request.user)
         paginator = Paginator(professor, 10)
         page_number = request.GET.get("page")
         page_obj = paginator.get_page(page_number)
         current_year = datetime.today().year
-        data = {'search': search, 'professor': page_obj, 'current_year': current_year, 'user': request.user}
+        data = {'search': search, 'professor': page_obj, 'current_year': current_year, 'user': request.user,
+                'branch':Branch.objects.filter(admin_id=request.user.id)
+                }
     return render(request, 'professors/all-professors.html', data)
 
 
@@ -103,11 +105,14 @@ def add_professor(request):
             return redirect('main_page')
     professor_form = TeacherForm()
     if request.method == 'POST':
+        branch = request.user.admin_branches.first()
         professor_form = TeacherForm(request.POST, request.FILES)
         if professor_form.is_valid():
             professor = professor_form.save(commit=False)
+            professor.branch_id = branch.id
+            professor.save()
             if not request.user.is_superuser:
-                professor.branch = branch  # Назначаем филиал текущего пользователя
+                professor.branch = branch
             professor.save()
             return redirect('all_professors')
 
@@ -130,14 +135,14 @@ def get_courses(request):
         if search_course_name:
             found_course = Course.objects.filter(name_course__icontains=search_course_name)
         else:
-            found_course = Course.objects.all()
+            found_course = Course.objects.filter(branch__admin=request.user)
         paginator = Paginator(found_course, 10)
         page_number = request.GET.get("page")
         page_obj = paginator.get_page(page_number)
         current_year = datetime.today().year
         data = {'search': search, 'courses': page_obj, 'current_year': current_year}
     else:
-        course = Course.objects.all()
+        course = Course.objects.filter(branch__admin=request.user)
         paginator = Paginator(course, 10)
 
         page_number = request.GET.get("page")
@@ -157,9 +162,11 @@ def add_course(request):
     course_form = CourseForm()
     current_year = datetime.today().year
     if request.method == 'POST':
+        branch = request.user.admin_branches.first()
         course_form = CourseForm(request.POST, request.FILES)
         if course_form.is_valid():
             course = course_form.save(commit=False)
+            course.branch_id = branch.id
             course.save()
             return redirect('all_courses')
     else:
@@ -280,13 +287,13 @@ def all_students(request):
             found_student = Student.objects.filter(Q(first_name_s__icontains=search_student_name) |
                                                    Q(last_name_s__icontains=search_student_name))
         else:
-            found_student = Student.objects.all()
+            found_student = Student.objects.filter(branch__admin=request.user)
     else:
-        found_student = Student.objects.all()
+        found_student = Student.objects.filter(branch__admin=request.user)
 
     filter_option = request.GET.get('filter')
     if filter_option == 'not_paid':
-        found_student = found_student.filter(paid_check='Не оплатил')
+        found_student = found_student.filter(paid_check='Не оплатил', branch__admin=request.user)
 
     paginator = Paginator(found_student, 10)
     page_number = request.GET.get("page")
@@ -306,7 +313,7 @@ def all_students(request):
         else:
             student.paid_check = "Не оплатил"
         student.save()
-    groups = Group.objects.all()
+    groups = Group.objects.filter(branch__admin=request.user)
     data = {'search': search, 'student': page_obj, 'current_year': current_year, 'groups': groups}
     return render(request, 'students/all-students.html', data)
 
@@ -321,16 +328,19 @@ def add_students(request, group_id=None):
     if request.method == "POST":
         student_form = StudentForm(request.POST)
         if student_form.is_valid():
+            branch = request.user.admin_branches.first()
             if group_id:
                 group = Group.objects.get(id=group_id)
-
                 student = student_form.save(commit=False)
+                student.branch_id = branch.id
                 student.save()
                 group.students_id.add(student)
 
                 return redirect('all_groups')
             else:
+
                 student = student_form.save(commit=False)
+                student.branch_id = branch.id
                 student.save()
                 return redirect('all_groups')
     else:
@@ -393,9 +403,9 @@ def profile_students(request, id_student):
     else:
         attendance = Attendance.objects.filter(students_id=id_student)
 
-    groups = Group.objects.filter(students_id=id_student)
+    groups = Group.objects.filter(students_id=id_student, branch__admin=request.user)
 
-    courses = Course.objects.filter(group__in=groups).distinct()
+    courses = Course.objects.filter(group__in=groups, branch__admin=request.user).distinct()
 
     current_year = datetime.today().year
 
@@ -422,7 +432,7 @@ def all_audience(request):
         messages.error(request, 'У вас нет прав доступа.')
         return redirect(
             'main_page')
-    audience = Audience.objects.all()
+    audience = Audience.objects.filter(branch__admin=request.user)
     current_year = datetime.today().year
     data = {'audience': audience, 'current_year': current_year}
     return render(request, 'audience/all-audience.html', data)
@@ -438,8 +448,10 @@ def add_audience(request):
     audience = Audience.objects.all()
     current_year = datetime.today().year
     if audience_form.is_valid():
+        branch = request.user.admin_branches.first()
         audience = audience_form.save(commit=False)
         audience.slug_audience = audience.number_audience
+        audience.branch_id = branch.id
         audience.save()
         return redirect('all_audience')
     audience_form = AudienceForm()
@@ -489,7 +501,7 @@ def all_groups(request):
         user_id=request.user.id).first()
 
     if request.user.is_superuser:
-        groups = Group.objects.all()
+        groups = Group.objects.filter(branch__admin=request.user)
         data = {'groups': groups, 'current_year': current_year}
         return render(request, 'groups/all-groups.html', data)
 
@@ -507,12 +519,16 @@ def all_groups(request):
 def add_group(request):
     if request.method == 'POST':
 
-        group_form = GroupForm(request.POST)
+        group_form = GroupForm(request.POST, user=request.user)
         if group_form.is_valid():
-            group = group_form.save()
+            branch = request.user.admin_branches.first()
+            group = group_form.save(commit=False)
+            group.branch_id = branch.id
+            group.save()
+
             return redirect('all_groups')
     else:
-        group_form = GroupForm()
+        group_form = GroupForm(user=request.user)
 
     current_year = datetime.today().year
     data = {"group_form": group_form, 'current_year': current_year, }
@@ -526,7 +542,7 @@ def update_group(request, id_group):
 
     if request.user.is_superuser:
         if request.method == 'POST':
-            group_form = GroupForm(request.POST, instance=group)
+            group_form = GroupForm(request.POST, instance=group, user=request.user)
             if group_form.is_valid():
                 group_form.save()
                 students_to_remove = request.POST.getlist('students_to_remove')
@@ -536,7 +552,7 @@ def update_group(request, id_group):
             else:
                 messages.error(request, group_form.errors)
         else:
-            group_form = GroupForm(instance=group)
+            group_form = GroupForm(instance=group, user=request.user)
         students_in_group = group.students_id.all()
     else:
         messages.error(request, 'У вас нет прав')
@@ -607,7 +623,7 @@ def mark_attendance(request, group_id):
         date_attendance = request.POST.get('date_attendance')
         attendance_status = Attendance_Status.objects.get(name_attendance_status='Отсутствует')
 
-        students = group.students_id.all()
+        students = group.students_id.filter(branch__admin=request.user)
 
         for student in students:
             attendance_value = request.POST.get(f'student_{student.id}', '')
@@ -777,7 +793,7 @@ def archived_students(request):
         messages.error(request, 'У вас нет прав доступа.')
         return redirect(
             'main_page')
-    archived_students = ArchivedStudent.objects.all()
+    archived_students = ArchivedStudent.objects.filter(branch__admin=request.user)
     current_year = datetime.today().year
     data = {
         'archived_students': archived_students,
@@ -823,17 +839,20 @@ def delete_archived_students(request):
 
 @login_required()
 def main_page(request):
-    completed_the_course = ArchivedStudent.objects.filter(comments='окончил(а) курс').count()
-    dropped_lesson = ArchivedStudent.objects.filter(comments='прекратил(а) обучение').count()
-    paid_students = Student.objects.filter(paid_check='Оплатил').count()
-    no_paid_students = Student.objects.filter(paid_check='Не оплатил').count()
-    other_students = Student.objects.filter(paid_check=None).count()
-
     if not request.user.is_superuser:
         messages.error(request, 'У вас нет прав доступа.')
         return redirect('all_groups')
 
-    groups = Group.objects.all()
+    completed_the_course = ArchivedStudent.objects.filter(comments='окончил(а) курс',
+                                                          branch__admin=request.user).count()
+    dropped_lesson = ArchivedStudent.objects.filter(comments='прекратил(а) обучение',
+                                                    branch__admin=request.user).count()
+    left_students = ArchivedStudent.objects.filter(branch__admin=request.user).count()
+    paid_students = Student.objects.filter(paid_check='Оплатил', branch__admin=request.user).count()
+    no_paid_students = Student.objects.filter(paid_check='Не оплатил', branch__admin=request.user).count()
+    other_students = Student.objects.filter(paid_check=None, branch__admin=request.user).count()
+
+    groups = Group.objects.filter(branch__admin=request.user)
     group_data = []
 
     for group in groups:
@@ -844,28 +863,41 @@ def main_page(request):
             'course': group.course_id,
         })
 
-    years = Student.objects.annotate(year=ExtractYear('joined_date')).values_list('year',
-                                                                                  flat=True).distinct().order_by('year')
+    years = Student.objects.filter(branch__admin=request.user).annotate(year=ExtractYear('joined_date')).values_list(
+        'year',
+        flat=True).distinct().order_by('year')
 
     current_year = request.GET.get('year', None)
     if current_year:
-        students_per_month = Student.objects.filter(joined_date__year=current_year).annotate(
+        students_per_month = Student.objects.filter(joined_date__year=current_year,
+                                                    branch__admin=request.user).annotate(
             month=TruncMonth('joined_date')).values('month').annotate(count=Count('id')).order_by('month')
+        left_students_per_month = ArchivedStudent.objects.filter(archived_date__year=current_year,
+                                                                 branch__admin=request.user).annotate(
+            month=TruncMonth('archived_date')).values('month').annotate(count=Count('id')).order_by('month')
     else:
-        students_per_month = Student.objects.annotate(month=TruncMonth('joined_date')).values('month').annotate(
+        students_per_month = Student.objects.filter(branch__admin=request.user).annotate(
+            month=TruncMonth('joined_date')).values('month').annotate(
+            count=Count('id')).order_by('month')
+        left_students_per_month = ArchivedStudent.objects.filter(branch__admin=request.user).annotate(
+            month=TruncMonth('archived_date')).values(
+            'month').annotate(
             count=Count('id')).order_by('month')
 
-    month_data = defaultdict(lambda: 0)
+    month_data = defaultdict(lambda: {'joined': 0, 'left': 0})
     for item in students_per_month:
-        month_data[item['month'].strftime('%B')] = item['count']
+        month_data[item['month'].strftime('%B')]['joined'] = item['count']
+
+    for item in left_students_per_month:
+        month_data[item['month'].strftime('%B')]['left'] = item['count']
 
     all_months = [datetime.strptime(str(month), "%m").strftime("%B") for month in range(1, 13)]
-    students_per_month_full = [(month, month_data[month]) for month in all_months]
+    students_per_month_full = [(month, month_data[month]['joined'], month_data[month]['left']) for month in all_months]
 
     data = {
         'group_data': group_data,
         'total_groups': groups.count(),
-        'total_students': Student.objects.count(),
+        'total_students': Student.objects.filter(branch__admin=request.user).count(),
         'paid_students': paid_students,
         'no_paid_students': no_paid_students,
         'other_students': other_students,
@@ -874,7 +906,10 @@ def main_page(request):
         'current_year': current_year,
         'completed_the_course': completed_the_course,
         'dropped_lesson': dropped_lesson,
-        'archived_students': ArchivedStudent.objects.count()
+        'archived_students': ArchivedStudent.objects.filter(branch__admin=request.user).count(),
+        'left_students': left_students,
+        'branch':Branch.objects.filter(admin_id=request.user.id)
+
     }
 
     return render(request, 'base.html', data)
@@ -886,7 +921,7 @@ def archived_groups(request):
         messages.error(request, 'У вас нет прав доступа.')
         return redirect(
             'main_page')
-    archived_groups = ArchivedGroup.objects.all()
+    archived_groups = ArchivedGroup.objects.filter(branch__admin=request.user)
     return render(request, 'groups/archived_group.html', {'archived_groups': archived_groups})
 
 
@@ -964,7 +999,7 @@ def delete_payment(request, payment_id):
 
 @login_required()
 def archived_payments(request):
-    archived_payments = ArchivedPayment.objects.all()
+    archived_payments = ArchivedPayment.objects.filter(branch__admin=request.user)
     context = {
         'archived_payments': archived_payments
     }

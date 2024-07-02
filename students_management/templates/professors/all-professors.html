@@ -80,13 +80,15 @@
     <div class="left-sidebar-pro">
         <nav id="sidebar" class="">
             <div class="sidebar-header">
-
-                    <a href="{% url 'main_page' %}"><img class="main-logo" style="height:70px;width: 170px "
-                                                         src="{% static 'img/logo/Ico.png' %}"
+                {% for branch in branch %}
+                	<a href="{% url 'main_page' %}"><img class="main-logo" style="height:70px;width: 170px "
+                                                         src="{{ branch.logo_branch.url }}"
                                                          alt=""/></a>
                     <strong><a href="{% url 'main_page' %}"><img style="height:50px;width: 50px "
-                                                                 src="{% static 'img/logo/logosn.png' %}"
+                                                                 src="{{branch.short_logo_branch.url}}"
                                                                  alt=""/></a></strong>
+                {% endfor %}
+
             </div>
             <div class="left-custom-menu-adp-wrap comment-scrollbar">
                 <nav class="sidebar-nav left-sidebar-menu-pro">

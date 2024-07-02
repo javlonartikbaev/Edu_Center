@@ -65,13 +65,15 @@
                                     </tr>
                                     </thead>
                                     <tbody>
-                                    {% for student in student %}
+                                    {% for student in  student %}
                                         <tr>
                                             <td>
-                                                <input type="checkbox" name="selected_students" value="{{ student.id }}">
+                                                <input type="checkbox" name="selected_students"
+                                                       value="{{ student.id }}">
                                             </td>
                                             <td>
-                                                <a href="{% url 'profile_students' student.id %}" style="color: #0a6aa1">
+                                                <a href="{% url 'profile_students' student.id %}"
+                                                   style="color: #0a6aa1">
                                                     {{ student.first_name_s }}
                                                 </a>
                                             </td>
@@ -89,18 +91,21 @@
                                             <td>{{ student.joined_date }}</td>
                                             <td>
                                                 {% for group in groups %}
-                                                    {% if student.pk == group.students_id  %}
-                                                        {{ group.course_id }}
-                                                    {% endif %}
+
+                                                    {% for st in group.students_id.all %}
+                                                        {% if student.id == st.id %}
+
+                                                            {{ group.name_group }}
+                                                        {% endif %}
+                                                    {% endfor %}
+
                                                 {% endfor %}
                                             </td>
                                             <td>
                                                 <a href="{{ student.get_absolute_url }}" class="btn btn-warning">
                                                     Редактировать
                                                 </a>
-                                                <a href="{% url 'delete_students' student.id %}" class="btn btn-danger">
-                                                    Удалить
-                                                </a>
+
                                             </td>
                                         </tr>
                                     {% endfor %}
