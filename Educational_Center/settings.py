@@ -17,7 +17,7 @@ SECRET_KEY = 'django-insecure-uvpm^m2iq*#z30+2^%f-h!8qtsrt=%&vvz*3iuqupleq(g*h&@
 
 DEBUG = True
 
-ALLOWED_HOSTS = ['localhost', '82.97.254.7']
+ALLOWED_HOSTS = ['localhost', '82.97.254.7',]
 
 # Application definition
 
@@ -64,6 +64,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'Educational_Center.wsgi.application'
 
+AUTH_USER_MODEL = 'students_management.CustomUser'
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
@@ -100,7 +101,7 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.0/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'ru'
 
 TIME_ZONE = 'UTC'
 

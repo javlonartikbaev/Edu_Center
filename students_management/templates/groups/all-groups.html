@@ -11,58 +11,88 @@
                 <div class="hpanel hblue contact-panel contact-panel-cs responsive-mg-b-10">
                     <div class="panel-body custom-panel-jw">
                         <h1>Список групп</h1>
-                        <table class="table table-striped" style="margin-top: 10px;">
-                            <thead>
-                            <tr>
-                                <th>Название группы</th>
-                                <th>Дата начала</th>
-                                <th>Дата окончания</th>
-                                <th>Преподаватель</th>
-                                <th>Курс</th>
-                                <th>Аудитория</th>
-                                <th>Количество студентов</th>
-                                <th>Статус</th>
-                                <th>Филиал</th>
-                                <th>Действия</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            {% for group in groups %}
-                                <tr>
-                                    <td><a href="{% url 'info_group'  group.id %}" style="color: #0a6aa1">
-                                        {{ group.name_group }}</a></td>
-                                    <td>{{ group.start_date }}</td>
-                                    <td>{{ group.end_date }}</td>
-                                    <td>{{ group.teacher_id.first_name }} {{ group.teacher_id.last_name }}</td>
-                                    <td>{{ group.course_id }}</td>
-                                    <td>{{ group.audience_id.number_audience }}</td>
-                                    <td>{{ group.students_id.count }}</td>
-                                    <td>{{ group.status_group.name_status }}</td>
-                                    <td>{{ group.branch.name }}</td>
-                                    <td>
-                                        <a href="{{ group.get_absolute_url }}"><img
-                                                src="{% static 'img/free-icon-pencil-7266960.png' %}"
-                                                style="width: 30px; height: 30px;"></a>
-                                        <a href="{% url 'delete_group' group.id %}"><img
-                                                src="{% static 'img/free-icon-delete-6932392.png' %}"
-                                                style="width: 30px; height: 30px;"></a>
-                                        <a href="{% url 'mark_attendance'  group.id %}" style="color: #0a6aa1">
-                                            <img
-                                                    src="{% static 'img/free-icon-attendance-16612795.png' %}"
-                                                    style="width: 30px; height: 30px;">
-                                        </a>
-                                        <a href="{% url 'add_students_to_group' group.id %}" style="color: #0a6aa1">
-                                            <img
-                                                    src="{% static 'img/add.png' %}"
-                                                    style="width: 30px; height: 30px;">
-                                        </a>
-                                    </td>
-                                </tr>
-                            {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
 
+
+                        <form method="GET" action="{% url 'all_groups' %}">
+                            <div class="form-group">
+                                <label for="main_office">Главный офис</label>
+                                <select id="main_office" name="main_office" class="form-control"
+                                        onchange="this.form.submit()">
+                                    <option value="">Все</option>
+                                    {% for office in main_offices %}
+                                        <option value="{{ office.id }}"
+                                                {% if office.id == selected_main_office_id %}selected{% endif %}>
+                                            {{ office.name_main_office }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="branch">Филиал</label>
+                                <select id="branch" name="branch" class="form-control" onchange="this.form.submit()">
+                                    <option value="">Все</option>
+                                    {% for branch in branches %}
+                                        <option value="{{ branch.id }}"
+                                                {% if branch.id == selected_branch_id %}selected{% endif %}>
+                                            {{ branch.name_branch }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </form>
+                        {% if groups %}
+
+                            <table class="table table-striped" style="margin-top: 10px;">
+                                <thead>
+                                <tr>
+                                    <th>Название группы</th>
+                                    <th>Дата начала</th>
+                                    <th>Дата окончания</th>
+                                    <th>Преподаватель</th>
+                                    <th>Курс</th>
+                                    <th>Аудитория</th>
+                                    <th>Количество студентов</th>
+                                    <th>Статус</th>
+                                    <th>Филиал</th>
+                                    <th>Действия</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {% for group in groups %}
+                                    <tr>
+                                        <td><a href="{% url 'info_group' group.id %}" style="color: #0a6aa1">
+                                            {{ group.name_group }}</a></td>
+                                        <td>{{ group.start_date }}</td>
+                                        <td>{{ group.end_date }}</td>
+                                        <td>{{ group.teacher_id.first_name }} {{ group.teacher_id.last_name }}</td>
+                                        <td>{{ group.course_id.name_course }}</td>
+                                        <td>{{ group.audience_id.number_audience }}</td>
+                                        <td>{{ group.students_id.count }}</td>
+                                        <td>{{ group.status_group.name_status }}</td>
+                                        <td>{{ group.branch.name }}</td>
+                                        <td>
+                                            <a href="{{ group.get_absolute_url }}"><img
+                                                    src="{% static 'img/free-icon-pencil-7266960.png' %}"
+                                                    style="width: 30px; height: 30px;"></a>
+                                            <a href="{% url 'delete_group' group.id %}"><img
+                                                    src="{% static 'img/free-icon-delete-6932392.png' %}"
+                                                    style="width: 30px; height: 30px;"></a>
+                                            <a href="{% url 'mark_attendance' group.id %}" style="color: #0a6aa1">
+                                                <img
+                                                        src="{% static 'img/free-icon-attendance-16612795.png' %}"
+                                                        style="width: 30px; height: 30px;">
+                                            </a>
+                                            <a href="{% url 'add_students_to_group' group.id %}" style="color: #0a6aa1">
+                                                <img
+                                                        src="{% static 'img/add.png' %}"
+                                                        style="width: 30px; height: 30px;">
+                                            </a>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                        {% endif %}
+                    </div>
 
                     <div class="white_card_body" style="height: 286px;">
                         <div class="chartjs-size-monitor">
@@ -73,7 +103,8 @@
                                 <div class=""></div>
                             </div>
                         </div>
-                        <canvas id="bar" style="display: block; height: 251px; width: 699px;" width="873" height="313"
+                        <canvas id="bar" style="display: block; height: 251px; width: 699px;" width="873"
+                                height="313"
                                 class="chartjs-render-monitor"></canvas>
                     </div>
 

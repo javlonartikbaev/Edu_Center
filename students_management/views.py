@@ -17,60 +17,78 @@ from .forms import *
 
 
 # Professor
-@login_required
+@login_required(login_url='/login/')
 def get_professor(request):
-    if not request.user.is_superuser:
-        messages.error(request, 'У вас нет прав доступа.')
-        return redirect(
-            'main_page')
-
+    user = request.user
     search = SearchForm(request.GET)
+    current_year = datetime.today().year
+    page_number = request.GET.get("page")
+
+    if user.role == 'teacher':
+        messages.error(request, 'У вас нет прав доступа.')
+        return redirect('main_page')
+
+    main_offices = MainOffice.objects.filter(admin=user)
+    branches = Branch.objects.filter(main_office__in=main_offices)
+
+    selected_main_office_id = request.GET.get('main_office')
+    selected_branch_id = request.GET.get('branch')
+
+    teachers = Teacher.objects.all()
+    if user.role == 'super admin':
+        if selected_main_office_id:
+            teachers = teachers.filter(main_office_id=selected_main_office_id)
+        elif selected_branch_id:
+            teachers = teachers.filter(branch_id=selected_branch_id)
+        else:
+            teachers = teachers.filter(Q(main_office_id__in=main_offices) | Q(branch__in=branches))
+    elif user.role == 'admin':
+        if selected_branch_id:
+            teachers = teachers.filter(branch_id=selected_branch_id)
+        else:
+            admin_branches = Branch.objects.filter(admin=user)
+            teachers = teachers.filter(branch__in=admin_branches)
+
     if search.is_valid():
         search_professor_name = search.cleaned_data.get('search_input', '')
         if search_professor_name:
-            found_professor = Teacher.objects.filter(Q(first_name__icontains=search_professor_name) |
-                                                     Q(last_name__icontains=search_professor_name))
-        else:
-            found_professor = Teacher.objects.filter(branch__admin=request.user)
-        paginator = Paginator(found_professor, 10)
-        page_number = request.GET.get("page")
-        page_obj = paginator.get_page(page_number)
-        current_year = datetime.today().year
-        data = {'search': search, 'professor': page_obj, 'current_year': current_year, 'user': request.user,
-                }
-    else:
-        professor = Teacher.objects.filter(branch__admin=request.user)
-        paginator = Paginator(professor, 10)
-        page_number = request.GET.get("page")
-        page_obj = paginator.get_page(page_number)
-        current_year = datetime.today().year
-        data = {'search': search, 'professor': page_obj, 'current_year': current_year, 'user': request.user,
-                'branch':Branch.objects.filter(admin_id=request.user.id)
-                }
+            teachers = teachers.filter(
+                Q(first_name__icontains=search_professor_name) | Q(last_name__icontains=search_professor_name))
+
+    paginator = Paginator(teachers, 10)
+    page_obj = paginator.get_page(page_number)
+
+    data = {
+        'search': search,
+        'professor': page_obj,
+        'current_year': current_year,
+        'user': user,
+        'main_offices': main_offices,
+        'branches': branches,
+        'selected_main_office_id': selected_main_office_id,
+        'selected_branch_id': selected_branch_id,
+    }
+
     return render(request, 'professors/all-professors.html', data)
 
 
-@login_required
+@login_required(login_url='/login/')
 def delete_professor(request, id_professor):
-    if not request.user.is_superuser:
+    if request.user.role == 'teacher':
         messages.error(request, 'У вас нет прав доступа.')
         return redirect(
             'main_page')
-    if not request.user.is_superuser:
-        messages.error(request, 'У вас нет прав доступа.')
-        return redirect(
-            'main_page')
-
     professor = get_object_or_404(Teacher, id=id_professor)
     current_year = datetime.today().year
     if request.method == 'POST':
         professor.delete()
         return redirect('all_professors')
-    data = {'professor': professor, 'current_year': current_year}
+    data = {'professor': professor, 'current_year': current_year,
+            'branch': Branch.objects.filter(admin_id=request.user.id)}
     return render(request, 'professors/delete-professor.html', data)
 
 
-@login_required
+@login_required(login_url='/login/')
 def update_professor(request, id_professor):
     professor = get_object_or_404(Teacher, pk=id_professor)
     current_year = datetime.today().year
@@ -86,96 +104,180 @@ def update_professor(request, id_professor):
     else:
         form = TeacherUpdateForm(instance=professor)
 
-    data = {"form": form, "current_year": current_year, 'professor': professor}
+    data = {"form": form, "current_year": current_year, 'professor': professor,
+            'branch': Branch.objects.filter(admin_id=request.user.id)}
 
-    if request.user.is_superuser:
+    if request.user.role == 'super admin':
         template_name = 'professors/edit-professor.html'
-    else:
+    elif request.user.role == 'teacher':
         template_name = 'teachers-group/teachers-profile.html'
 
     return render(request, template_name, data)
 
 
-@login_required
+@login_required(login_url='/login/')
 def add_professor(request):
-    if not request.user.is_superuser:
-        branch = request.user.admin_branches.first()
-        if not branch:
-            messages.error(request, 'У вас нет прав доступа.')
-            return redirect('main_page')
-    professor_form = TeacherForm()
-    if request.method == 'POST':
-        branch = request.user.admin_branches.first()
-        professor_form = TeacherForm(request.POST, request.FILES)
-        if professor_form.is_valid():
-            professor = professor_form.save(commit=False)
-            professor.branch_id = branch.id
-            professor.save()
-            if not request.user.is_superuser:
-                professor.branch = branch
-            professor.save()
-            return redirect('all_professors')
+    user = request.user
+    main_offices = MainOffice.objects.filter(admin=user)
+    branches = Branch.objects.filter(main_office__in=main_offices)
+    if request.user.role != 'teacher':
+        professor_form = TeacherForm()
+        if request.method == 'POST':
+            professor_form = TeacherForm(request.POST, request.FILES)
+            if professor_form.is_valid():
+                professor = professor_form.save(commit=False)
+                if request.user.is_superuser:
+                    user = request.user
+                    main_offices = MainOffice.objects.filter(admin_id=user.id).first()
+                    print(main_offices)
+                    professor.main_office_id = main_offices
+                elif user.role == 'admin':
+                    user = request.user
+                    branches = Branch.objects.filter(admin_id=user.id).first()
+                    print(branches)
+                    professor.branch = branches
+                professor.save()
+                return redirect('all_professors')
 
-    if request.user.is_superuser:
-        template_name = 'professors/add-professor.html'
-    else:
-        template_name = 'teachers/teachers-profile.html'
-    return render(request, template_name, {'professor_form': professor_form})
+    # if request.user.is_superuser:
+    #     template_name = 'professors/add-professor.html'
+    # else:
+    #     template_name = 'teachers/teachers-profile.html'
+    return render(request, 'professors/add-professor.html',
+                  {'professor_form': professor_form, 'branch': Branch.objects.filter(admin_id=request.user.id)})
 
 
-@login_required
+@login_required(login_url='/login/')
 def get_courses(request):
-    if not request.user.is_superuser:
+    current_year = datetime.today().year
+    if request.user.role == 'teacher':
         messages.error(request, 'У вас нет прав доступа.')
         return redirect(
             'main_page')
+    user = request.user
+    main_offices = MainOffice.objects.filter(admin=user)
+    branches = Branch.objects.filter(main_office__in=main_offices)
     search = SearchForm(request.GET)
+    selected_main_office_id = request.GET.get('main_office')
+    selected_branch_id = request.GET.get('branch')
+    selected_branch_id = request.GET.get('branch')
+    page_number = request.GET.get("page")
+    courses = Course.objects.all()
+    if user.role == 'super admin':
+        if selected_main_office_id:
+            courses = courses.filter(main_office_id=selected_main_office_id)
+        elif selected_branch_id:
+            courses = courses.filter(branch_id=selected_branch_id)
+        else:
+            courses = courses.filter(Q(main_office_id__in=main_offices) | Q(branch__in=branches))
+    elif user.role == 'admin':
+        if selected_branch_id:
+            courses = courses.filter(branch_id=selected_branch_id)
+        else:
+            admin_branches = Branch.objects.filter(admin=user)
+            courses = courses.filter(branch__in=admin_branches)
+
     if search.is_valid():
         search_course_name = search.cleaned_data.get('search_input', '')
         if search_course_name:
             found_course = Course.objects.filter(name_course__icontains=search_course_name)
-        else:
-            found_course = Course.objects.filter(branch__admin=request.user)
-        paginator = Paginator(found_course, 10)
-        page_number = request.GET.get("page")
-        page_obj = paginator.get_page(page_number)
-        current_year = datetime.today().year
-        data = {'search': search, 'courses': page_obj, 'current_year': current_year}
-    else:
-        course = Course.objects.filter(branch__admin=request.user)
-        paginator = Paginator(course, 10)
 
-        page_number = request.GET.get("page")
-        page_obj = paginator.get_page(page_number)
-        current_year = datetime.today().year
-        data = {'search': search, 'courses': page_obj, 'current_year': current_year}
+    paginator = Paginator(courses, 10)
+    page_obj = paginator.get_page(page_number)
+
+    data = {
+        'search': search,
+        'course': page_obj,
+        'current_year': current_year,
+        'user': user,
+        'main_offices': main_offices,
+        'branches': branches,
+        'selected_main_office_id': selected_main_office_id,
+        'selected_branch_id': selected_branch_id,
+    }
+    # if request.user.role == 'super admin':
+    #     search = SearchForm(request.GET)
+    #     if search.is_valid():
+    #         search_course_name = search.cleaned_data.get('search_input', '')
+    #         if search_course_name:
+    #             found_course = Course.objects.filter(name_course__icontains=search_course_name)
+    #         else:
+    #             found_course = Course.objects.all()
+    #         paginator = Paginator(found_course, 10)
+    #         page_number = request.GET.get("page")
+    #         page_obj = paginator.get_page(page_number)
+    #         current_year = datetime.today().year
+    #         data = {'search': search, 'courses': page_obj, 'current_year': current_year,
+    #                 'branch': Branch.objects.filter(admin_id=request.user.id)}
+    #     else:
+    #         course = Course.objects.all()
+    #         paginator = Paginator(course, 10)
+    #
+    #         page_number = request.GET.get("page")
+    #         page_obj = paginator.get_page(page_number)
+    #         current_year = datetime.today().year
+    #         data = {'search': search, 'courses': page_obj, 'current_year': current_year,
+    #                 'branch': Branch.objects.filter(admin_id=request.user.id)}
+    # elif request.user.role == 'admin':
+    #     search = SearchForm(request.GET)
+    #     if search.is_valid():
+    #         search_course_name = search.cleaned_data.get('search_input', '')
+    #         if search_course_name:
+    #             found_course = Course.objects.filter(name_course__icontains=search_course_name)
+    #         else:
+    #             found_course = Course.objects.filter(branch__admin=request.user)
+    #         paginator = Paginator(found_course, 10)
+    #         page_number = request.GET.get("page")
+    #         page_obj = paginator.get_page(page_number)
+    #         current_year = datetime.today().year
+    #         data = {'search': search, 'courses': page_obj, 'current_year': current_year}
+    #     else:
+    #         course = Course.objects.filter(branch__admin=request.user)
+    #         paginator = Paginator(course, 10)
+    #
+    #         page_number = request.GET.get("page")
+    #         page_obj = paginator.get_page(page_number)
+    #         current_year = datetime.today().year
+    #         data = {'search': search, 'courses': page_obj, 'current_year': current_year}
 
     return render(request, 'courses/all-courses.html', data)
 
 
-@login_required
+@login_required(login_url='/login/')
 def add_course(request):
-    if not request.user.is_superuser:
+    if request.user.role == 'teacher':
         messages.error(request, 'У вас нет прав доступа.')
         return redirect(
             'main_page')
     course_form = CourseForm()
     current_year = datetime.today().year
+
     if request.method == 'POST':
-        branch = request.user.admin_branches.first()
+
         course_form = CourseForm(request.POST, request.FILES)
+
         if course_form.is_valid():
             course = course_form.save(commit=False)
-            course.branch_id = branch.id
+            if request.user.role == 'super admin':
+                user = request.user
+                main_offices = MainOffice.objects.filter(admin_id=user.id).first()
+
+                course.main_office_id = main_offices
+            elif request.user.role == 'admin':
+                user = request.user
+                branches = Branch.objects.filter(admin_id=user.id).first()
+
+                course.branch = branches
             course.save()
-            return redirect('all_courses')
+
+        return redirect('all_courses')
     else:
         course_form = CourseForm()
         data = {"course_form": course_form, 'current_year': current_year}
-        return render(request, 'courses/add-course.html', data)
+    return render(request, 'courses/add-course.html', data)
 
 
-@login_required
+@login_required(login_url='/login/')
 def update_course(request, id_course):
     if not request.user.is_superuser:
         messages.error(request, 'У вас нет прав доступа.')
@@ -194,7 +296,7 @@ def update_course(request, id_course):
     return render(request, 'courses/edit-course.html', data)
 
 
-@login_required
+@login_required(login_url='/login/')
 def delete_course(request, id_course):
     if not request.user.is_superuser:
         messages.error(request, 'У вас нет прав доступа.')
@@ -209,87 +311,130 @@ def delete_course(request, id_course):
     return render(request, 'courses/delete-course.html', data)
 
 
-@login_required
-def all_status(request):
-    if not request.user.is_superuser:
-        messages.error(request, 'У вас нет прав доступа.')
-        return redirect(
-            'main_page')
-    status = Status.objects.all()
-    current_year = datetime.today().year
-    data = {'status': status, 'current_year': current_year}
-    return render(request, 'status/all-status.html', data)
+# @login_required(login_url='/login/')
+# def all_status(request):
+#     user = request.user
+#     current_year = datetime.today().year
+#     if user.role == 'teacher':
+#         messages.error(request, 'У вас нет прав доступа.')
+#         return redirect('main_page')
+#     main_offices = MainOffice.objects.filter(admin=user)
+#     branches = Branch.objects.filter(main_office__in=main_offices)
+#     selected_main_office_id = request.GET.get('main_office')
+#     selected_branch_id = request.GET.get('branch')
+#     selected_branch_id = request.GET.get('branch')
+#
+#     teachers = Teacher.objects.all()
+#     if user.role == 'super admin':
+#         if selected_main_office_id:
+#             teachers = teachers.filter(main_office_id=selected_main_office_id)
+#         elif selected_branch_id:
+#             teachers = teachers.filter(branch_id=selected_branch_id)
+#         else:
+#             teachers = teachers.filter(Q(main_office_id__in=main_offices) | Q(branch__in=branches))
+#     elif user.role == 'admin':
+#         if selected_branch_id:
+#             teachers = teachers.filter(branch_id=selected_branch_id)
+#         else:
+#             admin_branches = Branch.objects.filter(admin=user)
+#             teachers = teachers.filter(branch__in=admin_branches)
+#     if not request.user.is_superuser:
+#         messages.error(request, 'У вас нет прав доступа.')
+#         return redirect(
+#             'main_page')
+#     if request.user.role == 'super admin':
+#         user = request.user
+#     status = Status.objects.all()
+#     current_year = datetime.today().year
+#     data = {'status': status, 'current_year': current_year}
+#     return render(request, 'status/all-status.html', data)
+#
+#
+# @login_required(login_url='/login/')
+# def add_status(request):
+#     if not request.user.is_superuser:
+#         messages.error(request, 'У вас нет прав доступа.')
+#         return redirect(
+#             'main_page')
+#     status_form = StatusForm(request.POST)
+#     current_year = datetime.today().year
+#     if status_form.is_valid():
+#         status = status_form.save(commit=False)
+#         status.slug_status = status.name_status
+#         status.save()
+#         return redirect('all_status')
+#     status_form = StatusForm()
+#     data = {"status_form": status_form, 'current_year': current_year}
+#     return render(request, 'status/add-status.html', data)
+#
+#
+# @login_required(login_url='/login/')
+# def update_status(request, id_status):
+#     if not request.user.is_superuser:
+#         messages.error(request, 'У вас нет прав доступа.')
+#         return redirect(
+#             'main_page')
+#     status = get_object_or_404(Status, pk=id_status)
+#     current_year = datetime.today().year
+#     if request.method == 'POST':
+#         form = StatusForm(request.POST, instance=status)
+#         if form.is_valid():
+#             status.slug_status = status.name_status
+#             form.save()
+#             return redirect('all_status')
+#     else:
+#         form = StatusForm(instance=status)
+#     data = {"form": form, "current_year": current_year}
+#     return render(request, 'status/update-status.html', data)
+#
+#
+# @login_required(login_url='/login/')
+# def delete_status(request, id_status):
+#     if not request.user.is_superuser:
+#         messages.error(request, 'У вас нет прав доступа.')
+#         return redirect(
+#             'main_page')
+#     status = get_object_or_404(Status, pk=id_status)
+#     current_year = datetime.today().year
+#     if request.method == 'POST':
+#         status.delete()
+#         return redirect('all_status')
+#     data = {"status": status, "current_year": current_year}
+#     return render(request, 'status/delete-status.html', data)
 
 
-@login_required()
-def add_status(request):
-    if not request.user.is_superuser:
-        messages.error(request, 'У вас нет прав доступа.')
-        return redirect(
-            'main_page')
-    status_form = StatusForm(request.POST)
-    current_year = datetime.today().year
-    if status_form.is_valid():
-        status = status_form.save(commit=False)
-        status.slug_status = status.name_status
-        status.save()
-        return redirect('all_status')
-    status_form = StatusForm()
-    data = {"status_form": status_form, 'current_year': current_year}
-    return render(request, 'status/add-status.html', data)
-
-
-@login_required()
-def update_status(request, id_status):
-    if not request.user.is_superuser:
-        messages.error(request, 'У вас нет прав доступа.')
-        return redirect(
-            'main_page')
-    status = get_object_or_404(Status, pk=id_status)
-    current_year = datetime.today().year
-    if request.method == 'POST':
-        form = StatusForm(request.POST, instance=status)
-        if form.is_valid():
-            status.slug_status = status.name_status
-            form.save()
-            return redirect('all_status')
-    else:
-        form = StatusForm(instance=status)
-    data = {"form": form, "current_year": current_year}
-    return render(request, 'status/update-status.html', data)
-
-
-@login_required()
-def delete_status(request, id_status):
-    if not request.user.is_superuser:
-        messages.error(request, 'У вас нет прав доступа.')
-        return redirect(
-            'main_page')
-    status = get_object_or_404(Status, pk=id_status)
-    current_year = datetime.today().year
-    if request.method == 'POST':
-        status.delete()
-        return redirect('all_status')
-    data = {"status": status, "current_year": current_year}
-    return render(request, 'status/delete-status.html', data)
-
-
-@login_required()
+@login_required(login_url='/login/')
 def all_students(request):
-    if not request.user.is_superuser:
-        messages.error(request, 'У вас нет прав доступа.')
-        return redirect(
-            'main_page')
+    user = request.user
     search = SearchForm(request.GET)
-    if search.is_valid():
-        search_student_name = search.cleaned_data.get('search_input', )
-        if search_student_name:
-            found_student = Student.objects.filter(Q(first_name_s__icontains=search_student_name) |
-                                                   Q(last_name_s__icontains=search_student_name))
+    current_year = datetime.today().year
+    page_number = request.GET.get("page")
+
+    if user.role == 'teacher':
+        messages.error(request, 'У вас нет прав доступа.')
+        return redirect('main_page')
+
+    main_offices = MainOffice.objects.filter(admin=user)
+    branches = Branch.objects.filter(main_office__in=main_offices)
+
+    selected_main_office_id = request.GET.get('main_office')
+    selected_branch_id = request.GET.get('branch')
+
+    found_student = Student.objects.all()
+    if user.role == 'super admin':
+        if selected_main_office_id:
+            found_student = found_student.filter(main_office_id=selected_main_office_id)
+        elif selected_branch_id:
+            found_student = found_student.filter(branch_id=selected_branch_id)
         else:
-            found_student = Student.objects.filter(branch__admin=request.user)
-    else:
-        found_student = Student.objects.filter(branch__admin=request.user)
+            found_student = found_student.filter(Q(main_office_id__in=main_offices) | Q(branch__in=branches))
+    elif user.role == 'admin':
+        if selected_branch_id:
+            found_student = found_student.filter(branch_id=selected_branch_id)
+        else:
+            admin_branches = Branch.objects.filter(admin=user)
+            found_student = found_student.filter(branch__in=admin_branches)
+    search = SearchForm(request.GET)
 
     filter_option = request.GET.get('filter')
     if filter_option == 'not_paid':
@@ -313,34 +458,55 @@ def all_students(request):
         else:
             student.paid_check = "Не оплатил"
         student.save()
+
+    if search.is_valid():
+        search_professor_name = search.cleaned_data.get('search_input', '')
+        if search_professor_name:
+            teachers = found_student.filter(
+                Q(first_name__icontains=search_professor_name) | Q(last_name__icontains=search_professor_name))
+
+    paginator = Paginator(found_student, 10)
+    page_obj = paginator.get_page(page_number)
+
     groups = Group.objects.filter(branch__admin=request.user)
-    data = {'search': search, 'student': page_obj, 'current_year': current_year, 'groups': groups}
+    data = {'search': search, 'groups': groups,
+            'student': page_obj,
+            'current_year': current_year,
+            'user': user,
+            'main_offices': main_offices,
+            'branches': branches,
+            'selected_main_office_id': selected_main_office_id,
+            'selected_branch_id': selected_branch_id,
+            }
     return render(request, 'students/all-students.html', data)
 
 
-@login_required()
+@login_required(login_url='/login/')
 def add_students(request, group_id=None):
-    if not request.user.is_superuser:
-        messages.error(request, 'У вас нет прав доступа.')
-        return redirect(
-            'main_page')
     current_year = datetime.today().year
     if request.method == "POST":
         student_form = StudentForm(request.POST)
         if student_form.is_valid():
-            branch = request.user.admin_branches.first()
+            student = student_form.save(commit=False)
             if group_id:
                 group = Group.objects.get(id=group_id)
-                student = student_form.save(commit=False)
-                student.branch_id = branch.id
-                student.save()
-                group.students_id.add(student)
+                if request.user.role == 'super admin':
+                    user = request.user
+                    main_offices = MainOffice.objects.filter(id=group.main_office_id.id).first()
+                    student.main_office_id = main_offices
+                    student.save()
+                    group.students_id.add(student)
+                    return redirect('all_groups')
+                elif request.user.role == 'admin':
+                    user = request.user
+                    branches = Branch.objects.filter(id=group.branch_id).first()
+                    student.branch = branches
+                    student.save()
+                    group.students_id.add(student)
 
-                return redirect('all_groups')
+                    return redirect('all_groups')
             else:
-
                 student = student_form.save(commit=False)
-                student.branch_id = branch.id
                 student.save()
                 return redirect('all_groups')
     else:
@@ -356,7 +522,7 @@ def add_students(request, group_id=None):
     return render(request, 'groups/add_students_to_group.html', data)
 
 
-@login_required()
+@login_required(login_url='/login/')
 def update_students(request, id_student):
     if not request.user.is_superuser:
         messages.error(request, 'У вас нет прав доступа.')
@@ -375,7 +541,7 @@ def update_students(request, id_student):
     return render(request, 'students/edit-student.html', data)
 
 
-@login_required()
+@login_required(login_url='/login/')
 def delete_students(request, id_student):
     if not request.user.is_superuser:
         messages.error(request, 'У вас нет прав доступа.')
@@ -390,7 +556,7 @@ def delete_students(request, id_student):
     return render(request, 'students/delete-student.html', data)
 
 
-@login_required()
+@login_required(login_url='/login/')
 def profile_students(request, id_student):
     student = get_object_or_404(Student, id=id_student)
     payments = Payment.objects.filter(student_id=student)
@@ -426,40 +592,67 @@ def profile_students(request, id_student):
     return render(request, template_name, data)
 
 
-@login_required()
+@login_required(login_url='/login/')
 def all_audience(request):
-    if not request.user.is_superuser:
-        messages.error(request, 'У вас нет прав доступа.')
-        return redirect(
-            'main_page')
-    audience = Audience.objects.filter(branch__admin=request.user)
+    user = request.user
+    main_offices = MainOffice.objects.filter(admin=user)
+    branches = Branch.objects.filter(main_office__in=main_offices)
+
+    selected_main_office_id = request.GET.get('main_office')
+    selected_branch_id = request.GET.get('branch')
+
+    audience = Audience.objects.all()
+    if user.role == 'super admin':
+        if selected_main_office_id:
+            audience = audience.filter(main_office_id=selected_main_office_id)
+        elif selected_branch_id:
+            audience = audience.filter(branch_id=selected_branch_id)
+        else:
+            audience = audience.filter(Q(main_office_id__in=main_offices) | Q(branch__in=branches))
+    elif user.role == 'admin':
+        if selected_branch_id:
+            audience = audience.filter(branch_id=selected_branch_id)
+        else:
+            admin_branches = Branch.objects.filter(admin=user)
+            audience = audience.filter(branch__in=admin_branches)
+
     current_year = datetime.today().year
-    data = {'audience': audience, 'current_year': current_year}
+    data = {'audience': audience, 'current_year': current_year, 'main_offices': main_offices,
+            'branches': branches,
+            'selected_main_office_id': selected_main_office_id,
+            'selected_branch_id': selected_branch_id, }
     return render(request, 'audience/all-audience.html', data)
 
 
-@login_required()
+@login_required(login_url='/login/')
 def add_audience(request):
-    if not request.user.is_superuser:
-        messages.error(request, 'У вас нет прав доступа.')
-        return redirect(
-            'main_page')
     audience_form = AudienceForm(request.POST)
     audience = Audience.objects.all()
     current_year = datetime.today().year
     if audience_form.is_valid():
-        branch = request.user.admin_branches.first()
+
         audience = audience_form.save(commit=False)
-        audience.slug_audience = audience.number_audience
-        audience.branch_id = branch.id
+        if request.user.is_superuser:
+            user = request.user
+            main_offices = MainOffice.objects.filter(admin_id=user.id).first()
+            print(main_offices)
+            audience.main_office_id = main_offices
+            audience.slug_audience = audience.number_audience
+        elif request.user.role == 'admin':
+            user = request.user
+            branches = Branch.objects.filter(admin_id=user.id).first()
+            audience.slug_audience = audience.number_audience
+            print(branches)
+            audience.branch = branches
         audience.save()
+
         return redirect('all_audience')
     audience_form = AudienceForm()
     data = {"audience_form": audience_form, 'current_year': current_year}
     return render(request, 'audience/add-audience.html', data)
 
 
-@login_required()
+@login_required(login_url='/login/')
 def update_audience(request, id_audience):
     if not request.user.is_superuser:
         messages.error(request, 'У вас нет прав доступа.')
@@ -479,7 +672,7 @@ def update_audience(request, id_audience):
     return render(request, 'audience/edit-audience.html', data)
 
 
-@login_required()
+@login_required(login_url='/login/')
 def delete_audience(request, id_audience):
     if not request.user.is_superuser:
         messages.error(request, 'У вас нет прав доступа.')
@@ -494,48 +687,80 @@ def delete_audience(request, id_audience):
     return render(request, 'audience/delete-audience.html', data)
 
 
-@login_required()
+@login_required(login_url='/login/')
 def all_groups(request):
+    user = request.user
     current_year = datetime.today().year
-    req_user = Teacher.objects.filter(
-        user_id=request.user.id).first()
-
-    if request.user.is_superuser:
-        groups = Group.objects.filter(branch__admin=request.user)
-        data = {'groups': groups, 'current_year': current_year}
-        return render(request, 'groups/all-groups.html', data)
-
-    if req_user:
+    main_offices = MainOffice.objects.filter(admin=user)
+    branches = Branch.objects.filter(main_office__in=main_offices)
+    selected_main_office_id = request.GET.get('main_office')
+    selected_branch_id = request.GET.get('branch')
+    groups = Group.objects.all()
+    if user.role == 'super admin':
+        if selected_main_office_id:
+            groups = groups.filter(main_office_id=selected_main_office_id)
+        elif selected_branch_id:
+            groups = groups.filter(branch_id=selected_branch_id)
+        else:
+            groups = groups.filter(Q(main_office_id__in=main_offices) | Q(branch__in=branches))
+    elif user.role == 'admin':
+        if selected_branch_id:
+            groups = groups.filter(branch_id=selected_branch_id)
+        else:
+            admin_branches = Branch.objects.filter(admin=user)
+            groups = groups.filter(branch__in=admin_branches)
+    elif user.role == 'teacher':
         professors = Teacher.objects.all()
-        groups = Group.objects.filter(teacher_id=req_user.id)
+        groups = Group.objects.filter(teacher_id=user.id)
         data = {'groups': groups, 'current_year': current_year, 'professors': professors}
         return render(request, 'teachers-group/teachers_group.html', data)
 
-    data = {"current_year": current_year}
+    data = {
+
+        'groups': groups,
+        'current_year': current_year,
+        'user': user,
+        'main_offices': main_offices,
+        'branches': branches,
+        'selected_main_office_id': selected_main_office_id,
+        'selected_branch_id': selected_branch_id,
+    }
     return render(request, 'groups/all-groups.html', data)
 
 
-@login_required()
+@login_required(login_url='/login/')
 def add_group(request):
-    if request.method == 'POST':
+    current_year = datetime.today().year
 
-        group_form = GroupForm(request.POST, user=request.user)
+    if request.method == 'POST':
+        user = request.user
+        group_form = GroupForm(request.user, request.POST, request.FILES)
         if group_form.is_valid():
-            branch = request.user.admin_branches.first()
             group = group_form.save(commit=False)
-            group.branch_id = branch.id
+            if request.user.is_superuser:
+                user = request.user
+                main_offices = MainOffice.objects.filter(admin_id=user.id).first()
+                course = Course.objects.filter()
+                group.main_office_id = main_offices
+            elif request.user.role == 'admin':
+                user = request.user
+                branches = Branch.objects.filter(admin_id=user.id).first()
+                print(branches)
+                group.branch = branches
             group.save()
 
-            return redirect('all_groups')
+            return redirect('all_courses')
+        else:
+            course_form = CourseForm()
+            data = {"course_form": course_form, 'current_year': current_year}
     else:
-        group_form = GroupForm(user=request.user)
-
+        group_form = GroupForm(request.POST, request.FILES)
     current_year = datetime.today().year
     data = {"group_form": group_form, 'current_year': current_year, }
     return render(request, 'groups/add-groups.html', data)
 
 
-@login_required()
+@login_required(login_url='/login/')
 def update_group(request, id_group):
     group = get_object_or_404(Group, pk=id_group)
     current_year = datetime.today().year
@@ -563,7 +788,7 @@ def update_group(request, id_group):
     return render(request, 'groups/edit-groups.html', data)
 
 
-@login_required()
+@login_required(login_url='/login/')
 def delete_group(request, id_group):
     if not request.user.is_superuser:
         messages.error(request, 'У вас нет прав доступа.')
@@ -615,7 +840,7 @@ def delete_group(request, id_group):
     return render(request, 'groups/delete-groups.html', data)
 
 
-@login_required
+@login_required(login_url='/login/')
 def mark_attendance(request, group_id):
     group = get_object_or_404(Group, pk=group_id)
 
@@ -623,7 +848,7 @@ def mark_attendance(request, group_id):
         date_attendance = request.POST.get('date_attendance')
         attendance_status = Attendance_Status.objects.get(name_attendance_status='Отсутствует')
 
-        students = group.students_id.filter(branch__admin=request.user)
+        students = group.students_id.all()
 
         for student in students:
             attendance_value = request.POST.get(f'student_{student.id}', '')
@@ -651,7 +876,7 @@ def mark_attendance(request, group_id):
     return render(request, template_name, data)
 
 
-@login_required
+@login_required(login_url='/login/')
 def info_group(request, id_group):
     group = get_object_or_404(Group, pk=id_group)
     students = group.students_id.all()
@@ -686,7 +911,7 @@ def info_group(request, id_group):
     return render(request, template_name, data)
 
 
-@login_required()
+@login_required(login_url='/login/')
 def process_payment(request, student_id):
     if not request.user.is_superuser:
         messages.error(request, 'У вас нет прав доступа.')
@@ -735,7 +960,7 @@ def process_payment(request, student_id):
     return render(request, 'students/payment.html', data)
 
 
-@login_required()
+@login_required(login_url='/login/')
 def delete_selected_students(request):
     if not request.user.is_superuser:
         messages.error(request, 'У вас нет прав доступа.')
@@ -787,13 +1012,13 @@ def delete_selected_students(request):
         return HttpResponseBadRequest('Метод запроса должен быть POST.')
 
 
-@login_required()
+@login_required(login_url='/login/')
 def archived_students(request):
     if not request.user.is_superuser:
         messages.error(request, 'У вас нет прав доступа.')
         return redirect(
             'main_page')
-    archived_students = ArchivedStudent.objects.filter(branch__admin=request.user)
+    archived_students = ArchivedStudent.objects.all()
     current_year = datetime.today().year
     data = {
         'archived_students': archived_students,
@@ -802,7 +1027,7 @@ def archived_students(request):
     return render(request, 'students/archive-students.html', data)
 
 
-@login_required()
+@login_required(login_url='/login/')
 def restore_student(request, student_id):
     if not request.user.is_superuser:
         messages.error(request, 'У вас нет прав доступа.')
@@ -824,7 +1049,7 @@ def restore_student(request, student_id):
     return redirect('archived_students')
 
 
-@login_required()
+@login_required(login_url='/login/')
 def delete_archived_students(request):
     if not request.user.is_superuser:
         messages.error(request, 'У вас нет прав доступа.')
@@ -837,95 +1062,179 @@ def delete_archived_students(request):
     return redirect('archived_students')
 
 
-@login_required()
+@login_required(login_url='/login/')
 def main_page(request):
+    if not request.user.is_authenticated:
+        return redirect('login_page')
     if not request.user.is_superuser:
         messages.error(request, 'У вас нет прав доступа.')
         return redirect('all_groups')
 
-    completed_the_course = ArchivedStudent.objects.filter(comments='окончил(а) курс',
-                                                          branch__admin=request.user).count()
-    dropped_lesson = ArchivedStudent.objects.filter(comments='прекратил(а) обучение',
-                                                    branch__admin=request.user).count()
-    left_students = ArchivedStudent.objects.filter(branch__admin=request.user).count()
-    paid_students = Student.objects.filter(paid_check='Оплатил', branch__admin=request.user).count()
-    no_paid_students = Student.objects.filter(paid_check='Не оплатил', branch__admin=request.user).count()
-    other_students = Student.objects.filter(paid_check=None, branch__admin=request.user).count()
+    user = request.user
+    main_offices = MainOffice.objects.filter(admin=user)
+    branches = Branch.objects.filter(main_office__in=main_offices)
+    selected_main_office_id = request.GET.get('main_office')
+    selected_branch_id = request.GET.get('branch')
+    teachers = Teacher.objects.all()
 
-    groups = Group.objects.filter(branch__admin=request.user)
-    group_data = []
+    if request.user.role == 'super admin':
+        completed_the_course = ArchivedStudent.objects.filter(comments='окончил(а) курс',
+                                                              main_office_id=selected_main_office_id).count()
+        dropped_lesson = ArchivedStudent.objects.filter(comments='прекратил(а) обучение',
+                                                        main_office_id=selected_main_office_id).count()
+        left_students = ArchivedStudent.objects.all().count()
+        paid_students = Student.objects.filter(paid_check='Оплатил', main_office_id=selected_main_office_id).count()
+        no_paid_students = Student.objects.filter(paid_check='Не оплатил',
+                                                  main_office_id=selected_main_office_id).count()
+        other_students = Student.objects.filter(paid_check=None, main_office_id=selected_main_office_id).count()
 
-    for group in groups:
-        students_count = group.students_id.count()
-        group_data.append({
-            'group': group,
-            'students_count': students_count,
-            'course': group.course_id,
-        })
+        groups = Group.objects.all()
+        group_data = []
 
-    years = Student.objects.filter(branch__admin=request.user).annotate(year=ExtractYear('joined_date')).values_list(
-        'year',
-        flat=True).distinct().order_by('year')
+        for group in groups:
+            students_count = group.students_id.count()
+            group_data.append({
+                'group': group,
+                'students_count': students_count,
+                'course': group.course_id,
+            })
 
-    current_year = request.GET.get('year', None)
-    if current_year:
-        students_per_month = Student.objects.filter(joined_date__year=current_year,
-                                                    branch__admin=request.user).annotate(
-            month=TruncMonth('joined_date')).values('month').annotate(count=Count('id')).order_by('month')
-        left_students_per_month = ArchivedStudent.objects.filter(archived_date__year=current_year,
-                                                                 branch__admin=request.user).annotate(
-            month=TruncMonth('archived_date')).values('month').annotate(count=Count('id')).order_by('month')
-    else:
-        students_per_month = Student.objects.filter(branch__admin=request.user).annotate(
-            month=TruncMonth('joined_date')).values('month').annotate(
-            count=Count('id')).order_by('month')
-        left_students_per_month = ArchivedStudent.objects.filter(branch__admin=request.user).annotate(
-            month=TruncMonth('archived_date')).values(
-            'month').annotate(
-            count=Count('id')).order_by('month')
+        years = Student.objects.all().annotate(year=ExtractYear('joined_date')).values_list(
+            'year',
+            flat=True).distinct().order_by('year')
 
-    month_data = defaultdict(lambda: {'joined': 0, 'left': 0})
-    for item in students_per_month:
-        month_data[item['month'].strftime('%B')]['joined'] = item['count']
+        current_year = request.GET.get('year', None)
+        if current_year:
+            students_per_month = Student.objects.filter(joined_date__year=current_year,
+                                                        main_office_id=selected_main_office_id).annotate(
+                month=TruncMonth('joined_date')).values('month').annotate(count=Count('id')).order_by('month')
+            left_students_per_month = ArchivedStudent.objects.filter(archived_date__year=current_year,
+                                                                     main_office_id=selected_main_office_id).annotate(
+                month=TruncMonth('archived_date')).values('month').annotate(count=Count('id')).order_by('month')
+        else:
+            students_per_month = Student.objects.all().annotate(
+                month=TruncMonth('joined_date')).values('month').annotate(
+                count=Count('id')).order_by('month')
+            left_students_per_month = ArchivedStudent.objects.all().annotate(
+                month=TruncMonth('archived_date')).values(
+                'month').annotate(
+                count=Count('id')).order_by('month')
 
-    for item in left_students_per_month:
-        month_data[item['month'].strftime('%B')]['left'] = item['count']
+        month_data = defaultdict(lambda: {'joined': 0, 'left': 0})
+        for item in students_per_month:
+            month_data[item['month'].strftime('%B')]['joined'] = item['count']
 
-    all_months = [datetime.strptime(str(month), "%m").strftime("%B") for month in range(1, 13)]
-    students_per_month_full = [(month, month_data[month]['joined'], month_data[month]['left']) for month in all_months]
+        for item in left_students_per_month:
+            month_data[item['month'].strftime('%B')]['left'] = item['count']
 
-    data = {
-        'group_data': group_data,
-        'total_groups': groups.count(),
-        'total_students': Student.objects.filter(branch__admin=request.user).count(),
-        'paid_students': paid_students,
-        'no_paid_students': no_paid_students,
-        'other_students': other_students,
-        'students_per_month': students_per_month_full,
-        'years': years,
-        'current_year': current_year,
-        'completed_the_course': completed_the_course,
-        'dropped_lesson': dropped_lesson,
-        'archived_students': ArchivedStudent.objects.filter(branch__admin=request.user).count(),
-        'left_students': left_students,
-        'branch':Branch.objects.filter(admin_id=request.user.id)
+        all_months = [datetime.strptime(str(month), "%m").strftime("%B") for month in range(1, 13)]
+        students_per_month_full = [(month, month_data[month]['joined'], month_data[month]['left']) for month in
+                                   all_months]
 
-    }
+        data = {
+            'group_data': group_data,
+            'total_groups': groups.count(),
+            'total_students': Student.objects.all().count(),
+            'paid_students': paid_students,
+            'no_paid_students': no_paid_students,
+            'other_students': other_students,
+            'students_per_month': students_per_month_full,
+            'years': years,
+            'current_year': current_year,
+            'completed_the_course': completed_the_course,
+            'dropped_lesson': dropped_lesson,
+            'archived_students': ArchivedStudent.objects.all().count(),
+            'left_students': left_students,
+            'branch': branches
 
-    return render(request, 'base.html', data)
+        }
+        return render(request, 'base.html', data)
+    elif request.user.role == 'admin':
+        completed_the_course = ArchivedStudent.objects.filter(comments='окончил(а) курс',
+                                                              branch__admin=request.user).count()
+        dropped_lesson = ArchivedStudent.objects.filter(comments='прекратил(а) обучение',
+                                                        branch__admin=request.user).count()
+        left_students = ArchivedStudent.objects.filter(branch__admin=request.user).count()
+        paid_students = Student.objects.filter(paid_check='Оплатил', branch__admin=request.user).count()
+        no_paid_students = Student.objects.filter(paid_check='Не оплатил', branch__admin=request.user).count()
+        other_students = Student.objects.filter(paid_check=None, branch__admin=request.user).count()
+
+        groups = Group.objects.filter(branch__admin=request.user)
+        group_data = []
+
+        for group in groups:
+            students_count = group.students_id.count()
+            group_data.append({
+                'group': group,
+                'students_count': students_count,
+                'course': group.course_id,
+            })
+
+        years = Student.objects.filter(branch__admin=request.user).annotate(
+            year=ExtractYear('joined_date')).values_list(
+            'year',
+            flat=True).distinct().order_by('year')
+
+        current_year = request.GET.get('year', None)
+        if current_year:
+            students_per_month = Student.objects.filter(joined_date__year=current_year,
+                                                        branch__admin=request.user).annotate(
+                month=TruncMonth('joined_date')).values('month').annotate(count=Count('id')).order_by('month')
+            left_students_per_month = ArchivedStudent.objects.filter(archived_date__year=current_year,
+                                                                     branch__admin=request.user).annotate(
+                month=TruncMonth('archived_date')).values('month').annotate(count=Count('id')).order_by('month')
+        else:
+            students_per_month = Student.objects.filter(branch__admin=request.user).annotate(
+                month=TruncMonth('joined_date')).values('month').annotate(
+                count=Count('id')).order_by('month')
+            left_students_per_month = ArchivedStudent.objects.filter(branch__admin=request.user).annotate(
+                month=TruncMonth('archived_date')).values(
+                'month').annotate(
+                count=Count('id')).order_by('month')
+
+        month_data = defaultdict(lambda: {'joined': 0, 'left': 0})
+        for item in students_per_month:
+            month_data[item['month'].strftime('%B')]['joined'] = item['count']
+
+        for item in left_students_per_month:
+            month_data[item['month'].strftime('%B')]['left'] = item['count']
+
+        all_months = [datetime.strptime(str(month), "%m").strftime("%B") for month in range(1, 13)]
+        students_per_month_full = [(month, month_data[month]['joined'], month_data[month]['left']) for month in
+                                   all_months]
+
+        data = {
+            'group_data': group_data,
+            'total_groups': groups.count(),
+            'total_students': Student.objects.filter(branch__admin=request.user).count(),
+            'paid_students': paid_students,
+            'no_paid_students': no_paid_students,
+            'other_students': other_students,
+            'students_per_month': students_per_month_full,
+            'years': years,
+            'current_year': current_year,
+            'completed_the_course': completed_the_course,
+            'dropped_lesson': dropped_lesson,
+            'archived_students': ArchivedStudent.objects.filter(branch__admin=request.user).count(),
+            'left_students': left_students,
+            'branch': Branch.objects.filter(admin_id=request.user.id)
+
+        }
+        return render(request, 'base.html', data)
+    return render(request, 'base.html')
 
 
-@login_required()
+@login_required(login_url='/login/')
 def archived_groups(request):
     if not request.user.is_superuser:
         messages.error(request, 'У вас нет прав доступа.')
         return redirect(
             'main_page')
-    archived_groups = ArchivedGroup.objects.filter(branch__admin=request.user)
+    archived_groups = ArchivedGroup.objects.all()
     return render(request, 'groups/archived_group.html', {'archived_groups': archived_groups})
 
 
-@login_required()
+@login_required(login_url='/login/')
 def delete_archived_group(request, id_archived_group):
     if not request.user.is_superuser:
         messages.error(request, 'У вас нет прав доступа.')
@@ -937,7 +1246,7 @@ def delete_archived_group(request, id_archived_group):
         return redirect('archived_groups')
 
 
-@login_required()
+@login_required(login_url='/login/')
 def restore_group(request, group_id):
     if not request.user.is_superuser:
         messages.error(request, 'У вас нет прав доступа.')
@@ -967,7 +1276,7 @@ def restore_group(request, group_id):
     return redirect('archived_students')
 
 
-@login_required()
+@login_required(login_url='/login/')
 def delete_payment(request, payment_id):
     if not request.user.is_superuser:
         messages.error(request, 'У вас нет прав доступа.')
@@ -997,16 +1306,16 @@ def delete_payment(request, payment_id):
     return render(request, 'students/delete_payment.html', {'payment': payment, 'comment_form': comment_form})
 
 
-@login_required()
+@login_required(login_url='/login/')
 def archived_payments(request):
-    archived_payments = ArchivedPayment.objects.filter(branch__admin=request.user)
+    archived_payments = ArchivedPayment.objects.all()
     context = {
         'archived_payments': archived_payments
     }
     return render(request, 'students/payment_archive.html', context)
 
 
-@login_required()
+@login_required(login_url='/login/')
 def restore_payment(request, archived_payment_id):
     archived_payment = get_object_or_404(ArchivedPayment, id=archived_payment_id)
 
@@ -1033,7 +1342,7 @@ def login_page(request):
     if request.method == "POST":
         username = request.POST.get('username')
         password = request.POST.get('password')
-        if not User.objects.filter(username=username).exists():
+        if not CustomUser.objects.filter(username=username).exists():
             messages.error(request, 'Invalid Username')
             return redirect('/login/')
         user = authenticate(username=username, password=password)

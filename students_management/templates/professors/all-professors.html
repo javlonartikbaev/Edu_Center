@@ -81,11 +81,11 @@
         <nav id="sidebar" class="">
             <div class="sidebar-header">
                 {% for branch in branch %}
-                	<a href="{% url 'main_page' %}"><img class="main-logo" style="height:70px;width: 170px "
+                    <a href="{% url 'main_page' %}"><img class="main-logo" style="height:70px;width: 170px "
                                                          src="{{ branch.logo_branch.url }}"
                                                          alt=""/></a>
                     <strong><a href="{% url 'main_page' %}"><img style="height:50px;width: 50px "
-                                                                 src="{{branch.short_logo_branch.url}}"
+                                                                 src="{{ branch.short_logo_branch.url }}"
                                                                  alt=""/></a></strong>
                 {% endfor %}
 
@@ -138,19 +138,19 @@
 
                         </li>
 
-                        <li>
-                            <a class="has-arrow" href="{% url 'all_status' %}" aria-expanded="false"><span
-                                    class="educate-icon educate-course icon-wrap"></span> <span class="mini-click-non">Статусы</span></a>
-                            <ul class="submenu-angle" aria-expanded="false">
-                                <li><a title="All Courses" href="{% url 'all_status' %}"><span
-                                        class="mini-sub-pro">Все Статусы</span></a>
-                                </li>
-                                <li><a title="Add Courses" href="{% url 'add_status' %}"><span
-                                        class="mini-sub-pro">Добавить Статус</span></a></li>
-                                <!-- <li><a title="course Payment" href="course-payment.html"><span class="mini-sub-pro">Courses Payment</span></a></li> -->
-                            </ul>
-
-                        </li>
+{#                        <li>#}
+{#                            <a class="has-arrow" href="{% url 'all_status' %}" aria-expanded="false"><span#}
+{#                                    class="educate-icon educate-course icon-wrap"></span> <span class="mini-click-non">Статусы</span></a>#}
+{#                            <ul class="submenu-angle" aria-expanded="false">#}
+{#                                <li><a title="All Courses" href="{% url 'all_status' %}"><span#}
+{#                                        class="mini-sub-pro">Все Статусы</span></a>#}
+{#                                </li>#}
+{#                                <li><a title="Add Courses" href="{% url 'add_status' %}"><span#}
+{#                                        class="mini-sub-pro">Добавить Статус</span></a></li>#}
+{#                                <!-- <li><a title="course Payment" href="course-payment.html"><span class="mini-sub-pro">Courses Payment</span></a></li> -->#}
+{#                            </ul>#}
+{##}
+{#                        </li>#}
 
                         <li>
                             <a class="has-arrow" href="{% url 'all_audience' %}" aria-expanded="false"><span
@@ -326,20 +326,20 @@
 
                                     </ul>
                                 </li>
-                                <li>
-                                    <a class="has-arrow" href="{% url 'all_status' %}" aria-expanded="false"><span
-                                            class="educate-icon educate-course icon-wrap"></span> <span
-                                            class="mini-click-non">Статусы</span></a>
-                                    <ul class="submenu-angle" aria-expanded="false">
-                                        <li><a title="All Courses" href="{% url 'all_status' %}"><span
-                                                class="mini-sub-pro">Все Статусы</span></a>
-                                        </li>
-                                        <li><a title="Add Courses" href="{% url 'add_status' %}"><span
-                                                class="mini-sub-pro">Добавить Статус</span></a></li>
-
-                                    </ul>
-
-                                </li>
+{#                                <li>#}
+{#                                    <a class="has-arrow" href="{% url 'all_status' %}" aria-expanded="false"><span#}
+{#                                            class="educate-icon educate-course icon-wrap"></span> <span#}
+{#                                            class="mini-click-non">Статусы</span></a>#}
+{#                                    <ul class="submenu-angle" aria-expanded="false">#}
+{#                                        <li><a title="All Courses" href="{% url 'all_status' %}"><span#}
+{#                                                class="mini-sub-pro">Все Статусы</span></a>#}
+{#                                        </li>#}
+{#                                        <li><a title="Add Courses" href="{% url 'add_status' %}"><span#}
+{#                                                class="mini-sub-pro">Добавить Статус</span></a></li>#}
+{##}
+{#                                    </ul>#}
+{##}
+{#                                </li>#}
 
                                 <li>
                                     <a class="has-arrow" href="{% url 'all_audience' %}" aria-expanded="false"><span
@@ -425,32 +425,51 @@
 
 
 {% block content %}
-    {% if search %}
+    <form method="GET" action="{% url 'all_professors' %}">
+        <div class="form-group">
+            <label for="main_office">Главный офис</label>
+            <select id="main_office" name="main_office" class="form-control" onchange="this.form.submit()">
+                <option value="">Все</option>
+                {% for office in main_offices %}
+                    <option value="{{ office.id }}"
+                            {% if office.id|stringformat:"s" == selected_main_office_id|stringformat:"s" %}selected{% endif %}>{{ office.name_main_office }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="branch">Филиал</label>
+            <select id="branch" name="branch" class="form-control" onchange="this.form.submit()">
+                <option value="">Все</option>
+                {% for branch in branches %}
+                    <option value="{{ branch.id }}"
+                            {% if branch.id|stringformat:"s" == selected_branch_id|stringformat:"s" %}selected{% endif %}>{{ branch.name_branch }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </form>
+
+    {% if professor %}
         <div class="contacts-area mg-b-15">
             <div class="container-fluid">
                 <div class="row">
-
-                    {% for professor in professor %}
+                    {% for prof in professor %}
                         <div class="col-lg-3 col-md-6 col-sm-6 col-xs-10">
                             <div class="hpanel hblue contact-panel contact-panel-cs responsive-mg-b-10">
                                 <div class="panel-body custom-panel-jw">
                                     <img alt="logo" class="img-circle m-b" style="width: 550px; height: 250px"
-                                         src="{{ MEDIA_URL }}{{ professor.img_teacher.url }}">
+                                         src="{{ MEDIA_URL }}{{ prof.img_teacher.url }}">
                                     <h3>
-                                        <a href="{{ professor.get_absolute_url }}">{{ professor.first_name }} {{ professor.last_name }}</a>
+                                        <a href="{{ prof.get_absolute_url }}">{{ prof.first_name }} {{ prof.last_name }}</a>
                                     </h3>
-                                    <p class="all-pro-ad">{{ professor.phone_number }}</p>
-                                    <p>
-                                        {{ professor.course }}
-                                    </p>
-
-                                    <a href="{% url 'delete_professor' professor.id %}">
+                                    <p class="all-pro-ad">{{ prof.phone_number }}</p>
+                                    <p>{{ prof.course }}</p>
+                                    <a href="{% url 'delete_professor' prof.id %}">
                                         <button type="button" class="btn btn-danger delete-button"
-                                                data-professor-id="{{ professor.id }}">
+                                                data-professor-id="{{ prof.id }}">
                                             Удалить
                                         </button>
                                     </a>
-
                                 </div>
                             </div>
                         </div>
@@ -461,30 +480,28 @@
 
         <div class="pagination">
             <div class="pagination-second">
-            <span class="step-links">
-                {% if professor.has_previous %}
-                    <a href="?page=1">&laquo;</a>
-                    <a href="?page={{ professor.previous_page_number }}">‹</a>
-                {% endif %}
+                <span class="step-links">
+                    {% if professor.has_previous %}
+                        <a href="?page=1">&laquo;</a>
+                        <a href="?page={{ professor.previous_page_number }}">‹</a>
+                    {% endif %}
 
-                <span class="current">
-                    Page {{ professor.number }} of {{ professor.paginator.num_pages }}.
+                    <span class="current">
+                        Страница {{ professor.number }} из {{ professor.paginator.num_pages }}.
+                    </span>
+
+                    {% if professor.has_next %}
+                        <a href="?page={{ professor.next_page_number }}">›</a>
+                        <a href="?page={{ professor.paginator.num_pages }}">&raquo;</a>
+                    {% endif %}
                 </span>
-
-                {% if professor.has_next %}
-                    <a href="?page={{ professor.next_page_number }}">›</a>
-                    <a href="?page={{ professor.paginator.num_pages }}">&raquo;</a>
-                {% endif %}
-            </span>
             </div>
         </div>
-
     {% else %}
         <div>Ничего не найдено</div>
-
     {% endif %}
-
 {% endblock %}
+
 {% block footer %}
 
     <div class="footer-copyright-area">

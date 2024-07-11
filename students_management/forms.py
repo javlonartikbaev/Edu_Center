@@ -1,4 +1,5 @@
 from django import forms
+from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 
 from .models import *
 
@@ -6,20 +7,22 @@ from .models import *
 class TeacherForm(forms.ModelForm):
     class Meta:
         model = Teacher
-        fields = ['first_name', 'last_name', 'phone_number', 'img_teacher', 'course', 'user']
+        fields = ['first_name', 'last_name', 'phone_number', 'img_teacher', 'course', 'user',
+                  ]
         widgets = {
             'first_name': forms.TextInput(attrs={'class': 'form-control'}),
             'last_name': forms.TextInput(attrs={'class': 'form-control'}),
             'phone_number': forms.TextInput(attrs={'class': 'form-control'}),
             'img_teacher': forms.ClearableFileInput(attrs={'class': 'form-control-file'}),
             'course': forms.Select(attrs={'class': 'form-control'}),
+
         }
 
 
 class TeacherUpdateForm(forms.ModelForm):
     class Meta:
         model = Teacher
-        fields = ['first_name', 'last_name', 'phone_number', 'img_teacher', 'course', ]
+        fields = ['first_name', 'last_name', 'phone_number', 'img_teacher', 'course']
         widgets = {
             'first_name': forms.TextInput(attrs={'class': 'form-control'}),
             'last_name': forms.TextInput(attrs={'class': 'form-control'}),
@@ -63,7 +66,7 @@ class StatusForm(forms.ModelForm):
 class StudentForm(forms.ModelForm):
     class Meta:
         model = Student
-        exclude = ['paid_check', 'joined_date', 'branch']
+        exclude = ['paid_check', 'joined_date', 'branch', 'main_office_id']
         widgets = {
             'first_name_s': forms.TextInput(attrs={'class': 'form-control'}),
             'last_name_s': forms.TextInput(attrs={'class': 'form-control'}),
@@ -111,27 +114,18 @@ class GroupForm(forms.ModelForm):
             'course_id': forms.Select(attrs={'class': 'form-control'}),
         }
 
-    def __init__(self, *args, **kwargs):
-        user = kwargs.pop('user')
-        super(GroupForm, self).__init__(*args, **kwargs)
-        if user.is_superuser:
-            branch = user.admin_branches.first()
-            if branch:
-                self.fields['course_id'].queryset = Course.objects.filter(branch_id=branch.id)
-                self.fields['teacher_id'].queryset = Teacher.objects.filter(branch_id=branch.id)
-                self.fields['audience_id'].queryset = Audience.objects.filter(branch_id=branch.id)
-            else:
-                self.fields['course_id'].queryset = Course.objects.none()
-                self.fields['teacher_id'].queryset = Teacher.objects.none()
-                self.fields['audience_id'].queryset = Audience.objects.none()
-        else:
-            self.fields['course_id'].queryset = Course.objects.all()
-            self.fields['teacher_id'].queryset = Teacher.objects.all()
-            self.fields['audience_id'].queryset = Audience.objects.all()
+    def __init__(self, user,*args, **kwargs):
 
+        super().__init__(*args, **kwargs)
 
-
-
+        if user == 'super admin':
+            self.fields['course_id'].queryset = Course.objects.filter(main_office_id=user.main_office_id)
+            self.fields['audience_id'].queryset = Audience.objects.filter(main_office_id=user.main_office_id)
+            self.fields['teacher_id'].queryset = Teacher.objects.filter(main_office_id=user.main_office_id)
+        elif user == 'admin':
+            self.fields['course_id'].queryset = Course.objects.filter(branch__admin_id=user.branch.admin_id)
+            self.fields['audience_id'].queryset = Audience.objects.filter(branch__admin_id=user.branch.admin_id)
+            self.fields['teacher_id'].queryset = Teacher.objects.filter(branch__admin_id=user.branch.admin_id)
 
 
 class AttendanceForm(forms.ModelForm):
@@ -146,3 +140,15 @@ class CommentForm(forms.Form):
         widget=forms.Textarea(attrs={'rows': 4, 'class': "form-control", 'placeholder': 'Причина удаления ...'}),
         required=False
     )
+
+
+class CustomUserCreationForm(UserCreationForm):
+    class Meta:
+        model = CustomUser
+        fields = ("username", "password", "password1", "role")
+
+
+class CustomUserChangeForm(UserChangeForm):
+    class Meta:
+        model = CustomUser
+        fields = "__all__"

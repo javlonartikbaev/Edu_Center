@@ -20,10 +20,10 @@ urlpatterns = [
     path('delete-course/<int:id_course>/', views.delete_course, name='delete_course'),
 
     # status
-    path('all-status/', views.all_status, name='all_status'),
-    path('add-status/', views.add_status, name='add_status'),
-    path('update-status/<int:id_status>/', views.update_status, name='update_status'),
-    path('delete-status/<int:id_status>/', views.delete_status, name='delete_status'),
+    # path('all-status/', views.all_status, name='all_status'),
+    # path('add-status/', views.add_status, name='add_status'),
+    # path('update-status/<int:id_status>/', views.update_status, name='update_status'),
+    # path('delete-status/<int:id_status>/', views.delete_status, name='delete_status'),
 
     # student
     path('all-students/', views.all_students, name='all_students'),

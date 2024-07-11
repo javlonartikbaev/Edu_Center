@@ -1,13 +1,38 @@
 from django.contrib import admin
+from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 
 from students_management.models import *
+from .forms import CustomUserCreationForm, CustomUserChangeForm
 
-from django.contrib import admin
-from django.contrib.auth.admin import UserAdmin
+
+class MainBranchAdmin(admin.ModelAdmin):
+    list_display = ('first_name_d', 'last_name_d', 'address', 'phone_number', 'name_main_office', 'admin')
+
+
+class UserAdmin(BaseUserAdmin):
+    fieldsets = (
+        (None, {'fields': ('username', 'password', "role")}),
+        ('Personal info', {'fields': ('first_name', 'last_name', 'email')}),
+        ('Permissions', {'fields': ('is_active', 'is_staff', 'is_superuser','groups', 'user_permissions')}),
+        ('Important dates', {'fields': ('last_login', 'date_joined')}),
+    )
+    add_fieldsets = (
+        (None, {
+            'classes': ('wide',),
+            'fields': ('username', 'password1', 'password2', 'role', ),
+        }),
+    )
+    list_display = ('username', 'email', 'first_name', 'last_name', 'is_staff', 'role')
+    search_fields = ('username', 'first_name', 'last_name', 'email')
+    ordering = ('username',)
+
+
+
+
 # Create your models here.
 class StudentAdmin(admin.ModelAdmin):
     list_display = (
-        'id','first_name_s', 'last_name_s', 'phone_number_s', 'paid_check', 'parents_phone_number', 'joined_date')
+        'id', 'first_name_s', 'last_name_s', 'phone_number_s', 'paid_check', 'parents_phone_number', 'joined_date')
 
 
 class PaymentAdmin(admin.ModelAdmin):
@@ -27,7 +52,7 @@ class StatusAdmin(admin.ModelAdmin):
 
 
 class TeacherAdmin(admin.ModelAdmin):
-    list_display = ('first_name', 'last_name', 'phone_number', 'img_teacher', 'course')
+    list_display = ('first_name', 'last_name', 'phone_number', 'img_teacher', 'course', 'user')
 
 
 class GroupAdmin(admin.ModelAdmin):
@@ -45,7 +70,7 @@ class AttendanceAdmin(admin.ModelAdmin):
 
 
 class BranchAdmin(admin.ModelAdmin):
-    list_display = ('name', 'address', 'phone_number', 'admin')
+    list_display = ('name_branch', 'address', 'phone_number', 'admin')
 
 
 class ArchivedStudentAdmin(admin.ModelAdmin):
@@ -72,8 +97,8 @@ class ArchivedGroupAdmin(admin.ModelAdmin):
     list_filter = ('branch', 'status_group', 'archived_date')
     ordering = ('-archived_date',)
 
-
-
+admin.site.register(MainOffice, MainBranchAdmin)
+admin.site.register(CustomUser, UserAdmin)
 admin.site.register(ArchivedStudent, ArchivedStudentAdmin)
 admin.site.register(ArchivedPayment, ArchivedPaymentAdmin)
 admin.site.register(ArchivedGroup, ArchivedGroupAdmin)

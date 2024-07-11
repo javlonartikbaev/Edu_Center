@@ -53,31 +53,50 @@
 {% endblock %}
 
 {% block content %}
-    {% if search %}
-        <div class="courses-area" style="padding-bottom:20px ">
+    <form method="GET" action="{% url 'all_courses' %}">
+        <div class="form-group">
+            <label for="main_office">Главный офис</label>
+            <select id="main_office" name="main_office" class="form-control" onchange="this.form.submit()">
+                <option value="">Все</option>
+                {% for office in main_offices %}
+                    <option value="{{ office.id }}"
+                            {% if office.id|stringformat:"s" == selected_main_office_id|stringformat:"s" %}selected{% endif %}>{{ office.name_main_office }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="branch">Филиал</label>
+            <select id="branch" name="branch" class="form-control" onchange="this.form.submit()">
+                <option value="">Все</option>
+                {% for branch in branches %}
+                    <option value="{{ branch.id }}"
+                            {% if branch.id|stringformat:"s" == selected_branch_id|stringformat:"s" %}selected{% endif %}>{{ branch.name_branch }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </form>
+
+    {% if course %}
+        <div class="courses-area" style="padding-bottom:20px">
             <div class="container-fluid">
                 <div class="row">
-                    {% for course in courses %}
+                    {% for course in course %}
                         <div class="col-lg-3 col-md-6 col-sm-6 col-xs-12">
                             <div class="courses-inner res-mg-b-30">
                                 <div class="courses-title">
                                     <a href="#"><img src="{{ MEDIA_URL }}{{ course.img_course.url }}" alt=""></a>
                                     <h2><a href="{{ course.get_absolute_url }}">{{ course.name_course }}</a></h2>
                                 </div>
-
                                 <div class="course-des">
                                     <p><span><i class="fa fa-clock"></i></span> <b>Duration:</b> {{ course.duration }}
                                         Months</p>
                                     <p><span><i class="fa fa-clock"></i></span> <b>Price:</b> {{ course.price_course }}
-                                        sum
-                                    </p>
+                                        sum</p>
                                     <a href="{% url 'delete_course' course.id %}">
-                                        <button type="button" class="btn btn-danger delete-button">
-                                            Удалить
-                                        </button>
+                                        <button type="button" class="btn btn-danger delete-button">Удалить</button>
                                     </a>
                                 </div>
-
                             </div>
                         </div>
                     {% endfor %}
@@ -87,29 +106,28 @@
 
         <div class="pagination">
             <div class="pagination-second">
-            <span class="step-links">
-                {% if courses.has_previous %}
-                    <a href="?page=1">&laquo;</a>
-                    <a href="?page={{ courses.previous_page_number }}">‹</a>
-                {% endif %}
+                <span class="step-links">
+                    {% if courses.has_previous %}
+                        <a href="?page=1">&laquo;</a>
+                        <a href="?page={{ courses.previous_page_number }}">‹</a>
+                    {% endif %}
 
-                <span class="current">
-                    Page {{ courses.number }} of {{ courses.paginator.num_pages }}.
+                    <span class="current">
+                        Страница {{ courses.number }} из {{ courses.paginator.num_pages }}.
+                    </span>
+
+                    {% if courses.has_next %}
+                        <a href="?page={{ courses.next_page_number }}">›</a>
+                        <a href="?page={{ courses.paginator.num_pages }}">&raquo;</a>
+                    {% endif %}
                 </span>
-
-                {% if courses.has_next %}
-                    <a href="?page={{ courses.next_page_number }}">›</a>
-                    <a href="?page={{ courses.paginator.num_pages }}">&raquo;</a>
-                {% endif %}
-            </span>
             </div>
         </div>
-
     {% else %}
-        <h2>Ничего не найдено</h2>
-
+        <div>Ничего не найдено</div>
     {% endif %}
 {% endblock %}
+
 
 
 

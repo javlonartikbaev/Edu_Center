@@ -1,5 +1,15 @@
 {% extends 'teachers-group/teachers_group.html' %}
 {% load static %}
+{#{% block Left_Menu %}#}
+{#    {% for branch in branch %}#}
+{#        <a href="{% url 'main_page' %}"><img class="main-logo" style="height:70px;width: 170px "#}
+{#                                             src="{{ branch.logo_branch.url }}"#}
+{#                                             alt=""/></a>#}
+{#        <strong><a href="{% url 'main_page' %}"><img style="height:50px;width: 50px "#}
+{#                                                     src="{{ branch.short_logo_branch.url }}"#}
+{#                                                     alt=""/></a></strong>#}
+{#    {% endfor %}#}
+{#{% endblock %}#}
 {% block content %}
     <div class="container-fluid" style="margin-top: 60px">
         <form method="post" action="{% url 'mark_attendance' group.id %}">
