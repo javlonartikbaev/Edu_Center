@@ -28,7 +28,9 @@
 {% endblock %}
 {% block content %}
     <div class="page-wrapper" style="margin-top: 60px">
+
         <div style="margin: 10px; ">
+
             <form method="post" , enctype="multipart/form-data">
                 {% csrf_token %}
                 {{ course_form.as_p }}

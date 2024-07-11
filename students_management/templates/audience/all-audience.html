@@ -4,14 +4,20 @@
 {% block content %}
     <div class="container-fluid" style="margin-top: 30px">
         <div class="row">
+
             <div class="col-lg-12">
+                <button class="btn btn-lg btn-success" style="background-color: #00acee; margin-left: 1000px; margin-top: 30px"><a
+                        title="Add Courses" style="color:white;" href="{% url 'add_audience' %}"><span
+                        class="mini-sub-pro">Добавить аудиторию</span></a>
+                </button>
                 <div class="hpanel hblue contact-panel contact-panel-cs responsive-mg-b-10">
                     <div class="panel-body custom-panel-jw">
                         <h1>Список аудиторий</h1>
                         <form method="GET" action="{% url 'all_audience' %}">
                             <div class="form-group">
                                 <label for="main_office">Главный офис</label>
-                                <select id="main_office" name="main_office" class="form-control" onchange="this.form.submit()">
+                                <select id="main_office" name="main_office" class="form-control"
+                                        onchange="this.form.submit()">
                                     <option value="">Все</option>
                                     {% for office in main_offices %}
                                         <option value="{{ office.id }}"
@@ -45,9 +51,11 @@
                             <tbody>
                             {% for aud in audience %}
                                 <tr>
-                                    <td><a href="{{ aud.get_absolute_url }}" style="color: #0a6aa1">{{ aud.number_audience }}</a></td>
+                                    <td><a href="{{ aud.get_absolute_url }}"
+                                           style="color: #0a6aa1">{{ aud.number_audience }}</a></td>
                                     <td>{{ aud.capacity }}</td>
-                                    <td><a href="{% url 'delete_audience' aud.id %}" class="btn btn-danger">Удалить</a></td>
+                                    <td><a href="{% url 'delete_audience' aud.id %}" class="btn btn-danger">Удалить</a>
+                                    </td>
                                 </tr>
                             {% endfor %}
                             </tbody>
