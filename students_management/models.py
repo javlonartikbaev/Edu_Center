@@ -20,9 +20,8 @@ class CustomUser(AbstractUser):
     groups = models.ManyToManyField(Group, related_name='customuser_set', blank=True)
     user_permissions = models.ManyToManyField(Permission, related_name='customuser_set', blank=True)
 
-    def __str__(self):
-        return self.username
-
+    main_office_id = models.ForeignKey('MainOffice', on_delete=models.SET_NULL, null=True, blank=True)
+    branch_office_id = models.ForeignKey('Branch', on_delete=models.SET_NULL, null=True, blank=True)
 class MainOffice(models.Model):
     first_name_d = models.CharField(max_length=50)
     last_name_d = models.CharField(max_length=50)
@@ -33,6 +32,7 @@ class MainOffice(models.Model):
     short_logo_main = models.ImageField(upload_to="logo", verbose_name='Короткий логотип филиала')
     admin = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='admin_main_branches',
                               verbose_name="Админ филиала")
+
     class Meta:
         db_table = 'main_office'
         verbose_name = 'Главный офис'
@@ -51,7 +51,7 @@ class Branch(models.Model):
     short_logo_branch = models.ImageField(upload_to="logo", verbose_name='Короткий логотип филиала')
     admin = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='admin_branches',
                               verbose_name="Админ филиала")
-    main_office = models.ForeignKey(MainOffice, on_delete=models.CASCADE, related_name='main_branches',)
+    main_office = models.ForeignKey(MainOffice, on_delete=models.CASCADE, related_name='main_branches', )
 
     class Meta:
         db_table = 'branch'
@@ -78,8 +78,10 @@ class Student(models.Model):
     paid_check = models.CharField(max_length=20, choices=STATUS_CHOICES, default="Не оплатил")
     parents_phone_number = models.CharField(max_length=55, verbose_name='Телефон номер родителей')
     joined_date = models.DateField(default=datetime.today, verbose_name='Дата присоединение')
-    branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='students', verbose_name="Филиал", null=True)
-    main_office_id = models.ForeignKey(MainOffice, on_delete=models.CASCADE, related_name='main_offices_student', null=True)
+    branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='students', verbose_name="Филиал",
+                               null=True)
+    main_office_id = models.ForeignKey(MainOffice, on_delete=models.CASCADE, related_name='main_offices_student',
+                                       null=True)
 
     class Meta:
         db_table = 'student'
@@ -100,8 +102,10 @@ class Course(models.Model):
     duration = models.CharField(max_length=55, verbose_name='Длительность курса')
     img_course = models.ImageField(upload_to='course', verbose_name='Фото')
     slug_course = models.CharField(max_length=55)
-    branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='courses', verbose_name="Филиал", null=True, blank=True)
-    main_office_id = models.ForeignKey(MainOffice, on_delete=models.CASCADE, related_name='main_offices_course', null=True, blank=True)
+    branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='courses', verbose_name="Филиал",
+                               null=True, blank=True)
+    main_office_id = models.ForeignKey(MainOffice, on_delete=models.CASCADE, related_name='main_offices_course',
+                                       null=True, blank=True)
 
     class Meta:
         db_table = 'course'
@@ -126,8 +130,10 @@ class Payment(models.Model):
     date_pay = models.DateField(default=datetime.today, verbose_name='Дата оплаты')
     price = models.CharField(max_length=69, default='', verbose_name='Цена')
     student_id = models.ForeignKey(Student, on_delete=models.CASCADE, verbose_name='Студент')
-    branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='payments', verbose_name="Филиал", null=True)
-    main_office_id = models.ForeignKey(MainOffice, on_delete=models.CASCADE, related_name='main_offices_payment', null=True)
+    branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='payments', verbose_name="Филиал",
+                               null=True)
+    main_office_id = models.ForeignKey(MainOffice, on_delete=models.CASCADE, related_name='main_offices_payment',
+                                       null=True)
     course_id = models.ForeignKey(Course, on_delete=models.CASCADE, verbose_name='Курс')
 
     class Meta:
@@ -144,8 +150,10 @@ class Audience(models.Model):
     number_audience = models.CharField(max_length=45, verbose_name='Аудитория')
     capacity = models.CharField(max_length=45, verbose_name='Вместимость')
     slug_audience = models.CharField(max_length=45)
-    branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='audiences', verbose_name="Филиал", null=True)
-    main_office_id = models.ForeignKey(MainOffice, on_delete=models.CASCADE, related_name='main_offices_audience', null=True)
+    branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='audiences', verbose_name="Филиал",
+                               null=True)
+    main_office_id = models.ForeignKey(MainOffice, on_delete=models.CASCADE, related_name='main_offices_audience',
+                                       null=True)
 
     class Meta:
         db_table = 'audience'
@@ -183,8 +191,10 @@ class Teacher(models.Model):
     phone_number = models.CharField(max_length=45, verbose_name='Номер телефона')
     img_teacher = models.ImageField(upload_to='teacher', verbose_name='Фото учителя')
     course = models.ForeignKey('Course', on_delete=models.CASCADE, verbose_name='Курс')
-    branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='teachers', verbose_name="Филиал", null=True, blank=True)
-    main_office_id = models.ForeignKey(MainOffice, on_delete=models.CASCADE, related_name='main_offices_teacher', null=True, blank=True)
+    branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='teachers', verbose_name="Филиал",
+                               null=True, blank=True)
+    main_office_id = models.ForeignKey(MainOffice, on_delete=models.CASCADE, related_name='main_offices_teacher',
+                                       null=True, blank=True)
 
     class Meta:
         db_table = 'teacher'
@@ -214,9 +224,11 @@ class Group(models.Model):
     audience_id = models.ForeignKey(Audience, on_delete=models.CASCADE, verbose_name='Аудитория')
     students_id = models.ManyToManyField(Student, related_name='students', verbose_name='Студенты', blank=True)
     status_group = models.ForeignKey(Status, on_delete=models.PROTECT, default='', verbose_name='Статус группы')
-    branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='groups', verbose_name="Филиал", null=True)
+    branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='groups', verbose_name="Филиал",
+                               null=True)
     course_id = models.ForeignKey(Course, on_delete=models.CASCADE, default='', verbose_name="Курсы")
-    main_office_id = models.ForeignKey(MainOffice, on_delete=models.CASCADE, related_name='main_offices_group', null=True)
+    main_office_id = models.ForeignKey(MainOffice, on_delete=models.CASCADE, related_name='main_offices_group',
+                                       null=True)
 
     class Meta:
         db_table = 'group'
@@ -245,8 +257,11 @@ class Attendance(models.Model):
     attendance_status = models.ForeignKey(Attendance_Status, on_delete=models.CASCADE, verbose_name='Статус пропуска')
     students_id = models.ForeignKey(Student, on_delete=models.CASCADE, verbose_name='Студент')
     groups_id = models.ForeignKey(Group, on_delete=models.CASCADE, verbose_name='Группа')
-    branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='attendances', verbose_name="Филиал", null=True)
-    main_office_id = models.ForeignKey(MainOffice, on_delete=models.CASCADE, related_name='main_offices_attendance', null=True)
+    branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='attendances', verbose_name="Филиал",
+                               null=True)
+    main_office_id = models.ForeignKey(MainOffice, on_delete=models.CASCADE, related_name='main_offices_attendance',
+                                       null=True)
+
     class Meta:
         db_table = 'attendance'
         verbose_name = 'Посещение студента'
@@ -269,7 +284,9 @@ class ArchivedStudent(models.Model):
     comments = models.CharField(choices=STATUS_CHOICES, max_length=45)
     branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='archived_students',
                                verbose_name="Филиал", null=True)
-    main_office_id = models.ForeignKey(MainOffice, on_delete=models.CASCADE, related_name='main_offices_archived', null=True)
+    main_office_id = models.ForeignKey(MainOffice, on_delete=models.CASCADE, related_name='main_offices_archived',
+                                       null=True)
+
     class Meta:
         db_table = 'archived_student'
         verbose_name = 'Архивированный студент'
@@ -287,7 +304,9 @@ class ArchivedPayment(models.Model):
     branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='archived_payments',
                                verbose_name="Филиал", null=True)
     course = models.ForeignKey(Course, on_delete=models.CASCADE, verbose_name='Курс')
-    main_office_id = models.ForeignKey(MainOffice, on_delete=models.CASCADE, related_name='main_offices_arch_payment', null=True)
+    main_office_id = models.ForeignKey(MainOffice, on_delete=models.CASCADE, related_name='main_offices_arch_payment',
+                                       null=True)
+
     class Meta:
         db_table = 'archived_payment'
         verbose_name = 'Архивированный платеж'
@@ -303,11 +322,14 @@ class ArchivedGroup(models.Model):
     students_id = models.ManyToManyField(Student, related_name='archived_groups_students', verbose_name='Студенты',
                                          blank=True)
     status_group = models.ForeignKey(Status, on_delete=models.PROTECT, verbose_name='Статус группы')
-    branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='archived_groups', verbose_name="Филиал", null=True)
+    branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='archived_groups', verbose_name="Филиал",
+                               null=True)
     course_id = models.ForeignKey(Course, on_delete=models.CASCADE, verbose_name='Курс')
     comments = models.TextField(max_length=100, default='', verbose_name='Комментарии')
     archived_date = models.DateField(verbose_name='Дата архивации', default=datetime.today)
-    main_office_id = models.ForeignKey(MainOffice, on_delete=models.CASCADE, related_name='main_offices_arch_group', null=True)
+    main_office_id = models.ForeignKey(MainOffice, on_delete=models.CASCADE, related_name='main_offices_arch_group',
+                                       null=True)
+
     class Meta:
         db_table = 'archived_group'
         verbose_name = 'Архивированная группа'

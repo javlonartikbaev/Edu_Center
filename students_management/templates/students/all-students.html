@@ -104,8 +104,8 @@
                                             <td>{{ student.phone_number_s }}</td>
                                             <td>{{ student.parents_phone_number }}</td>
                                             <td>
-                                                {% if student.last_payment_date %}
-                                                    {{ student.last_payment_date }}
+                                                {% if last_payment_date %}
+                                                    {{ last_payment_date }}
                                                 {% else %}
                                                     Не оплатил
                                                 {% endif %}

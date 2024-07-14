@@ -76,18 +76,28 @@
 <![endif]-->
 <!-- Start Left menu area -->
 {% block Left_Menu %}
-
     <div class="left-sidebar-pro">
         <nav id="sidebar" class="">
             <div class="sidebar-header">
-                {% for branch in branch %}
-                    <a href="{% url 'main_page' %}"><img class="main-logo" style="height:70px;width: 170px "
-                                                         src="{{ branch.logo_branch.url }}"
-                                                         alt=""/></a>
-                    <strong><a href="{% url 'main_page' %}"><img style="height:50px;width: 50px "
-                                                                 src="{{ branch.short_logo_branch.url }}"
-                                                                 alt=""/></a></strong>
-                {% endfor %}
+                {% if main_offices %}
+                    {% for main_office in main_offices %}
+                        <a href="{% url 'main_page' %}"><img class="main-logo" style="height:70px;width: 170px "
+                                                             src="{{ MEDIA_URL }}{{ main_office.logo_min.url }}"
+                                                             alt=""/></a>
+                        <strong><a href="{% url 'main_page' %}"><img style="height:50px;width: 50px "
+                                                                     src="{{ MEDIA_URL }}{{ main_office.short_logo_main.url }}"
+                                                                     alt=""/></a></strong>
+                    {% endfor %}
+                {% elif branches %}
+                    {% for branch in branches %}
+                        <a href="{% url 'main_page' %}"><img class="main-logo" style="height:70px;width: 170px "
+                                                             src="{{ MEDIA_URL }}{{ branch.logo_branch.url }}"
+                                                             alt=""/></a>
+                        <strong><a href="{% url 'main_page' %}"><img style="height:50px;width: 50px "
+                                                                     src="{{ MEDIA_URL }}{{ branch.short_logo_branch.url }}"
+                                                                     alt=""/></a></strong>
+                    {% endfor %}
+                {% endif %}
 
             </div>
             <div class="left-custom-menu-adp-wrap comment-scrollbar">
@@ -115,11 +125,7 @@
                                 <li><a title="All Students" href="{% url 'all_students' %}"><span
                                         class="mini-sub-pro">Все Студенты</span></a>
                                 </li>
-                                {#                                <li><a title="Add Students" href="{% url 'add_students' %}"><span#}
-                                {#                                        class="mini-sub-pro">Добавить студента</span></a>#}
-                                {#                                </li>#}
-                                <!-- <li><a title="Edit Students" href="edit-student.html"><span class="mini-sub-pro">Edit Student</span></a></li>
-                                <li><a title="Students Profile" href="student-profile.html"><span class="mini-sub-pro">Student Profile</span></a></li> -->
+
                             </ul>
                         </li>
                         <li>
@@ -135,19 +141,7 @@
 
                         </li>
 
-                        {#                        <li>#}
-                        {#                            <a class="has-arrow" href="{% url 'all_status' %}" aria-expanded="false"><span#}
-                        {#                                    class="educate-icon educate-course icon-wrap"></span> <span class="mini-click-non">Статусы</span></a>#}
-                        {#                            <ul class="submenu-angle" aria-expanded="false">#}
-                        {#                                <li><a title="All Courses" href="{% url 'all_status' %}"><span#}
-                        {#                                        class="mini-sub-pro">Все Статусы</span></a>#}
-                        {#                                </li>#}
-                        {#                                <li><a title="Add Courses" href="{% url 'add_status' %}"><span#}
-                        {#                                        class="mini-sub-pro">Добавить Статус</span></a></li>#}
-                        {#                                <!-- <li><a title="course Payment" href="course-payment.html"><span class="mini-sub-pro">Courses Payment</span></a></li> -->#}
-                        {#                            </ul>#}
-                        {##}
-                        {#                        </li>#}
+
 
                         <li>
                             <a class="has-arrow" href="{% url 'all_audience' %}" aria-expanded="false"><span
@@ -206,10 +200,7 @@
     <div class="container-fluid">
         <div class="row">
             <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
-                <div class="logo-pro">
-                    <a href="{% url 'all_professors' %}"><img class="main-logo" src="{% static 'img/logo/logo.png' %}"
-                                                              alt=""/></a>
-                </div>
+
             </div>
         </div>
     </div>
@@ -296,89 +287,75 @@
                                         <li><a href="{% url 'all_professors' %}">Все Менторы</a>
                                         </li>
 
-                                        </li>
-
-                                    </ul>
-                                </li>
-                                <li><a data-toggle="collapse" data-target="#demopro" href="#">Студенты <span
-                                        class="admin-project-icon edu-icon edu-down-arrow"></span></a>
-                                    <ul id="demopro" class="collapse dropdown-header-top">
-                                        <li><a href="../students/all-students.html">Все студенты</a>
-                                        </li>
-                                        {#                                        <li><a href="../students/add-student.html">Добавить студента</a>#}
-                                        {#                                        </li>#}
-
-                                    </ul>
-                                </li>
-                                <li><a data-toggle="collapse" data-target="#democrou" href="#">Курсы <span
-                                        class="admin-project-icon edu-icon edu-down-arrow"></span></a>
-                                    <ul id="democrou" class="collapse dropdown-header-top">
-                                        <li><a href="{% url 'all_courses' %}">Все Курсы</a>
-
-
-
-                                    </ul>
-                                </li>
-                                {#                                <li>#}
-                                {#                                    <a class="has-arrow" href="{% url 'all_status' %}" aria-expanded="false"><span#}
-                                {#                                            class="educate-icon educate-course icon-wrap"></span> <span#}
-                                {#                                            class="mini-click-non">Статусы</span></a>#}
-                                {#                                    <ul class="submenu-angle" aria-expanded="false">#}
-                                {#                                        <li><a title="All Courses" href="{% url 'all_status' %}"><span#}
-                                {#                                                class="mini-sub-pro">Все Статусы</span></a>#}
-                                {#                                        </li>#}
-                                {#                                        <li><a title="Add Courses" href="{% url 'add_status' %}"><span#}
-                                {#                                                class="mini-sub-pro">Добавить Статус</span></a></li>#}
-                                {##}
-                                {#                                    </ul>#}
-                                {##}
-                                {#                                </li>#}
-
-                                <li>
-                                    <a class="has-arrow" href="{% url 'all_audience' %}" aria-expanded="false"><span
-                                            class="educate-icon educate-course icon-wrap"></span> <span
-                                            class="mini-click-non">Аудитории</span></a>
-                                    <ul class="submenu-angle" aria-expanded="false">
-                                        <li><a title="All Courses" href="{% url 'all_audience' %}"><span
-                                                class="mini-sub-pro">Все Аудитории</span></a>
-                                        </li>
-
-                                        <!-- <li><a title="course Payment" href="course-payment.html"><span class="mini-sub-pro">Courses Payment</span></a></li> -->
-                                    </ul>
-
                                 </li>
 
-                                <li>
-                                    <a class="has-arrow" href="#" aria-expanded="false"><span
-                                            class="educate-icon educate-course icon-wrap"></span> <span
-                                            class="mini-click-non">Группы</span></a>
-                                    <ul class="submenu-angle" aria-expanded="false">
-                                        <li><a title="All Courses" href="#"><span
-                                                class="mini-sub-pro">Все Группы</span></a>
-                                        </li>
-                                        <
+                            </ul>
+                            </li>
+                            <li><a data-toggle="collapse" data-target="#demopro" href="#">Студенты <span
+                                    class="admin-project-icon edu-icon edu-down-arrow"></span></a>
+                                <ul id="demopro" class="collapse dropdown-header-top">
+                                    <li><a href="../students/all-students.html">Все студенты</a>
+                                    </li>
+                                                                            <li><a href="../students/add-student.html">Добавить студента</a>
+                                                                            </li>
 
-                                        <!-- <li><a title="course Payment" href="course-payment.html"><span class="mini-sub-pro">Courses Payment</span></a></li> -->
-                                    </ul>
+                                </ul>
+                            </li>
+                            <li><a data-toggle="collapse" data-target="#democrou" href="#">Курсы <span
+                                    class="admin-project-icon edu-icon edu-down-arrow"></span></a>
+                                <ul id="democrou" class="collapse dropdown-header-top">
+                                    <li><a href="{% url 'all_courses' %}">Все Курсы</a>
 
-                                </li>
-                                <li>
-                                    <a class="has-arrow" href="{% url 'archived_students' %}"
-                                       aria-expanded="false"><span
-                                            class="educate-icon educate-course icon-wrap"></span> <span
-                                            class="mini-click-non">Архив</span></a>
-                                    <ul class="submenu-angle" aria-expanded="false">
-                                        <li><a title="All Courses" href="{% url 'archived_students' %}"><span
-                                                class="mini-sub-pro">Архив студентов</span></a>
-                                        </li>
-                                        <li><a title="Add Courses" href="{% url 'archived_payments' %}"><span
-                                                class="mini-sub-pro">Архив оплаты</span></a></li>
-                                        <li><a title="Add Courses" href="{% url 'archived_groups' %}"><span
-                                                class="mini-sub-pro">Архив групп</span></a></li>
-                                        <!-- <li><a title="course Payment" href="course-payment.html"><span class="mini-sub-pro">Courses Payment</span></a></li> -->
-                                    </ul>
 
-                                </li>
+                                </ul>
+                            </li>
+
+
+                            <li>
+                                <a class="has-arrow" href="{% url 'all_audience' %}" aria-expanded="false"><span
+                                        class="educate-icon educate-course icon-wrap"></span> <span
+                                        class="mini-click-non">Аудитории</span></a>
+                                <ul class="submenu-angle" aria-expanded="false">
+                                    <li><a title="All Courses" href="{% url 'all_audience' %}"><span
+                                            class="mini-sub-pro">Все Аудитории</span></a>
+                                    </li>
+
+                                    <!-- <li><a title="course Payment" href="course-payment.html"><span class="mini-sub-pro">Courses Payment</span></a></li> -->
+                                </ul>
+
+                            </li>
+
+                            <li>
+                                <a class="has-arrow" href="#" aria-expanded="false"><span
+                                        class="educate-icon educate-course icon-wrap"></span> <span
+                                        class="mini-click-non">Группы</span></a>
+                                <ul class="submenu-angle" aria-expanded="false">
+                                    <li><a title="All Courses" href="#"><span
+                                            class="mini-sub-pro">Все Группы</span></a>
+                                    </li>
+                                    <
+
+                                    <!-- <li><a title="course Payment" href="course-payment.html"><span class="mini-sub-pro">Courses Payment</span></a></li> -->
+                                </ul>
+
+                            </li>
+                            <li>
+                                <a class="has-arrow" href="{% url 'archived_students' %}"
+                                   aria-expanded="false"><span
+                                        class="educate-icon educate-course icon-wrap"></span> <span
+                                        class="mini-click-non">Архив</span></a>
+                                <ul class="submenu-angle" aria-expanded="false">
+                                    <li><a title="All Courses" href="{% url 'archived_students' %}"><span
+                                            class="mini-sub-pro">Архив студентов</span></a>
+                                    </li>
+                                    <li><a title="Add Courses" href="{% url 'archived_payments' %}"><span
+                                            class="mini-sub-pro">Архив оплаты</span></a></li>
+                                    <li><a title="Add Courses" href="{% url 'archived_groups' %}"><span
+                                            class="mini-sub-pro">Архив групп</span></a></li>
+                                    <!-- <li><a title="course Payment" href="course-payment.html"><span class="mini-sub-pro">Courses Payment</span></a></li> -->
+                                </ul>
+
+                            </li>
                             </ul>
                         </nav>
                     </div>
@@ -396,7 +373,8 @@
                 <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
                     <div class="breadcome-list">
                         <div class="row">
-                            <button class="btn btn-lg btn-success" style="background-color: #00acee; margin-left: 1000px"><a
+                            <button class="btn btn-lg btn-success"
+                                    style="background-color: #00acee; margin-left: 1000px"><a
                                     title="Add Professor" style="color: white"
                                     href="{% url 'add_professor' %}"><span
                                     class="mini-sub-pro">Добавить Ментора</span></a></button>

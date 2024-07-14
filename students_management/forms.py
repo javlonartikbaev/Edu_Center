@@ -1,8 +1,8 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm
+from django.db.models import Q
 
 from .models import *
-
 
 class TeacherForm(forms.ModelForm):
     class Meta:
@@ -17,6 +17,22 @@ class TeacherForm(forms.ModelForm):
             'course': forms.Select(attrs={'class': 'form-control'}),
 
         }
+
+    def __init__(self, *args, **kwargs):
+        main_office_id = kwargs.pop('main_office_id', None)
+        branch_office_id = kwargs.pop('branch_office_id', None)
+        super(TeacherForm, self).__init__(*args, **kwargs)
+
+        if main_office_id:
+            self.fields['user'].queryset = CustomUser.objects.filter(
+                Q(main_office_id=main_office_id) | Q(branch_office_id__main_office_id=main_office_id)
+            )
+        elif branch_office_id:
+            self.fields['user'].queryset = CustomUser.objects.filter(
+                Q(branch_office_id=branch_office_id) | Q(main_office_id=branch_office_id.main_office_id)
+            )
+        else:
+            self.fields['user'].queryset = CustomUser.objects.none()
 
 
 class TeacherUpdateForm(forms.ModelForm):
@@ -114,7 +130,7 @@ class GroupForm(forms.ModelForm):
             'course_id': forms.Select(attrs={'class': 'form-control'}),
         }
 
-    def __init__(self, user,*args, **kwargs):
+    def __init__(self, user, *args, **kwargs):
 
         super().__init__(*args, **kwargs)
 

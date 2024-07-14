@@ -153,12 +153,11 @@
             <div class="col-lg-12">
                 <div class="hpanel hblue contact-panel contact-panel-cs responsive-mg-b-10">
                     <div class="panel-body custom-panel-jw">
-                        {% for branch in branch %}
+                        {% for branch in branches %}
                             <h2 class="text-center">{{ branch.name }}</h2>
                         {% endfor %}
 
-
-                        <form method="GET" action="{% url 'all_students' %}" style="float: right;">
+                        <form method="GET" action="{% url 'all_students' %}" style="float: right; margin-top: 30px">
                             {% csrf_token %}
                             <button type="submit" name="filter" value="not_paid" class="btn btn-danger">
                                 Показать должников

@@ -11,7 +11,7 @@ class MainBranchAdmin(admin.ModelAdmin):
 
 class UserAdmin(BaseUserAdmin):
     fieldsets = (
-        (None, {'fields': ('username', 'password', "role")}),
+        (None, {'fields': ('username', 'password', "role", 'main_office_id', 'branch_office_id')}),
         ('Personal info', {'fields': ('first_name', 'last_name', 'email')}),
         ('Permissions', {'fields': ('is_active', 'is_staff', 'is_superuser','groups', 'user_permissions')}),
         ('Important dates', {'fields': ('last_login', 'date_joined')}),
