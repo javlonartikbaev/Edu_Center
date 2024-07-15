@@ -27,6 +27,7 @@ def get_professor(request):
         return redirect('main_page')
     main_offices = MainOffice.objects.filter(admin=user)
     branches = Branch.objects.filter(main_office__in=main_offices)
+    branch_logo = Branch.objects.filter(admin_id=user.id)
     selected_main_office_id = request.GET.get('main_office')
     selected_branch_id = request.GET.get('branch')
     teachers = Teacher.objects.all()
@@ -62,6 +63,7 @@ def get_professor(request):
         'branches': branches,
         'selected_main_office_id': selected_main_office_id,
         'selected_branch_id': selected_branch_id,
+        'branch_logo':branch_logo
     }
 
     return render(request, 'professors/all-professors.html', data)
@@ -69,6 +71,9 @@ def get_professor(request):
 
 @login_required(login_url='/login/')
 def delete_professor(request, id_professor):
+    user = request.user
+    main_offices = MainOffice.objects.filter(admin=user)
+    branch_logo = Branch.objects.filter(admin_id=user.id)
     if request.user.role == 'teacher':
         messages.error(request, 'У вас нет прав доступа.')
         return redirect(
@@ -78,7 +83,7 @@ def delete_professor(request, id_professor):
     if request.method == 'POST':
         professor.delete()
         return redirect('all_professors')
-    data = {'professor': professor, 'current_year': current_year,
+    data = {'professor': professor, 'current_year': current_year,'branch_logo':branch_logo,'main_offices': main_offices,
             'branch': Branch.objects.filter(admin_id=request.user.id)}
     return render(request, 'professors/delete-professor.html', data)
 
@@ -91,6 +96,7 @@ def update_professor(request, id_professor):
 
     main_offices = MainOffice.objects.filter(admin=user)
     branches = Branch.objects.filter(main_office__in=main_offices)
+    branch_logo = Branch.objects.filter(admin_id=user.id)
 
     if not request.user.is_superuser and professor.user != request.user:
         return redirect('all_groups')
@@ -104,7 +110,7 @@ def update_professor(request, id_professor):
         form = TeacherUpdateForm(instance=professor)
 
     data = {"form": form, "current_year": current_year, 'professor': professor, 'main_offices': main_offices,
-            'branches': branches,
+            'branches': branches,'branch_logo':branch_logo,
             'branch': Branch.objects.filter(admin_id=request.user.id)}
 
     if request.user.role == 'super admin':
@@ -120,7 +126,7 @@ def add_professor(request):
     user = request.user
     main_office = MainOffice.objects.filter(admin=user).first()
     branch_office = Branch.objects.filter(admin=user).first()
-
+    branch_logo = Branch.objects.filter(admin_id=user.id)
     main_offices = MainOffice.objects.filter(admin=user)
     branches = Branch.objects.filter(main_office__in=main_offices)
 
@@ -144,7 +150,7 @@ def add_professor(request):
     return render(request, 'professors/add-professor.html',
                   {'professor_form': professor_form, 'branch': Branch.objects.filter(admin_id=request.user.id),
                    'main_offices': main_offices,
-                   'branches': branches, })
+                   'branches': branches,'branch_logo':branch_logo })
 
 
 @login_required(login_url='/login/')
@@ -157,7 +163,7 @@ def get_courses(request):
     user = request.user
     main_offices = MainOffice.objects.filter(admin=user)
     branches = Branch.objects.filter(main_office__in=main_offices)
-
+    branch_logo = Branch.objects.filter(admin_id=user.id)
     search = SearchForm(request.GET)
     selected_main_office_id = request.GET.get('main_office')
     selected_branch_id = request.GET.get('branch')
@@ -195,6 +201,7 @@ def get_courses(request):
         'branches': branches,
         'selected_main_office_id': selected_main_office_id,
         'selected_branch_id': selected_branch_id,
+        'branch_logo': branch_logo
     }
     # if request.user.role == 'super admin':
     #     search = SearchForm(request.GET)
@@ -253,6 +260,7 @@ def add_course(request):
     course_form = CourseForm()
     current_year = datetime.today().year
     user = request.user
+    branch_logo = Branch.objects.filter(admin_id=user.id)
     main_offices = MainOffice.objects.filter(admin=user)
     branches = Branch.objects.filter(main_office__in=main_offices)
     if request.method == 'POST':
@@ -277,7 +285,7 @@ def add_course(request):
     else:
         course_form = CourseForm()
         data = {"course_form": course_form, 'current_year': current_year, 'main_offices': main_offices,
-                'branches': branches, }
+                'branches': branches, 'branch_logo':branch_logo}
     return render(request, 'courses/add-course.html', data)
 
 
@@ -291,6 +299,7 @@ def update_course(request, id_course):
     current_year = datetime.today().year
     user = request.user
     main_offices = MainOffice.objects.filter(admin=user)
+    branch_logo = Branch.objects.filter(admin_id=user.id)
     branches = Branch.objects.filter(main_office__in=main_offices)
     if request.method == 'POST':
         form = CourseForm(request.POST, instance=course)
@@ -299,7 +308,7 @@ def update_course(request, id_course):
             return redirect('all_courses')
     else:
         form = CourseForm(instance=course)
-    data = {"form": form, "current_year": current_year, 'main_offices': main_offices,
+    data = {"form": form, "current_year": current_year, 'main_offices': main_offices,'branch_logo':branch_logo,
             'branches': branches, }
     return render(request, 'courses/edit-course.html', data)
 
@@ -309,6 +318,7 @@ def delete_course(request, id_course):
     user = request.user
     main_offices = MainOffice.objects.filter(admin=user)
     branches = Branch.objects.filter(main_office__in=main_offices)
+    branch_logo = Branch.objects.filter(admin_id=user.id)
     if not request.user.is_superuser:
         messages.error(request, 'У вас нет прав доступа.')
         return redirect(
@@ -319,7 +329,7 @@ def delete_course(request, id_course):
         course.delete()
         return redirect('all_courses')
     data = {"course": course, "current_year": current_year, 'main_offices': main_offices,
-            'branches': branches, }
+            'branches': branches, 'branch_logo':branch_logo}
     return render(request, 'courses/delete-course.html', data)
 
 
@@ -421,7 +431,7 @@ def all_students(request):
     search = SearchForm(request.GET)
     current_year = datetime.today().year
     page_number = request.GET.get("page")
-
+    branch_logo = Branch.objects.filter(admin_id=user.id)
     if user.role == 'teacher':
         messages.error(request, 'У вас нет прав доступа.')
         return redirect('main_page')
@@ -489,6 +499,7 @@ def all_students(request):
             'branches': branches,
             'selected_main_office_id': selected_main_office_id,
             'selected_branch_id': selected_branch_id,
+            'branch_logo': branch_logo
             }
     return render(request, 'students/all-students.html', data)
 
@@ -499,7 +510,7 @@ def add_students(request, group_id=None):
     user = request.user
     main_offices = MainOffice.objects.filter(admin=user)
     branches = Branch.objects.filter(main_office__in=main_offices)
-
+    branch_logo = Branch.objects.filter(admin_id=user.id)
     if request.method == "POST":
         student_form = StudentForm(request.POST)
         if request.user.role == 'super admin':
@@ -546,6 +557,7 @@ def add_students(request, group_id=None):
         'selected_group_id': group_id,
         'main_offices': main_offices,
         'branches': branches,
+        'branch_logo': branch_logo
     }
     return render(request, 'groups/add_students_to_group.html', data)
 
@@ -555,6 +567,7 @@ def update_students(request, id_student):
     user = request.user
     main_offices = MainOffice.objects.filter(admin=user)
     branches = Branch.objects.filter(main_office__in=main_offices)
+    branch_logo = Branch.objects.filter(admin_id=user.id)
     if not request.user.is_superuser:
         messages.error(request, 'У вас нет прав доступа.')
         return redirect(
@@ -569,7 +582,7 @@ def update_students(request, id_student):
     else:
         form = StudentForm(instance=student)
     data = {"form": form, "current_year": current_year, 'main_offices': main_offices,
-            'branches': branches, }
+            'branches': branches, 'branch_logo': branch_logo}
     return render(request, 'students/edit-student.html', data)
 
 
@@ -578,6 +591,7 @@ def delete_students(request, id_student):
     user = request.user
     main_offices = MainOffice.objects.filter(admin=user)
     branches = Branch.objects.filter(main_office__in=main_offices)
+    branch_logo = Branch.objects.filter(admin_id=user.id)
     if not request.user.is_superuser:
         messages.error(request, 'У вас нет прав доступа.')
         return redirect(
@@ -588,7 +602,7 @@ def delete_students(request, id_student):
         student.delete()
         return redirect('all_students')
     data = {"student": student, "current_year": current_year, 'main_offices': main_offices,
-            'branches': branches, }
+            'branches': branches,'branch_logo':branch_logo }
     return render(request, 'students/delete-student.html', data)
 
 
@@ -599,7 +613,7 @@ def profile_students(request, id_student):
     branches = Branch.objects.filter(main_office__in=main_offices)
     student = get_object_or_404(Student, id=id_student)
     payments = Payment.objects.filter(student_id=student)
-
+    branch_logo = Branch.objects.filter(admin_id=user.id)
     selected_month = request.GET.get('month')
 
     if selected_month:
@@ -623,6 +637,7 @@ def profile_students(request, id_student):
         'courses': courses,
         'main_offices': main_offices,
         'branches': branches,
+        'branch_logo': branch_logo
     }
 
     if request.user.role == 'super admin' or request.user.role == 'admin':
@@ -638,7 +653,7 @@ def all_audience(request):
     user = request.user
     main_offices = MainOffice.objects.filter(admin=user)
     branches = Branch.objects.filter(main_office__in=main_offices)
-
+    branch_logo = Branch.objects.filter(admin_id=user.id)
     selected_main_office_id = request.GET.get('main_office')
     selected_branch_id = request.GET.get('branch')
 
@@ -661,7 +676,7 @@ def all_audience(request):
     data = {'audience': audience, 'current_year': current_year, 'main_offices': main_offices,
             'branches': branches,
             'selected_main_office_id': selected_main_office_id,
-            'selected_branch_id': selected_branch_id, }
+            'selected_branch_id': selected_branch_id, 'branch_logo':branch_logo}
     return render(request, 'audience/all-audience.html', data)
 
 
@@ -673,6 +688,7 @@ def add_audience(request):
     branches = Branch.objects.filter(main_office__in=main_offices)
     audience = Audience.objects.all()
     current_year = datetime.today().year
+    branch_logo = Branch.objects.filter(admin_id=user.id)
     if audience_form.is_valid():
 
         audience = audience_form.save(commit=False)
@@ -693,7 +709,7 @@ def add_audience(request):
         return redirect('all_audience')
     audience_form = AudienceForm()
     data = {"audience_form": audience_form, 'current_year': current_year, 'main_offices': main_offices,
-            'branches': branches, }
+            'branches': branches,'branch_logo':branch_logo }
     return render(request, 'audience/add-audience.html', data)
 
 
@@ -702,6 +718,7 @@ def update_audience(request, id_audience):
     user = request.user
     main_offices = MainOffice.objects.filter(admin=user)
     branches = Branch.objects.filter(main_office__in=main_offices)
+    branch_logo = Branch.objects.filter(admin_id=user.id)
     if not request.user.is_superuser:
         messages.error(request, 'У вас нет прав доступа.')
         return redirect(
@@ -717,7 +734,7 @@ def update_audience(request, id_audience):
     else:
         audience_form = AudienceForm(instance=audience)
     data = {"audience_form": audience_form, 'current_year': current_year, 'main_offices': main_offices,
-            'branches': branches, }
+            'branches': branches,'branch_logo':branch_logo }
     return render(request, 'audience/edit-audience.html', data)
 
 
@@ -726,6 +743,7 @@ def delete_audience(request, id_audience):
     user = request.user
     main_offices = MainOffice.objects.filter(admin=user)
     branches = Branch.objects.filter(main_office__in=main_offices)
+    branch_logo = Branch.objects.filter(admin_id=user.id)
     if not request.user.is_superuser:
         messages.error(request, 'У вас нет прав доступа.')
         return redirect(
@@ -736,7 +754,7 @@ def delete_audience(request, id_audience):
         audience.delete()
         return redirect('all_audience')
     data = {'audience': audience, 'current_year': current_year, 'main_offices': main_offices,
-            'branches': branches, }
+            'branches': branches, 'branch_logo':branch_logo}
     return render(request, 'audience/delete-audience.html', data)
 
 
@@ -748,6 +766,7 @@ def all_groups(request):
     branches = Branch.objects.filter(main_office__in=main_offices)
     selected_main_office_id = request.GET.get('main_office')
     selected_branch_id = request.GET.get('branch')
+    branch_logo = Branch.objects.filter(admin_id=user.id)
     groups = Group.objects.all()
     if user.role == 'super admin':
         if selected_main_office_id:
@@ -765,7 +784,7 @@ def all_groups(request):
     elif user.role == 'teacher':
         professors = Teacher.objects.all()
         groups = Group.objects.filter(teacher_id=user.id)
-        data = {'groups': groups, 'current_year': current_year, 'professors': professors}
+        data = {'groups': groups, 'current_year': current_year, 'professors': professors,'branch_logo':branch_logo}
         return render(request, 'teachers-group/teachers_group.html', data)
 
     data = {
@@ -777,6 +796,7 @@ def all_groups(request):
         'branches': branches,
         'selected_main_office_id': selected_main_office_id,
         'selected_branch_id': selected_branch_id,
+        'branch_logo': branch_logo
     }
     return render(request, 'groups/all-groups.html', data)
 
@@ -787,6 +807,7 @@ def add_group(request):
     user = request.user
     main_offices = MainOffice.objects.filter(admin=user)
     branches = Branch.objects.filter(main_office__in=main_offices)
+    branch_logo = Branch.objects.filter(admin_id=user.id)
     if request.method == 'POST':
         user = request.user
         group_form = GroupForm(request.user, request.POST, request.FILES)
@@ -807,12 +828,12 @@ def add_group(request):
             return redirect('all_courses')
         else:
             course_form = CourseForm()
-            data = {"course_form": course_form, 'current_year': current_year}
+            data = {"course_form": course_form, 'current_year': current_year,'branch_logo':branch_logo}
     else:
         group_form = GroupForm(request.POST, request.FILES)
     current_year = datetime.today().year
     data = {"group_form": group_form, 'current_year': current_year, 'main_offices': main_offices,
-            'branches': branches, }
+            'branches': branches, 'branch_logo':branch_logo}
     return render(request, 'groups/add-groups.html', data)
 
 
@@ -823,6 +844,7 @@ def update_group(request, id_group):
     user = request.user
     main_offices = MainOffice.objects.filter(admin=user)
     branches = Branch.objects.filter(main_office__in=main_offices)
+    branch_logo = Branch.objects.filter(admin_id=user.id)
     if request.user.is_superuser:
         if request.method == 'POST':
             group_form = GroupForm(request.POST, instance=group, user=request.user)
@@ -843,7 +865,7 @@ def update_group(request, id_group):
 
     data = {"group_form": group_form, 'current_year': current_year, 'messages': messages,
             'students_in_group': students_in_group, 'main_offices': main_offices,
-            'branches': branches, }
+            'branches': branches, 'branch_logo':branch_logo}
     return render(request, 'groups/edit-groups.html', data)
 
 
@@ -852,6 +874,7 @@ def delete_group(request, id_group):
     user = request.user
     main_offices = MainOffice.objects.filter(admin=user)
     branches = Branch.objects.filter(main_office__in=main_offices)
+    branch_logo = Branch.objects.filter(admin_id=user.id)
     if not request.user.is_superuser:
         messages.error(request, 'У вас нет прав доступа.')
         return redirect('main_page')
@@ -900,7 +923,7 @@ def delete_group(request, id_group):
     comment_form = CommentForm()
 
     data = {"group": group, 'comment_form': comment_form, 'main_offices': main_offices,
-            'branches': branches, }
+            'branches': branches, 'branch_logo':branch_logo}
     return render(request, 'groups/delete-groups.html', data)
 
 
@@ -910,6 +933,7 @@ def mark_attendance(request, group_id):
     user = request.user
     main_offices = MainOffice.objects.filter(admin=user)
     branches = Branch.objects.filter(main_office__in=main_offices)
+    branch_logo = Branch.objects.filter(admin_id=user.id)
     if request.method == 'POST':
         date_attendance = request.POST.get('date_attendance')
         attendance_status = Attendance_Status.objects.get(name_attendance_status='Отсутствует')
@@ -934,6 +958,7 @@ def mark_attendance(request, group_id):
         'group': group,
         'main_offices': main_offices,
         'branches': branches,
+        'branch_logo': branch_logo
     }
 
     if request.user.is_superuser:
@@ -949,6 +974,7 @@ def info_group(request, id_group):
     user = request.user
     main_offices = MainOffice.objects.filter(admin=user)
     branches = Branch.objects.filter(main_office__in=main_offices)
+    branch_logo = Branch.objects.filter(admin_id=user.id)
     group = get_object_or_404(Group, pk=id_group)
     students = group.students_id.all()
     today = datetime.today().date()
@@ -973,7 +999,7 @@ def info_group(request, id_group):
         'today': today,
         'main_offices': main_offices,
         'branches': branches,
-
+        'branch_logo': branch_logo
     }
 
     if request.user.is_superuser:
@@ -989,6 +1015,7 @@ def process_payment(request, student_id):
     user = request.user
     main_offices = MainOffice.objects.filter(admin=user)
     branches = Branch.objects.filter(main_office__in=main_offices)
+    branch_logo = Branch.objects.filter(admin_id=user.id)
     if request.user.role == 'teacher':
         messages.error(request, 'У вас нет прав доступа.')
         return redirect('main_page')
@@ -1037,19 +1064,21 @@ def process_payment(request, student_id):
         'last_payment_date': last_payment_date,  # Передаем дату последней оплаты в контекст
         'main_offices': main_offices,
         'branches': branches,
+        'branch_logo': branch_logo
     }
     return render(request, 'students/payment.html', data)
 
 
 @login_required(login_url='/login/')
 def delete_selected_students(request):
-    if not request.user.is_superuser:
+    if request.user.role == 'teacher':
         messages.error(request, 'У вас нет прав доступа.')
         return redirect('main_page')
 
     if request.method == 'POST':
         selected_students = request.POST.getlist('selected_students')
         comments = request.POST.get('comments', '')
+
         for student_id in selected_students:
             try:
                 student = Student.objects.get(id=student_id)
@@ -1098,7 +1127,7 @@ def archived_students(request):
     user = request.user
     main_offices = MainOffice.objects.filter(admin=user)
     branches = Branch.objects.filter(main_office__in=main_offices)
-
+    branch_logo = Branch.objects.filter(admin_id=user.id)
     selected_main_office_id = request.GET.get('main_office')
     selected_branch_id = request.GET.get('branch')
     archived_students = ArchivedStudent.objects.all()
@@ -1116,7 +1145,7 @@ def archived_students(request):
         else:
             admin_branches = Branch.objects.filter(admin=user)
             archived_students = archived_students.filter(branch__in=admin_branches)
-    if not request.user.is_superuser:
+    if request.user.role == 'teacher':
         messages.error(request, 'У вас нет прав доступа.')
         return redirect(
             'main_page')
@@ -1129,6 +1158,7 @@ def archived_students(request):
         'selected_branch_id':selected_branch_id,
         'main_offices': main_offices,
         'branches': branches,
+        'branch_logo': branch_logo
     }
     return render(request, 'students/archive-students.html', data)
 
@@ -1171,7 +1201,7 @@ def delete_archived_students(request):
 @login_required(login_url='/login/')
 def main_page(request):
     user = request.user
-
+    branch_logo = Branch.objects.filter(admin_id=user.id)
     if not request.user.is_authenticated:
         return redirect('login_page')
     if request.user.role == 'teacher':
@@ -1254,9 +1284,10 @@ def main_page(request):
             'dropped_lesson': dropped_lesson,
             'archived_students': ArchivedStudent.objects.all().count(),
             'left_students': left_students,
-
+            'branch_logo': branch_logo,
             'main_offices': main_offices,
             'branches': branches,
+
 
         }
         return render(request, 'base.html', data)
@@ -1329,7 +1360,7 @@ def main_page(request):
             'archived_students': ArchivedStudent.objects.filter(branch__admin=request.user).count(),
             'left_students': left_students,
             'branch': Branch.objects.filter(admin_id=request.user.id),
-
+            'branch_logo': branch_logo,
             'main_offices': main_offices,
             'branches': branches,
         }
@@ -1346,7 +1377,7 @@ def archived_groups(request):
     user = request.user
     main_offices = MainOffice.objects.filter(admin=user)
     branches = Branch.objects.filter(main_office__in=main_offices)
-
+    branch_logo = Branch.objects.filter(admin_id=user.id)
     selected_main_office_id = request.GET.get('main_office')
     selected_branch_id = request.GET.get('branch')
     arch_groups = ArchivedGroup.objects.all()
@@ -1371,6 +1402,7 @@ def archived_groups(request):
         'branches': branches,
         'selected_main_office_id': selected_main_office_id,
         'selected_branch_id': selected_branch_id,
+        'branch_logo': branch_logo
     }
     return render(request, 'groups/archived_group.html', data)
 
@@ -1406,6 +1438,7 @@ def restore_group(request, group_id):
         teacher_id=instance_teacher,
         audience_id=instance_audience,
         status_group=status_instance,
+        main_office_id=archived_group.main_office_id,
         branch=archived_group.branch,
         course_id=archived_group.course_id
     )
@@ -1422,6 +1455,7 @@ def delete_payment(request, payment_id):
     user = request.user
     main_offices = MainOffice.objects.filter(admin=user)
     branches = Branch.objects.filter(main_office__in=main_offices)
+    branch_logo = Branch.objects.filter(admin_id=user.id)
     if not request.user.is_superuser:
         messages.error(request, 'У вас нет прав доступа.')
         return redirect(
@@ -1449,7 +1483,7 @@ def delete_payment(request, payment_id):
 
     return render(request, 'students/delete_payment.html',
                   {'payment': payment, 'comment_form': comment_form, 'main_offices': main_offices,
-                   'branches': branches, })
+                   'branches': branches, 'branch_logo':branch_logo})
 
 
 @login_required(login_url='/login/')
@@ -1458,10 +1492,12 @@ def archived_payments(request):
     main_offices = MainOffice.objects.filter(admin=user)
     branches = Branch.objects.filter(main_office__in=main_offices)
     archived_payments = ArchivedPayment.objects.all()
+    branch_logo = Branch.objects.filter(admin_id=user.id)
     context = {
         'archived_payments': archived_payments,
         'main_offices': main_offices,
         'branches': branches,
+        'branch_logo': branch_logo
     }
     return render(request, 'students/payment_archive.html', context)
 
