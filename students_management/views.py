@@ -63,7 +63,7 @@ def get_professor(request):
         'branches': branches,
         'selected_main_office_id': selected_main_office_id,
         'selected_branch_id': selected_branch_id,
-        'branch_logo':branch_logo
+        'branch_logo': branch_logo
     }
 
     return render(request, 'professors/all-professors.html', data)
@@ -83,7 +83,8 @@ def delete_professor(request, id_professor):
     if request.method == 'POST':
         professor.delete()
         return redirect('all_professors')
-    data = {'professor': professor, 'current_year': current_year,'branch_logo':branch_logo,'main_offices': main_offices,
+    data = {'professor': professor, 'current_year': current_year, 'branch_logo': branch_logo,
+            'main_offices': main_offices,
             'branch': Branch.objects.filter(admin_id=request.user.id)}
     return render(request, 'professors/delete-professor.html', data)
 
@@ -110,7 +111,7 @@ def update_professor(request, id_professor):
         form = TeacherUpdateForm(instance=professor)
 
     data = {"form": form, "current_year": current_year, 'professor': professor, 'main_offices': main_offices,
-            'branches': branches,'branch_logo':branch_logo,
+            'branches': branches, 'branch_logo': branch_logo,
             'branch': Branch.objects.filter(admin_id=request.user.id)}
 
     if request.user.role == 'super admin':
@@ -132,25 +133,30 @@ def add_professor(request):
 
     if request.user.role != 'teacher':
         if request.method == 'POST':
-            professor_form = TeacherForm(request.POST, request.FILES, main_office_id=main_office,
-                                         branch_office_id=branch_office)
+            professor_form = TeacherForm(request.POST, request.FILES,
+                                         main_office_id=main_office.id if main_office else None,
+                                         branch_office_id=branch_office.id if branch_office else None)
             if professor_form.is_valid():
                 professor = professor_form.save(commit=False)
                 if request.user.role == 'super admin':
-                    professor.main_office_id = main_office
+                    professor.main_office = main_office
                 elif request.user.role == 'admin':
                     professor.branch = branch_office
                 professor.save()
                 return redirect('all_professors')
         else:
-            professor_form = TeacherForm(main_office_id=main_office, branch_office_id=branch_office)
+            professor_form = TeacherForm(main_office_id=main_office.id if main_office else None,
+                                         branch_office_id=branch_office.id if branch_office else None)
     else:
         professor_form = None
 
-    return render(request, 'professors/add-professor.html',
-                  {'professor_form': professor_form, 'branch': Branch.objects.filter(admin_id=request.user.id),
-                   'main_offices': main_offices,
-                   'branches': branches,'branch_logo':branch_logo })
+    return render(request, 'professors/add-professor.html', {
+        'professor_form': professor_form,
+        'branch': Branch.objects.filter(admin_id=request.user.id),
+        'main_offices': main_offices,
+        'branches': branches,
+        'branch_logo': branch_logo
+    })
 
 
 @login_required(login_url='/login/')
@@ -285,7 +291,7 @@ def add_course(request):
     else:
         course_form = CourseForm()
         data = {"course_form": course_form, 'current_year': current_year, 'main_offices': main_offices,
-                'branches': branches, 'branch_logo':branch_logo}
+                'branches': branches, 'branch_logo': branch_logo}
     return render(request, 'courses/add-course.html', data)
 
 
@@ -308,7 +314,7 @@ def update_course(request, id_course):
             return redirect('all_courses')
     else:
         form = CourseForm(instance=course)
-    data = {"form": form, "current_year": current_year, 'main_offices': main_offices,'branch_logo':branch_logo,
+    data = {"form": form, "current_year": current_year, 'main_offices': main_offices, 'branch_logo': branch_logo,
             'branches': branches, }
     return render(request, 'courses/edit-course.html', data)
 
@@ -329,7 +335,7 @@ def delete_course(request, id_course):
         course.delete()
         return redirect('all_courses')
     data = {"course": course, "current_year": current_year, 'main_offices': main_offices,
-            'branches': branches, 'branch_logo':branch_logo}
+            'branches': branches, 'branch_logo': branch_logo}
     return render(request, 'courses/delete-course.html', data)
 
 
@@ -602,7 +608,7 @@ def delete_students(request, id_student):
         student.delete()
         return redirect('all_students')
     data = {"student": student, "current_year": current_year, 'main_offices': main_offices,
-            'branches': branches,'branch_logo':branch_logo }
+            'branches': branches, 'branch_logo': branch_logo}
     return render(request, 'students/delete-student.html', data)
 
 
@@ -676,7 +682,7 @@ def all_audience(request):
     data = {'audience': audience, 'current_year': current_year, 'main_offices': main_offices,
             'branches': branches,
             'selected_main_office_id': selected_main_office_id,
-            'selected_branch_id': selected_branch_id, 'branch_logo':branch_logo}
+            'selected_branch_id': selected_branch_id, 'branch_logo': branch_logo}
     return render(request, 'audience/all-audience.html', data)
 
 
@@ -709,7 +715,7 @@ def add_audience(request):
         return redirect('all_audience')
     audience_form = AudienceForm()
     data = {"audience_form": audience_form, 'current_year': current_year, 'main_offices': main_offices,
-            'branches': branches,'branch_logo':branch_logo }
+            'branches': branches, 'branch_logo': branch_logo}
     return render(request, 'audience/add-audience.html', data)
 
 
@@ -734,7 +740,7 @@ def update_audience(request, id_audience):
     else:
         audience_form = AudienceForm(instance=audience)
     data = {"audience_form": audience_form, 'current_year': current_year, 'main_offices': main_offices,
-            'branches': branches,'branch_logo':branch_logo }
+            'branches': branches, 'branch_logo': branch_logo}
     return render(request, 'audience/edit-audience.html', data)
 
 
@@ -754,7 +760,7 @@ def delete_audience(request, id_audience):
         audience.delete()
         return redirect('all_audience')
     data = {'audience': audience, 'current_year': current_year, 'main_offices': main_offices,
-            'branches': branches, 'branch_logo':branch_logo}
+            'branches': branches, 'branch_logo': branch_logo}
     return render(request, 'audience/delete-audience.html', data)
 
 
@@ -784,7 +790,7 @@ def all_groups(request):
     elif user.role == 'teacher':
         professors = Teacher.objects.all()
         groups = Group.objects.filter(teacher_id=user.id)
-        data = {'groups': groups, 'current_year': current_year, 'professors': professors,'branch_logo':branch_logo}
+        data = {'groups': groups, 'current_year': current_year, 'professors': professors, 'branch_logo': branch_logo}
         return render(request, 'teachers-group/teachers_group.html', data)
 
     data = {
@@ -808,34 +814,37 @@ def add_group(request):
     main_offices = MainOffice.objects.filter(admin=user)
     branches = Branch.objects.filter(main_office__in=main_offices)
     branch_logo = Branch.objects.filter(admin_id=user.id)
+
     if request.method == 'POST':
-        user = request.user
-        group_form = GroupForm(request.user, request.POST, request.FILES)
+        main_office = MainOffice.objects.filter(admin=user).first()
+        branch_office = Branch.objects.filter(admin=user).first()
+
+        group_form = GroupForm(request.POST, main_office_id=main_office.id if main_office else None,
+                               branch_office_id=branch_office.id if branch_office else None)
+
         if group_form.is_valid():
             group = group_form.save(commit=False)
             if request.user.is_superuser:
-                user = request.user
-                main_offices = MainOffice.objects.filter(admin_id=user.id).first()
-                course = Course.objects.filter()
-                group.main_office_id = main_offices
+                group.main_office_id = main_office
             elif request.user.role == 'admin':
-                user = request.user
-                branches = Branch.objects.filter(admin_id=user.id).first()
-                print(branches)
-                group.branch = branches
+                group.branch = branch_office
             group.save()
-
             return redirect('all_courses')
-        else:
-            course_form = CourseForm()
-            data = {"course_form": course_form, 'current_year': current_year,'branch_logo':branch_logo}
     else:
-        group_form = GroupForm(request.POST, request.FILES)
-    current_year = datetime.today().year
-    data = {"group_form": group_form, 'current_year': current_year, 'main_offices': main_offices,
-            'branches': branches, 'branch_logo':branch_logo}
-    return render(request, 'groups/add-groups.html', data)
+        main_office = MainOffice.objects.filter(admin=user).first()
+        branch_office = Branch.objects.filter(admin=user).first()
 
+        group_form = GroupForm(main_office_id=main_office.id if main_office else None,
+                               branch_office_id=branch_office.id if branch_office else None)
+
+    data = {
+        'group_form': group_form,
+        'current_year': current_year,
+        'main_offices': main_offices,
+        'branches': branches,
+        'branch_logo': branch_logo
+    }
+    return render(request, 'groups/add-groups.html', data)
 
 @login_required(login_url='/login/')
 def update_group(request, id_group):
@@ -865,7 +874,7 @@ def update_group(request, id_group):
 
     data = {"group_form": group_form, 'current_year': current_year, 'messages': messages,
             'students_in_group': students_in_group, 'main_offices': main_offices,
-            'branches': branches, 'branch_logo':branch_logo}
+            'branches': branches, 'branch_logo': branch_logo}
     return render(request, 'groups/edit-groups.html', data)
 
 
@@ -923,7 +932,7 @@ def delete_group(request, id_group):
     comment_form = CommentForm()
 
     data = {"group": group, 'comment_form': comment_form, 'main_offices': main_offices,
-            'branches': branches, 'branch_logo':branch_logo}
+            'branches': branches, 'branch_logo': branch_logo}
     return render(request, 'groups/delete-groups.html', data)
 
 
@@ -1091,7 +1100,8 @@ def delete_selected_students(request):
                     paid_check=student.paid_check,
                     joined_date=student.joined_date,
                     comments=comments,
-                    branch=student.branch
+                    branch=student.branch,
+                    main_office_id=student.main_office_id,
                 )
 
                 payments_to_archive = Payment.objects.filter(student_id=student.id)
@@ -1154,8 +1164,8 @@ def archived_students(request):
     data = {
         'archived_students': archived_students,
         'current_year': current_year,
-        'selected_main_office_id':selected_main_office_id,
-        'selected_branch_id':selected_branch_id,
+        'selected_main_office_id': selected_main_office_id,
+        'selected_branch_id': selected_branch_id,
         'main_offices': main_offices,
         'branches': branches,
         'branch_logo': branch_logo
@@ -1287,7 +1297,6 @@ def main_page(request):
             'branch_logo': branch_logo,
             'main_offices': main_offices,
             'branches': branches,
-
 
         }
         return render(request, 'base.html', data)
@@ -1483,7 +1492,7 @@ def delete_payment(request, payment_id):
 
     return render(request, 'students/delete_payment.html',
                   {'payment': payment, 'comment_form': comment_form, 'main_offices': main_offices,
-                   'branches': branches, 'branch_logo':branch_logo})
+                   'branches': branches, 'branch_logo': branch_logo})
 
 
 @login_required(login_url='/login/')
