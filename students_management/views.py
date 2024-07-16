@@ -139,7 +139,7 @@ def add_professor(request):
             if professor_form.is_valid():
                 professor = professor_form.save(commit=False)
                 if request.user.role == 'super admin':
-                    professor.main_office = main_office
+                    professor.main_office_id = main_office
                 elif request.user.role == 'admin':
                     professor.branch = branch_office
                 professor.save()
