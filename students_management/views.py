@@ -829,7 +829,7 @@ def add_group(request):
             elif request.user.role == 'admin':
                 group.branch = branch_office
             group.save()
-            return redirect('all_courses')
+            return redirect('all_groups')
     else:
         main_office = MainOffice.objects.filter(admin=user).first()
         branch_office = Branch.objects.filter(admin=user).first()
@@ -846,6 +846,7 @@ def add_group(request):
     }
     return render(request, 'groups/add-groups.html', data)
 
+
 @login_required(login_url='/login/')
 def update_group(request, id_group):
     group = get_object_or_404(Group, pk=id_group)
@@ -856,7 +857,10 @@ def update_group(request, id_group):
     branch_logo = Branch.objects.filter(admin_id=user.id)
     if request.user.is_superuser:
         if request.method == 'POST':
-            group_form = GroupForm(request.POST, instance=group, user=request.user)
+            main_office = MainOffice.objects.filter(admin=user).first()
+            branch_office = Branch.objects.filter(admin=user).first()
+            group_form = GroupForm(request.POST, instance=group, main_office_id=main_office.id if main_office else None,
+                                   branch_office_id=branch_office.id if branch_office else None)
             if group_form.is_valid():
                 group_form.save()
                 students_to_remove = request.POST.getlist('students_to_remove')
@@ -866,7 +870,10 @@ def update_group(request, id_group):
             else:
                 messages.error(request, group_form.errors)
         else:
-            group_form = GroupForm(instance=group, user=request.user)
+            main_office = MainOffice.objects.filter(admin=user).first()
+            branch_office = Branch.objects.filter(admin=user).first()
+            group_form = GroupForm( instance=group, main_office_id=main_office.id if main_office else None,
+                                   branch_office_id=branch_office.id if branch_office else None)
         students_in_group = group.students_id.all()
     else:
         messages.error(request, 'У вас нет прав')
