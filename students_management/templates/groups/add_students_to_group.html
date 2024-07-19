@@ -12,6 +12,35 @@
                 {{ student_form.as_p }}
                 <button type="submit" class="btn btn-lg btn-success">Добавить</button>
             </form>
+            <h3>Студенты без группы</h3>
+            <table>
+                <thead>
+                <tr>
+                    <th>Имя</th>
+                    <th>Фамилия</th>
+                    <th>Действие</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for student in students_without_group %}
+                    <tr>
+                        <td>{{ student.first_name_s }}</td>
+                        <td>{{ student.last_name_s }}</td>
+                        <td>
+                            <form method="post" action="{% url 'add_students_to_group' selected_group_id %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="student_id" value="{{ student.id }}">
+                                <button type="submit" class="btn btn-primary">Добавить в группу</button>
+                            </form>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="3">Нет студентов без группы</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
         </div>
     </div>
 {% endblock %}

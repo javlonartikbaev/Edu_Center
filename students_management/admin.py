@@ -97,6 +97,10 @@ class ArchivedGroupAdmin(admin.ModelAdmin):
     list_filter = ('branch', 'status_group', 'archived_date')
     ordering = ('-archived_date',)
 
+class QuantityStudentsAdmin(admin.ModelAdmin):
+    list_display = ('first_name_s', 'last_name_s', 'joined_date', 'branch', 'main_office_id')
+
+admin.site.register(QuantityStudent, QuantityStudentsAdmin)
 admin.site.register(MainOffice, MainBranchAdmin)
 admin.site.register(CustomUser, UserAdmin)
 admin.site.register(ArchivedStudent, ArchivedStudentAdmin)

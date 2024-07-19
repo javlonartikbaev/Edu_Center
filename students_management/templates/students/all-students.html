@@ -88,6 +88,8 @@
                                     </tr>
                                     </thead>
                                     <tbody>
+
+
                                     {% for student in  student %}
                                         <tr>
                                             <td>
@@ -113,16 +115,17 @@
                                             <td>{{ student.paid_check }}</td>
                                             <td>{{ student.joined_date }}</td>
                                             <td>
-                                                {% for group in groups %}
 
+
+                                                {% for group in groups_branch %}
                                                     {% for st in group.students_id.all %}
                                                         {% if student.id == st.id %}
-
                                                             {{ group.name_group }}
                                                         {% endif %}
                                                     {% endfor %}
-
                                                 {% endfor %}
+
+
                                             </td>
                                             <td>
                                                 <a href="{{ student.get_absolute_url }}" class="btn btn-warning">
@@ -132,6 +135,8 @@
                                             </td>
                                         </tr>
                                     {% endfor %}
+
+
                                     </tbody>
                                 </table>
                             </div>

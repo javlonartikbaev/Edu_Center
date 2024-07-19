@@ -80,6 +80,7 @@ class Student(models.Model):
     joined_date = models.DateField(default=datetime.today, verbose_name='Дата присоединение')
     branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='students', verbose_name="Филиал",
                                null=True)
+    group_student_id = models.ForeignKey('Group', on_delete=models.CASCADE, verbose_name='Группа', null=True, related_name='group_student')
     main_office_id = models.ForeignKey(MainOffice, on_delete=models.CASCADE, related_name='main_offices_student',
                                        null=True)
 
@@ -96,6 +97,16 @@ class Student(models.Model):
         return reverse("update_students", kwargs={"id_student": self.pk})
 
 
+class QuantityStudent(models.Model):
+
+    first_name_s = models.CharField(max_length=55, verbose_name='Имя студента')
+    last_name_s = models.CharField(max_length=55, verbose_name='Фамилия студента')
+
+    joined_date = models.DateField(default=datetime.today, verbose_name='Дата присоединение')
+    branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='quantity_students_branch', verbose_name="Филиал",
+                               null=True)
+    main_office_id = models.ForeignKey(MainOffice, on_delete=models.CASCADE, related_name='quantity_students_branch_main_office',
+                                       null=True)
 class Course(models.Model):
     name_course = models.CharField(max_length=55, verbose_name='Имя курсе')
     price_course = models.CharField(max_length=55, verbose_name='Цена курса')
@@ -230,6 +241,8 @@ class Group(models.Model):
     main_office_id = models.ForeignKey(MainOffice, on_delete=models.CASCADE, related_name='main_offices_group',
                                        null=True)
 
+    def __str__(self):
+        return self.name_group
     class Meta:
         db_table = 'group'
         verbose_name = 'Группа'

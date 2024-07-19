@@ -84,12 +84,13 @@ class StatusForm(forms.ModelForm):
 class StudentForm(forms.ModelForm):
     class Meta:
         model = Student
-        exclude = ['paid_check', 'joined_date', 'branch', 'main_office_id']
+        exclude = ['paid_check', 'joined_date', 'branch', 'main_office_id', 'group_student_id']
         widgets = {
             'first_name_s': forms.TextInput(attrs={'class': 'form-control'}),
             'last_name_s': forms.TextInput(attrs={'class': 'form-control'}),
             'phone_number_s': forms.TextInput(attrs={'class': 'form-control'}),
             'parents_phone_number': forms.TextInput(attrs={'class': 'form-control'}),
+
 
         }
 

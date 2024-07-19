@@ -438,6 +438,7 @@ def all_students(request):
     current_year = datetime.today().year
     page_number = request.GET.get("page")
     branch_logo = Branch.objects.filter(admin_id=user.id)
+
     if user.role == 'teacher':
         messages.error(request, 'У вас нет прав доступа.')
         return redirect('main_page')
@@ -449,7 +450,13 @@ def all_students(request):
     selected_branch_id = request.GET.get('branch')
 
     found_student = Student.objects.all()
+    paid_students = 0
+    no_paid_students = 0
+
     if user.role == 'super admin':
+        paid_students = Student.objects.filter(paid_check='Оплатил', main_office_id__admin=user).count()
+        no_paid_students = Student.objects.filter(paid_check='Не оплатил', main_office_id__admin=user).count()
+
         if selected_main_office_id:
             found_student = found_student.filter(main_office_id=selected_main_office_id)
         elif selected_branch_id:
@@ -457,21 +464,22 @@ def all_students(request):
         else:
             found_student = found_student.filter(Q(main_office_id__in=main_offices) | Q(branch__in=branches))
     elif user.role == 'admin':
+        paid_students = Student.objects.filter(paid_check='Оплатил', main_office_id=branches.first()).count()
+        no_paid_students = Student.objects.filter(paid_check='Не оплатил', main_office_id=branches.first()).count()
+
         if selected_branch_id:
             found_student = found_student.filter(branch_id=selected_branch_id)
         else:
             admin_branches = Branch.objects.filter(admin=user)
             found_student = found_student.filter(branch__in=admin_branches)
-    search = SearchForm(request.GET)
 
     filter_option = request.GET.get('filter')
     if filter_option == 'not_paid':
-        found_student = found_student.filter(paid_check='Не оплатил', branch__admin=request.user)
+        found_student = found_student.filter(paid_check='Не оплатил')
 
     paginator = Paginator(found_student, 10)
     page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
-    current_year = datetime.today().year
 
     for student in page_obj:
         last_payment = Payment.objects.filter(student_id=student.id).aggregate(last_payment_date=Max('date_pay'))
@@ -490,23 +498,27 @@ def all_students(request):
     if search.is_valid():
         search_professor_name = search.cleaned_data.get('search_input', '')
         if search_professor_name:
-            teachers = found_student.filter(
+            found_student = found_student.filter(
                 Q(first_name__icontains=search_professor_name) | Q(last_name__icontains=search_professor_name))
 
     paginator = Paginator(found_student, 10)
     page_obj = paginator.get_page(page_number)
 
-    groups = Group.objects.filter(branch__admin=request.user)
-    data = {'search': search, 'groups': groups,
-            'student': page_obj,
-            'current_year': current_year,
-            'user': user,
-            'main_offices': main_offices,
-            'branches': branches,
-            'selected_main_office_id': selected_main_office_id,
-            'selected_branch_id': selected_branch_id,
-            'branch_logo': branch_logo
-            }
+    groups_branch = Group.objects.all()
+    data = {
+        'search': search,
+        'groups_branch': groups_branch,
+        'student': page_obj,
+        'current_year': current_year,
+        'user': user,
+        'main_offices': main_offices,
+        'branches': branches,
+        'selected_main_office_id': selected_main_office_id,
+        'selected_branch_id': selected_branch_id,
+        'branch_logo': branch_logo,
+        'paid_students': paid_students,
+        'no_paid_students': no_paid_students
+    }
     return render(request, 'students/all-students.html', data)
 
 
@@ -517,22 +529,40 @@ def add_students(request, group_id=None):
     main_offices = MainOffice.objects.filter(admin=user)
     branches = Branch.objects.filter(main_office__in=main_offices)
     branch_logo = Branch.objects.filter(admin_id=user.id)
+
+
+    students_without_group = Student.objects.filter(group_student_id__isnull=True)
+
     if request.method == "POST":
+        student_id = request.POST.get('student_id')
+        if student_id:
+            student = Student.objects.get(id=student_id)
+            if group_id:
+                group = Group.objects.get(id=group_id)
+                student.group_student_id = group
+                student.save()
+                group.students_id.add(student)
+                group.save()
+                QuantityStudent.objects.create(first_name_s=student.first_name_s,last_name_s = student.last_name_s,
+                                               joined_date=datetime.today(), branch = student.branch, main_office_id = student.main_office_id)
+                return redirect('add_students_to_group', group_id=group_id)
+
         student_form = StudentForm(request.POST)
         if request.user.role == 'super admin':
             if student_form.is_valid():
                 student = student_form.save(commit=False)
                 if group_id:
                     group = Group.objects.get(id=group_id)
-                    print(group.id)
                     if group.main_office_id in main_offices:
                         student.main_office_id = group.main_office_id
                     elif group.branch in branches:
                         student.branch = group.branch
-                        print(student.branch, group.branch)
-
+                    student.group_student_id = group
                     student.save()
                     group.students_id.add(student)
+                    QuantityStudent.objects.create(first_name_s=student.first_name_s, last_name_s=student.last_name_s,
+                                                   joined_date=datetime.today(), branch=student.branch,
+                                                   main_office_id=student.main_office_id)
                     return redirect('all_groups')
                 else:
                     student.save()
@@ -542,16 +572,17 @@ def add_students(request, group_id=None):
                 student = student_form.save(commit=False)
                 if group_id:
                     group = Group.objects.get(id=group_id)
-                    print(group.id)
                     student.branch = group.branch
-                    print(student.branch, group.branch)
+                    student.group_student_id = group  # Присваиваем объект группы
                     student.save()
                     group.students_id.add(student)
+                    QuantityStudent.objects.create(first_name_s=student.first_name_s, last_name_s=student.last_name_s,
+                                                   joined_date=datetime.today(), branch=student.branch,
+                                                   main_office_id=student.main_office_id)
                     return redirect('all_groups')
                 else:
                     student.save()
                     return redirect('all_groups')
-
     else:
         student_form = StudentForm()
 
@@ -563,7 +594,8 @@ def add_students(request, group_id=None):
         'selected_group_id': group_id,
         'main_offices': main_offices,
         'branches': branches,
-        'branch_logo': branch_logo
+        'branch_logo': branch_logo,
+        'students_without_group': students_without_group
     }
     return render(request, 'groups/add_students_to_group.html', data)
 
@@ -598,7 +630,7 @@ def delete_students(request, id_student):
     main_offices = MainOffice.objects.filter(admin=user)
     branches = Branch.objects.filter(main_office__in=main_offices)
     branch_logo = Branch.objects.filter(admin_id=user.id)
-    if not request.user.is_superuser:
+    if request.user.role == 'teacher':
         messages.error(request, 'У вас нет прав доступа.')
         return redirect(
             'main_page')
@@ -855,7 +887,7 @@ def update_group(request, id_group):
     main_offices = MainOffice.objects.filter(admin=user)
     branches = Branch.objects.filter(main_office__in=main_offices)
     branch_logo = Branch.objects.filter(admin_id=user.id)
-    if request.user.is_superuser:
+    if request.user.role == 'super admin' or request.user.role == 'admin':
         if request.method == 'POST':
             main_office = MainOffice.objects.filter(admin=user).first()
             branch_office = Branch.objects.filter(admin=user).first()
@@ -872,10 +904,10 @@ def update_group(request, id_group):
         else:
             main_office = MainOffice.objects.filter(admin=user).first()
             branch_office = Branch.objects.filter(admin=user).first()
-            group_form = GroupForm( instance=group, main_office_id=main_office.id if main_office else None,
+            group_form = GroupForm(instance=group, main_office_id=main_office.id if main_office else None,
                                    branch_office_id=branch_office.id if branch_office else None)
         students_in_group = group.students_id.all()
-    else:
+    elif request.user.role == 'teacher':
         messages.error(request, 'У вас нет прав')
         return redirect('all_groups')
 
@@ -993,6 +1025,7 @@ def info_group(request, id_group):
     branch_logo = Branch.objects.filter(admin_id=user.id)
     group = get_object_or_404(Group, pk=id_group)
     students = group.students_id.all()
+    print(students)
     today = datetime.today().date()
     student_ids = students.values_list('id', flat=True)
     student_data = []
@@ -1182,7 +1215,7 @@ def archived_students(request):
 
 @login_required(login_url='/login/')
 def restore_student(request, student_id):
-    if not request.user.is_superuser:
+    if request.user.role == 'teacher':
         messages.error(request, 'У вас нет прав доступа.')
         return redirect(
             'main_page')
@@ -1195,7 +1228,8 @@ def restore_student(request, student_id):
         parents_phone_number=archived_student.parents_phone_number,
         paid_check=archived_student.paid_check,
         joined_date=archived_student.joined_date,
-        branch=archived_student.branch
+        branch=archived_student.branch,
+        main_office_id=archived_student.main_office_id,
     )
 
     archived_student.delete()
@@ -1204,7 +1238,7 @@ def restore_student(request, student_id):
 
 @login_required(login_url='/login/')
 def delete_archived_students(request):
-    if not request.user.is_superuser:
+    if request.user.role == 'teacher':
         messages.error(request, 'У вас нет прав доступа.')
         return redirect(
             'main_page')
@@ -1227,26 +1261,19 @@ def main_page(request):
 
     user = request.user
     main_offices = MainOffice.objects.filter(admin=user)
-    branches = Branch.objects.filter(main_office__in=main_offices)
-    selected_main_office_id = request.GET.get('main_office')
-
-    selected_branch_id = request.GET.get('branch')
-    teachers = Teacher.objects.all()
+    branches = Branch.objects.filter(admin=user)
 
     if request.user.role == 'super admin':
         completed_the_course = ArchivedStudent.objects.filter(comments='окончил(а) курс',
-                                                              main_office_id=selected_main_office_id).count()
+                                                              main_office_id=main_offices.first()).count()
         dropped_lesson = ArchivedStudent.objects.filter(comments='прекратил(а) обучение',
-                                                        main_office_id=selected_main_office_id).count()
+                                                        main_office_id=main_offices.first()).count()
         left_students = ArchivedStudent.objects.all().count()
-        paid_students = Student.objects.filter(paid_check='Оплатил', main_office_id=selected_main_office_id).count()
-        no_paid_students = Student.objects.filter(paid_check='Не оплатил',
-                                                  main_office_id=selected_main_office_id).count()
-        other_students = Student.objects.filter(paid_check=None, main_office_id=selected_main_office_id).count()
-
-        groups = Group.objects.all()
+        paid_students = Student.objects.filter(paid_check='Оплатил', main_office_id=main_offices.first()).count()
+        no_paid_students = Student.objects.filter(paid_check='Не оплатил', main_office_id=main_offices.first()).count()
+        other_students = Student.objects.filter(paid_check=None, main_office_id=main_offices.first()).count()
+        groups = Group.objects.filter(Q(branch__admin=request.user) | Q(main_office_id__admin=request.user))
         group_data = []
-
         for group in groups:
             students_count = group.students_id.count()
             group_data.append({
@@ -1261,27 +1288,24 @@ def main_page(request):
 
         current_year = request.GET.get('year', None)
         if current_year:
-            students_per_month = Student.objects.filter(joined_date__year=current_year,
-                                                        main_office_id=selected_main_office_id).annotate(
+            students_per_month = QuantityStudent.objects.filter(joined_date__year=current_year,
+                                                        main_office_id__admin=request.user).annotate(
                 month=TruncMonth('joined_date')).values('month').annotate(count=Count('id')).order_by('month')
-            left_students_per_month = ArchivedStudent.objects.filter(archived_date__year=current_year,
-                                                                     main_office_id=selected_main_office_id).annotate(
-                month=TruncMonth('archived_date')).values('month').annotate(count=Count('id')).order_by('month')
         else:
-            students_per_month = Student.objects.all().annotate(
+            students_per_month = QuantityStudent.objects.filter(main_office_id__admin=request.user).annotate(
                 month=TruncMonth('joined_date')).values('month').annotate(
                 count=Count('id')).order_by('month')
-            left_students_per_month = ArchivedStudent.objects.all().annotate(
-                month=TruncMonth('archived_date')).values(
-                'month').annotate(
-                count=Count('id')).order_by('month')
 
+        left_students_per_month = ArchivedStudent.objects.filter(main_office_id__admin=request.user).annotate(
+            month=TruncMonth('archived_date')).values('month').annotate(count=Count('id')).order_by('month')
+
+        # Объединение результатов
         month_data = defaultdict(lambda: {'joined': 0, 'left': 0})
         for item in students_per_month:
-            month_data[item['month'].strftime('%B')]['joined'] = item['count']
+            month_data[item['month'].strftime('%B')]['joined'] += item['count']
 
         for item in left_students_per_month:
-            month_data[item['month'].strftime('%B')]['left'] = item['count']
+            month_data[item['month'].strftime('%B')]['left'] += item['count']
 
         all_months = [datetime.strptime(str(month), "%m").strftime("%B") for month in range(1, 13)]
         students_per_month_full = [(month, month_data[month]['joined'], month_data[month]['left']) for month in
@@ -1290,8 +1314,9 @@ def main_page(request):
         data = {
             'group_data': group_data,
             'total_groups': groups.count(),
-            'total_students': Student.objects.all().count(),
+            'total_students': Student.objects.filter(main_office_id__admin=request.user).count(),
             'paid_students': paid_students,
+            'groups': groups,
             'no_paid_students': no_paid_students,
             'other_students': other_students,
             'students_per_month': students_per_month_full,
@@ -1299,24 +1324,24 @@ def main_page(request):
             'current_year': current_year,
             'completed_the_course': completed_the_course,
             'dropped_lesson': dropped_lesson,
-            'archived_students': ArchivedStudent.objects.all().count(),
+            'archived_students': ArchivedStudent.objects.filter(main_office_id__admin=request.user).count(),
             'left_students': left_students,
             'branch_logo': branch_logo,
             'main_offices': main_offices,
             'branches': branches,
-
+            'user': user
         }
         return render(request, 'base.html', data)
     elif request.user.role == 'admin':
         completed_the_course = ArchivedStudent.objects.filter(comments='окончил(а) курс',
-                                                              branch__admin=request.user).count()
+                                                              branch=branches.first()).count()
         dropped_lesson = ArchivedStudent.objects.filter(comments='прекратил(а) обучение',
-                                                        branch__admin=request.user).count()
-        left_students = ArchivedStudent.objects.filter(branch__admin=request.user).count()
-        paid_students = Student.objects.filter(paid_check='Оплатил', branch__admin=request.user).count()
-        no_paid_students = Student.objects.filter(paid_check='Не оплатил', branch__admin=request.user).count()
-        other_students = Student.objects.filter(paid_check=None, branch__admin=request.user).count()
+                                                        branch=branches.first()).count()
+        left_students = ArchivedStudent.objects.all().count()
+        paid_students = Student.objects.filter(paid_check='Оплатил', branch=branches.first()).count()
 
+        no_paid_students = Student.objects.filter(paid_check='Не оплатил', branch=branches.first()).count()
+        other_students = Student.objects.filter(paid_check=None, branch=branches.first()).count()
         groups = Group.objects.filter(branch__admin=request.user)
         group_data = []
 
@@ -1332,30 +1357,27 @@ def main_page(request):
             year=ExtractYear('joined_date')).values_list(
             'year',
             flat=True).distinct().order_by('year')
-
         current_year = request.GET.get('year', None)
         if current_year:
-            students_per_month = Student.objects.filter(joined_date__year=current_year,
+            students_per_month = QuantityStudent.objects.filter(joined_date__year=current_year,
                                                         branch__admin=request.user).annotate(
                 month=TruncMonth('joined_date')).values('month').annotate(count=Count('id')).order_by('month')
-            left_students_per_month = ArchivedStudent.objects.filter(archived_date__year=current_year,
-                                                                     branch__admin=request.user).annotate(
-                month=TruncMonth('archived_date')).values('month').annotate(count=Count('id')).order_by('month')
         else:
-            students_per_month = Student.objects.filter(branch__admin=request.user).annotate(
+            students_per_month = QuantityStudent.objects.filter(branch__admin=request.user).annotate(
                 month=TruncMonth('joined_date')).values('month').annotate(
                 count=Count('id')).order_by('month')
-            left_students_per_month = ArchivedStudent.objects.filter(branch__admin=request.user).annotate(
-                month=TruncMonth('archived_date')).values(
-                'month').annotate(
-                count=Count('id')).order_by('month')
 
+        left_students_per_month = ArchivedStudent.objects.filter(branch__admin=request.user).annotate(
+            month=TruncMonth('archived_date')).values(
+            'month').annotate(count=Count('id')).order_by('month')
+
+        # Объединение результатов
         month_data = defaultdict(lambda: {'joined': 0, 'left': 0})
         for item in students_per_month:
-            month_data[item['month'].strftime('%B')]['joined'] = item['count']
+            month_data[item['month'].strftime('%B')]['joined'] += item['count']
 
         for item in left_students_per_month:
-            month_data[item['month'].strftime('%B')]['left'] = item['count']
+            month_data[item['month'].strftime('%B')]['left'] += item['count']
 
         all_months = [datetime.strptime(str(month), "%m").strftime("%B") for month in range(1, 13)]
         students_per_month_full = [(month, month_data[month]['joined'], month_data[month]['left']) for month in
@@ -1379,7 +1401,9 @@ def main_page(request):
             'branch_logo': branch_logo,
             'main_offices': main_offices,
             'branches': branches,
+            'user': user
         }
+
         return render(request, 'base.html', data)
     return render(request, 'base.html')
 
