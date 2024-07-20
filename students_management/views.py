@@ -1031,7 +1031,7 @@ def info_group(request, id_group):
     student_data = []
     for student in students:
         last_attendance = Attendance.objects.filter(students_id=student).order_by('-date_attendance').first()
-        student_payments = Payment.objects.filter(student_id=student).order_by('-date_pay')
+        student_payments = Payment.objects.filter(student_id=student).order_by('-date_pay').first()
 
         student_data.append({
             'student': student,
@@ -1051,7 +1051,7 @@ def info_group(request, id_group):
         'branch_logo': branch_logo
     }
 
-    if request.user.is_superuser:
+    if request.user.role == 'admin' or request.user.role == 'super admin':
         template_name = 'groups/info-group.html'
     else:
         template_name = 'teachers-group/teachers-group-info.html'

@@ -38,10 +38,10 @@
                                     </td>
                                     <td>
                                         {% if student.payments %}
-                                            {% for payment in student.payments %}
-                                                {{ payment.date_pay }} - {{ payment.method_pay }} - {{ payment.price }}
+{#                                            {% for payment in student.payments %}#}
+                                                {{ student.payments.date_pay }} - {{ student.payments.method_pay }} - {{ student.payments.price }}
                                                 <br>
-                                            {% endfor %}
+{#                                            {% endfor %}#}
                                         {% else %}
                                             Нет данных о платежах
                                         {% endif %}
