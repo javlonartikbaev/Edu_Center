@@ -99,7 +99,7 @@ def update_professor(request, id_professor):
     branches = Branch.objects.filter(main_office__in=main_offices)
     branch_logo = Branch.objects.filter(admin_id=user.id)
 
-    if not request.user.is_superuser and professor.user != request.user:
+    if request.user.role == 'teacher' and professor.user != request.user:
         return redirect('all_groups')
 
     if request.method == 'POST':
@@ -297,7 +297,7 @@ def add_course(request):
 
 @login_required(login_url='/login/')
 def update_course(request, id_course):
-    if not request.user.is_superuser:
+    if request.user.role == 'teacher':
         messages.error(request, 'У вас нет прав доступа.')
         return redirect(
             'main_page')
@@ -325,7 +325,7 @@ def delete_course(request, id_course):
     main_offices = MainOffice.objects.filter(admin=user)
     branches = Branch.objects.filter(main_office__in=main_offices)
     branch_logo = Branch.objects.filter(admin_id=user.id)
-    if not request.user.is_superuser:
+    if request.user.role == 'teacher':
         messages.error(request, 'У вас нет прав доступа.')
         return redirect(
             'main_page')
@@ -441,7 +441,7 @@ def all_students(request):
 
     if user.role == 'teacher':
         messages.error(request, 'У вас нет прав доступа.')
-        return redirect('main_page')
+        return redirect('all_groups')
 
     main_offices = MainOffice.objects.filter(admin=user)
     branches = Branch.objects.filter(main_office__in=main_offices)
@@ -606,7 +606,7 @@ def update_students(request, id_student):
     main_offices = MainOffice.objects.filter(admin=user)
     branches = Branch.objects.filter(main_office__in=main_offices)
     branch_logo = Branch.objects.filter(admin_id=user.id)
-    if not request.user.is_superuser:
+    if request.user.role == 'teacher':
         messages.error(request, 'У вас нет прав доступа.')
         return redirect(
             'main_page')
@@ -728,9 +728,8 @@ def add_audience(request):
     current_year = datetime.today().year
     branch_logo = Branch.objects.filter(admin_id=user.id)
     if audience_form.is_valid():
-
         audience = audience_form.save(commit=False)
-        if request.user.is_superuser:
+        if request.user.role == 'super admin':
             user = request.user
             main_offices = MainOffice.objects.filter(admin_id=user.id).first()
             print(main_offices)
@@ -757,7 +756,7 @@ def update_audience(request, id_audience):
     main_offices = MainOffice.objects.filter(admin=user)
     branches = Branch.objects.filter(main_office__in=main_offices)
     branch_logo = Branch.objects.filter(admin_id=user.id)
-    if not request.user.is_superuser:
+    if request.user.role == 'teacher':
         messages.error(request, 'У вас нет прав доступа.')
         return redirect(
             'main_page')
@@ -782,7 +781,7 @@ def delete_audience(request, id_audience):
     main_offices = MainOffice.objects.filter(admin=user)
     branches = Branch.objects.filter(main_office__in=main_offices)
     branch_logo = Branch.objects.filter(admin_id=user.id)
-    if not request.user.is_superuser:
+    if request.user.role == 'teacher':
         messages.error(request, 'У вас нет прав доступа.')
         return redirect(
             'main_page')
@@ -863,7 +862,7 @@ def add_group(request):
 
         if group_form.is_valid():
             group = group_form.save(commit=False)
-            if request.user.is_superuser:
+            if request.user.role == 'super admin':
                 group.main_office_id = main_office
             elif request.user.role == 'admin':
                 group.branch = branch_office
@@ -930,9 +929,9 @@ def delete_group(request, id_group):
     main_offices = MainOffice.objects.filter(admin=user)
     branches = Branch.objects.filter(main_office__in=main_offices)
     branch_logo = Branch.objects.filter(admin_id=user.id)
-    if not request.user.is_superuser:
+    if request.user.role == 'teacher':
         messages.error(request, 'У вас нет прав доступа.')
-        return redirect('main_page')
+        return redirect('all_groups')
 
     group = get_object_or_404(Group, pk=id_group)
 
@@ -1016,7 +1015,7 @@ def mark_attendance(request, group_id):
         'branch_logo': branch_logo
     }
 
-    if request.user.is_superuser:
+    if request.user.role == 'super admin' or request.user.role == 'admin':
         template_name = 'groups/attendance-group.html'
     else:
         template_name = 'teachers-group/teachers-mark-att.html'
@@ -1074,7 +1073,7 @@ def process_payment(request, student_id):
     branch_logo = Branch.objects.filter(admin_id=user.id)
     if request.user.role == 'teacher':
         messages.error(request, 'У вас нет прав доступа.')
-        return redirect('main_page')
+        return redirect('all_groups')
 
     student = get_object_or_404(Student, id=student_id)
     payments = Payment.objects.filter(student_id=student_id).order_by('-date_pay')
@@ -1129,7 +1128,7 @@ def process_payment(request, student_id):
 def delete_selected_students(request):
     if request.user.role == 'teacher':
         messages.error(request, 'У вас нет прав доступа.')
-        return redirect('main_page')
+        return redirect('all_groups')
 
     if request.method == 'POST':
         selected_students = request.POST.getlist('selected_students')
@@ -1419,7 +1418,7 @@ def main_page(request):
 def archived_groups(request):
     if request.user.role == 'teacher':
         messages.error(request, 'У вас нет прав доступа.')
-        return redirect('main_page')
+        return redirect('all_groups')
 
     user = request.user
     main_offices = MainOffice.objects.filter(admin=user)
@@ -1456,7 +1455,7 @@ def archived_groups(request):
 
 @login_required(login_url='/login/')
 def delete_archived_group(request, id_archived_group):
-    if not request.user.is_superuser:
+    if request.user.role == 'teacher':
         messages.error(request, 'У вас нет прав доступа.')
         return redirect(
             'main_page')
@@ -1468,7 +1467,7 @@ def delete_archived_group(request, id_archived_group):
 
 @login_required(login_url='/login/')
 def restore_group(request, group_id):
-    if not request.user.is_superuser:
+    if request.user.role == 'teacher':
         messages.error(request, 'У вас нет прав доступа.')
         return redirect(
             'main_page')
@@ -1503,7 +1502,7 @@ def delete_payment(request, payment_id):
     main_offices = MainOffice.objects.filter(admin=user)
     branches = Branch.objects.filter(main_office__in=main_offices)
     branch_logo = Branch.objects.filter(admin_id=user.id)
-    if not request.user.is_superuser:
+    if request.user.role == 'teacher':
         messages.error(request, 'У вас нет прав доступа.')
         return redirect(
             'main_page')
