@@ -22,18 +22,7 @@
                                 <label for="id_date_pay">Дата оплаты:</label>
                                 {{ form.date_pay }}
                             </div>
-                            <div class="form-group">
-                                <label for="id_course_id">Курс:</label>
-                                {{ form.course_id }}
-                            </div>
-                            <div class="form-group">
-                                <label for="id_price">Филиал:</label>
-                                {{ form.branch }}
-                            </div>
-                            <div class="form-group">
-                                <label for="id_price">Сумма (сум):</label>
-                                {{ course_prices }}
-                            </div>
+
                             <button type="submit" class="btn btn-primary">Оплатить</button>
                             <a href="{% url 'profile_students' student.id %}" class="btn btn-secondary">Отмена</a>
                         </form>

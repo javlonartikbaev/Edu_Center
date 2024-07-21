@@ -44,6 +44,10 @@ def get_professor(request):
         else:
             admin_branches = Branch.objects.filter(admin=user)
             teachers = teachers.filter(branch__in=admin_branches)
+    elif user.role == 'teacher':
+        user = request.user.id
+        professor = Teacher.objects.filter(user_id=user).first()
+        groups = Group.objects.filter(teacher_id=professor)
 
     if search.is_valid():
         search_professor_name = search.cleaned_data.get('search_input', '')
@@ -820,13 +824,13 @@ def all_groups(request):
             groups = groups.filter(branch__in=admin_branches)
     elif user.role == 'teacher':
         user = request.user.id
-        professors = Teacher.objects.all()
-        groups = Group.objects.filter(teacher_id=professors.first())
-        data = {'groups': groups, 'current_year': current_year, 'professors': professors, 'branch_logo': branch_logo}
+
+        professor = Teacher.objects.filter(user_id=user).first()
+
+        groups = Group.objects.filter(teacher_id=professor)
+        data = {'groups': groups, 'current_year': current_year, 'professors': professor, 'branch_logo': branch_logo}
         return render(request, 'teachers-group/teachers_group.html', data)
-
     data = {
-
         'groups': groups,
         'current_year': current_year,
         'user': user,
@@ -1025,19 +1029,21 @@ def mark_attendance(request, group_id):
 
 @login_required(login_url='/login/')
 def info_group(request, id_group):
+    current_year = datetime.now().year
     user = request.user
     main_offices = MainOffice.objects.filter(admin=user)
     branches = Branch.objects.filter(main_office__in=main_offices)
     branch_logo = Branch.objects.filter(admin_id=user.id)
     group = get_object_or_404(Group, pk=id_group)
     students = group.students_id.all()
-    print(students)
     today = datetime.today().date()
     student_ids = students.values_list('id', flat=True)
+    user = request.user.id
+    professor = Teacher.objects.filter(user_id=user).first()
     student_data = []
     for student in students:
         last_attendance = Attendance.objects.filter(students_id=student).order_by('-date_attendance').first()
-        student_payments = Payment.objects.filter(student_id=student).order_by('-date_pay').first()
+        student_payments = Payment.objects.filter(student_id=student).order_by('-date_pay')
 
         student_data.append({
             'student': student,
@@ -1054,7 +1060,10 @@ def info_group(request, id_group):
         'today': today,
         'main_offices': main_offices,
         'branches': branches,
-        'branch_logo': branch_logo
+        'branch_logo': branch_logo,
+        'student': student,
+        'professors': professor,
+
     }
 
     if request.user.role == 'admin' or request.user.role == 'super admin':

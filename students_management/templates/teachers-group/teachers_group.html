@@ -12,30 +12,30 @@
                             <ul class="mobile-menu-nav">
                                 <li>
                                     <a class="has-arrow" href="#" aria-expanded="false"><span
-                                            class="educate-icon educate-course icon-wrap"></span> <span
-                                            class="mini-click-non">Группы</span></a>
+                                            class="educate-icon educate-course icon-wrap"></span>
+                                        <span class="mini-click-non">Группы</span></a>
                                     <ul class="submenu-angle" aria-expanded="false">
                                         <li><a title="All Courses" href="#"><span class="mini-sub-pro">Все Группы</span></a>
                                         </li>
                                     </ul>
                                 </li>
                                 <li>
-
-
-                                    <a class="has-arrow" href="{{ professor.get_absolute_url }}"
-                                       aria-expanded="false"><span
+                                    <a class="has-arrow" href="#" aria-expanded="false"><span
                                             class="educate-icon educate-course icon-wrap"></span>
-                                        <span
-                                                class="mini-click-non">Профиль</span></a>
-                                    {% for professor in professors %}
-                                        <ul class="submenu-angle" aria-expanded="false">
-                                            <li><a title="All Courses"
-                                                   href="{{ professor.get_absolute_url }}"><span
-                                                    class="mini-sub-pro">{{ professor.first_name }} {{ professor.last_name }}</span></a>
-                                            </li>
-                                        </ul>
-                                    {% endfor %}
+                                        <span class="mini-click-non">Профиль</span></a>
+                                    <ul class="submenu-angle" aria-expanded="false">
+                                        {% if professors %}
+                                            <ul class="submenu-angle" aria-expanded="false">
+                                                <li><a title="All Courses"
+                                                       href="{{ professors.get_absolute_url }}"><span
+                                                        class="mini-sub-pro">{{ professors.first_name }} {{ professors.last_name }}</span></a>
+                                                </li>
+                                            </ul>
+                                        {% endif %}
+                                    </ul>
                                 </li>
+
+
                             </ul>
                         </nav>
                     </div>
@@ -67,22 +67,19 @@
                             </ul>
                         </li>
                         <li>
-
-
-                            <a class="has-arrow" href="{{ professor.get_absolute_url }}"
-                               aria-expanded="false"><span class="educate-icon educate-course icon-wrap"></span>
-                                <span
-                                        class="mini-click-non">Профиль</span></a>
-                            {% for professor in professors %}
-                                <ul class="submenu-angle" aria-expanded="false">
-                                    <li><a title="All Courses"
-                                           href="{{ professor.get_absolute_url }}"><span
-                                            class="mini-sub-pro">{{ professor.first_name }} {{ professor.last_name }}</span></a>
-                                    </li>
-                                </ul>
-
-                            {% endfor %}
-
+                            <a class="has-arrow" href="#" aria-expanded="false"><span
+                                    class="educate-icon educate-course icon-wrap"></span>
+                                <span class="mini-click-non">Профиль</span></a>
+                            <ul class="submenu-angle" aria-expanded="false">
+                                {% if professors %}
+                                    <ul class="submenu-angle" aria-expanded="false">
+                                        <li><a title="All Courses"
+                                               href="{{ professors.get_absolute_url }}"><span
+                                                class="mini-sub-pro">{{ professors.first_name }} {{ professors.last_name }}</span></a>
+                                        </li>
+                                    </ul>
+                                {% endif %}
+                            </ul>
                         </li>
                     </ul>
                 </nav>

@@ -7,7 +7,7 @@
         <div class="row">
             <div class="col-lg-12">
                 <div class="hpanel hblue contact-panel contact-panel-cs responsive-mg-b-10">
-                    <div class="panel-body custom-panel-jw">
+                    <div class="panel-body custom-panel-jw" style="margin-top: 30px">
                         <!-- Заголовок с именем группы и учителя -->
                         <h1>Группа: {{ group.name_group }}</h1>
                         <h2>Преподаватель: {{ group.teacher_id.first_name }} {{ group.teacher_id.last_name }}</h2>
@@ -37,10 +37,11 @@
                                     </td>
                                     <td>
                                         {% if student.payments %}
-                                            {% for payment in student.payments %}
-                                                {{ payment.date_pay }} - {{ payment.method_pay }} - {{ payment.price }}
-                                                <br>
+
+                                            {% for student in student_data %}
+                                            	{{ student.student.paid_check }}
                                             {% endfor %}
+
                                         {% else %}
                                             Нет данных о платежах
                                         {% endif %}
