@@ -820,8 +820,9 @@ def all_groups(request):
             admin_branches = Branch.objects.filter(admin=user)
             groups = groups.filter(branch__in=admin_branches)
     elif user.role == 'teacher':
+        user = request.user.id
         professors = Teacher.objects.all()
-        groups = Group.objects.filter(teacher_id=user.id)
+        groups = Group.objects.filter(teacher_id=professors.first())
         data = {'groups': groups, 'current_year': current_year, 'professors': professors, 'branch_logo': branch_logo}
         return render(request, 'teachers-group/teachers_group.html', data)
 
@@ -836,7 +837,13 @@ def all_groups(request):
         'selected_branch_id': selected_branch_id,
         'branch_logo': branch_logo
     }
-    return render(request, 'groups/all-groups.html', data)
+
+    if request.user.role == 'admin' or request.user.role == 'super admin':
+        template = 'groups/all-groups.html'
+    elif request.user.role == 'teacher':
+        template = 'teachers-group/teachers_group.html'
+
+    return render(request,template , data)
 
 
 @login_required(login_url='/login/')
