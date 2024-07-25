@@ -100,6 +100,14 @@ class ArchivedGroupAdmin(admin.ModelAdmin):
 class QuantityStudentsAdmin(admin.ModelAdmin):
     list_display = ('first_name_s', 'last_name_s', 'joined_date', 'branch', 'main_office_id')
 
+@admin.register(SmsTemplates)
+class SmsTemplatesAdmin(admin.ModelAdmin):
+    list_display = ('text_sms','TEMPLATE_STATUS',)
+
+@admin.register(SMSLoginPassword)
+class SMSLoginPasswordAdmin(admin.ModelAdmin):
+    list_display = ('login', 'password')
+
 admin.site.register(QuantityStudent, QuantityStudentsAdmin)
 admin.site.register(MainOffice, MainBranchAdmin)
 admin.site.register(CustomUser, UserAdmin)

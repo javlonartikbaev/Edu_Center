@@ -350,3 +350,38 @@ class ArchivedGroup(models.Model):
 
     def __str__(self):
         return self.name_group
+
+class SmsTemplates(models.Model):
+    TEMPLATE_STATUS = [
+        ("sms для посещаемости", 'SMS для посещаемости'),
+        ("sms для должников", "SMS для должников"),
+        ("sms для уведомления групп", "sms для уведомления групп")
+    ]
+    text_sms = models.TextField()
+    text_categories = models.CharField(choices=TEMPLATE_STATUS)
+    branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='sms_temp_branch', verbose_name="Филиал",
+                               null=True)
+    main_office_id = models.ForeignKey(MainOffice, on_delete=models.CASCADE, related_name='sms_temp_main_office',
+                                       null=True)
+    class Meta:
+        db_table = 'sms_templates'
+        verbose_name = 'SMS Шаблон'
+        verbose_name_plural = 'SMS Шаблоны'
+
+    def __str__(self):
+        return self.text_sms
+
+class SMSLoginPassword(models.Model):
+    login = models.CharField(max_length=45)
+    password = models.CharField(max_length=255)
+    branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='sms_login_branch', verbose_name="Филиал",
+                               null=True, blank=True)
+    main_office_id = models.ForeignKey(MainOffice, on_delete=models.CASCADE, related_name='sms_login_main_office',
+                                       null=True, blank=True)
+    class Meta:
+        db_table = 'sms_login_password'
+        verbose_name = 'Смс логин и пароль',
+        verbose_name_plural = 'Смс логин и пароль'
+
+    def __str__(self):
+        return self.login

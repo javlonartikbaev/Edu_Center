@@ -76,7 +76,25 @@
                             </table>
                             <button type="submit" class="btn btn-danger">Удалить выбранных</button>
                         </form>
+                        <div class="pagination">
+                            <div class="pagination-second">
+                                <span class="step-links">
+                                    {% if archived_students.has_previous %}
+                                        <a href="?page=1">&laquo;</a>
+                                        <a href="?page={{ archived_students.previous_page_number }}">‹</a>
+                                    {% endif %}
+                                    <span class="current">
+                                        Страница {{ archived_students.number }} из {{ archived_students.paginator.num_pages }}.
+                                    </span>
+                                    {% if archived_students.has_next %}
+                                        <a href="?page={{ archived_students.next_page_number }}">›</a>
+                                        <a href="?page={{ archived_students.paginator.num_pages }}">&raquo;</a>
+                                    {% endif %}
+                                </span>
+                            </div>
+                        </div>
                     </div>
+
                 </div>
             </div>
         </div>

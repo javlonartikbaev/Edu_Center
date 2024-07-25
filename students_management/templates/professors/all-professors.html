@@ -86,6 +86,16 @@
                                                              alt=""/></a>
                         <strong><a href="{% url 'main_page' %}"><img style="height:50px;width: 50px "
                                                                      src="
+
+
+
+
+
+
+
+
+
+
                                                                              {{ MEDIA_URL }}{{ main_office.short_logo_main.url }}"
                                                                      alt=""/></a></strong>
                     {% endfor %}
@@ -96,6 +106,16 @@
                                                              alt=""/></a>
                         <strong><a href="{% url 'main_page' %}"><img style="height:50px;width: 50px "
                                                                      src="
+
+
+
+
+
+
+
+
+
+
                                                                              {{ MEDIA_URL }}{{ branch.short_logo_branch.url }}"
                                                                      alt=""/></a></strong>
                     {% endfor %}
@@ -185,6 +205,24 @@
                             </ul>
 
                         </li>
+                        {% if user.role == 'super admin' %}
+
+
+                            <li>
+
+                                <a class="has-arrow" href="{% url 'sms_temp' %}" aria-expanded="false"><span
+                                        class="educate-icon educate-course icon-wrap"></span> <span
+                                        class="mini-click-non">Настройки СМС</span></a>
+                                <ul class="submenu-angle" aria-expanded="false">
+                                    <li><a title="All Courses" href="{% url 'sms_temp' %}"><span
+                                            class="mini-sub-pro">СМС Шаблоны</span></a>
+                                    </li>
+                                    <li></li>
+                                    <!-- <li><a title="course Payment" href="course-payment.html"><span class="mini-sub-pro">Courses Payment</span></a></li> -->
+                                </ul>
+
+                            </li>
+                        {% endif %}
 
                     </ul>
                 </nav>
@@ -227,7 +265,7 @@
                                 <div class="header-right-info">
                                     <ul class="nav navbar-nav mai-top-nav header-right-menu">
                                         <li class="nav-item dropdown">
-                                            <a href="#" data-toggle="dropdown" role="button" aria-expanded="false"
+                                            <a href="{% url 'groups_sms' %}" role="button"
                                                class="nav-link dropdown-toggle"><i
                                                     class="educate-icon educate-message edu-chat-pro"
                                                     aria-hidden="true"></i><span class="indicator-ms"></span></a>
@@ -285,12 +323,13 @@
                                        href="{% url 'all_professors' %}">Менторы <span
                                         class=""></span></a>
                                 </li>
-                                <ul id="demoevent" class="collapse dropdown-header-top admin-project-icon edu-icon edu-down-arrow">
-                                    <li><a href="{% url 'all_professors' %}">Все Менторы</a>
-                                    </li>
+                                <ul id="demoevent"
+                                    class="collapse dropdown-header-top admin-project-icon edu-icon edu-down-arrow">
+                                    <li><a href="{% url 'all_professors' %}">Все Менторы</a></li>
+
 
                                 </ul>
-                                </li>
+
                                 <li><a data-toggle="collapse" data-target="#demopro" href="#">Студенты <span
                                         class="admin-project-icon edu-icon edu-down-arrow"></span></a>
                                     <ul id="demopro" class="collapse dropdown-header-top">
@@ -305,8 +344,6 @@
                                         class="admin-project-icon edu-icon edu-down-arrow"></span></a>
                                     <ul id="democrou" class="collapse dropdown-header-top">
                                         <li><a href="{% url 'all_courses' %}">Все Курсы</a>
-
-
                                     </ul>
                                 </li>
 
@@ -319,8 +356,6 @@
                                         <li><a title="All Courses" href="{% url 'all_audience' %}"><span
                                                 class="mini-sub-pro">Все Аудитории</span></a>
                                         </li>
-
-                                        <!-- <li><a title="course Payment" href="course-payment.html"><span class="mini-sub-pro">Courses Payment</span></a></li> -->
                                     </ul>
 
                                 </li>
@@ -354,8 +389,27 @@
                                                 class="mini-sub-pro">Архив групп</span></a></li>
                                         <!-- <li><a title="course Payment" href="course-payment.html"><span class="mini-sub-pro">Courses Payment</span></a></li> -->
                                     </ul>
-
                                 </li>
+                                {% if user.role == 'super admin' %}
+
+
+                                    <li>
+
+                                        <a class="has-arrow" href="{% url 'sms_temp' %}" aria-expanded="false"><span
+                                                class="educate-icon educate-course icon-wrap"></span> <span
+                                                class="mini-click-non">Настройки СМС</span></a>
+                                        <ul class="submenu-angle" aria-expanded="false">
+                                            <li><a title="All Courses" href="{% url 'sms_temp' %}"><span
+                                                    class="mini-sub-pro">СМС Шаблоны</span></a>
+                                            </li>
+                                            <li></li>
+                                            <!-- <li><a title="course Payment" href="course-payment.html"><span class="mini-sub-pro">Courses Payment</span></a></li> -->
+                                        </ul>
+
+                                    </li>
+                                {% endif %}
+
+
                             </ul>
                         </nav>
                     </div>
@@ -479,14 +533,19 @@
 
 {% block footer %}
 
-    <div class="footer-copyright-area">
-        <div class="container-fluid">
-            <div class="row">
-                <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
-                    <div class="footer-copy-right">
-                        <p>Copyright © {{ current_year }}. All rights reserved. Template by <a
-                                href="https://colorlib.com/wp/templates/">Colorlib</a>
-                        </p>
+    <div class="wrapper">
+        <div class="content">
+            <!-- Your page content here -->
+        </div>
+        <div class="footer-copyright-area">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                        <div class="footer-copy-right">
+                            <p>Copyright © {{ current_year }}. All rights reserved. Template by <a
+                                    href="https://colorlib.com/wp/templates/">Colorlib</a>
+                            </p>
+                        </div>
                     </div>
                 </div>
             </div>

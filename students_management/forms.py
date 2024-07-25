@@ -91,7 +91,6 @@ class StudentForm(forms.ModelForm):
             'phone_number_s': forms.TextInput(attrs={'class': 'form-control'}),
             'parents_phone_number': forms.TextInput(attrs={'class': 'form-control'}),
 
-
         }
 
 
@@ -174,3 +173,21 @@ class CustomUserChangeForm(UserChangeForm):
     class Meta:
         model = CustomUser
         fields = "__all__"
+
+
+class SmsTemplateForm(forms.ModelForm):
+    class Meta:
+        model = SmsTemplates
+        fields = ['text_sms', 'text_categories']
+
+        widgets = {
+            'text_sms': forms.Textarea(attrs={'class': 'form-control',
+                                              'rows': 15,
+                                              'cols': 60,
+                                              'style': 'resize: none;'}),
+            'text_categories': forms.Select(attrs={'class': 'form-control'}),
+        }
+        labels = {
+            'text_sms': 'Шаблон',
+            'text_categories': 'Смс категорий'
+        }

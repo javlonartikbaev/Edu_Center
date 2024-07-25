@@ -1,9 +1,12 @@
+import json
 from collections import defaultdict
 from datetime import timedelta
 
+import requests
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
+# from django.contrib.sites import requests
 from django.core.paginator import Paginator
 from django.db.models import Max, Count
 from django.db.models.functions import ExtractYear, TruncMonth
@@ -11,8 +14,33 @@ from django.http import HttpResponseBadRequest
 # Create your views here.
 from django.shortcuts import get_object_or_404
 from django.shortcuts import render, redirect
+from django.views.decorators.csrf import csrf_exempt
 
 from .forms import *
+
+
+@csrf_exempt
+def send_sms(phone, text, request):
+    user = request.user
+    main_offices = MainOffice.objects.filter(admin=user)
+    branches = Branch.objects.filter(main_office__in=main_offices)
+    login_password = SMSLoginPassword.objects.filter(
+        main_office_id__in=main_offices
+    ).first()
+
+    url = "http://localhost:8000/"
+    payload = [{
+        "phone": f"{phone}",
+        "text": f"{text}"
+    }]
+    data = {
+        'login': login_password.login,
+        'password': login_password.password,
+        'data': json.dumps(payload)
+    }
+
+    response = requests.post(url, data=data)
+    return response.status_code, response.text
 
 
 # Professor
@@ -467,6 +495,8 @@ def all_students(request):
             found_student = found_student.filter(branch_id=selected_branch_id)
         else:
             found_student = found_student.filter(Q(main_office_id__in=main_offices) | Q(branch__in=branches))
+
+
     elif user.role == 'admin':
         paid_students = Student.objects.filter(paid_check='Оплатил', main_office_id=branches.first()).count()
         no_paid_students = Student.objects.filter(paid_check='Не оплатил', main_office_id=branches.first()).count()
@@ -534,7 +564,6 @@ def add_students(request, group_id=None):
     branches = Branch.objects.filter(main_office__in=main_offices)
     branch_logo = Branch.objects.filter(admin_id=user.id)
 
-
     students_without_group = Student.objects.filter(group_student_id__isnull=True)
 
     if request.method == "POST":
@@ -547,8 +576,9 @@ def add_students(request, group_id=None):
                 student.save()
                 group.students_id.add(student)
                 group.save()
-                QuantityStudent.objects.create(first_name_s=student.first_name_s,last_name_s = student.last_name_s,
-                                               joined_date=datetime.today(), branch = student.branch, main_office_id = student.main_office_id)
+                QuantityStudent.objects.create(first_name_s=student.first_name_s, last_name_s=student.last_name_s,
+                                               joined_date=datetime.today(), branch=student.branch,
+                                               main_office_id=student.main_office_id)
                 return redirect('add_students_to_group', group_id=group_id)
 
         student_form = StudentForm(request.POST)
@@ -620,7 +650,7 @@ def update_students(request, id_student):
         form = StudentForm(request.POST, instance=student)
         if form.is_valid():
             form.save()
-            return redirect('')
+            return redirect('all_students')
     else:
         form = StudentForm(instance=student)
     data = {"form": form, "current_year": current_year, 'main_offices': main_offices,
@@ -846,7 +876,7 @@ def all_groups(request):
     elif request.user.role == 'teacher':
         template = 'teachers-group/teachers_group.html'
 
-    return render(request,template , data)
+    return render(request, template, data)
 
 
 @login_required(login_url='/login/')
@@ -992,6 +1022,7 @@ def mark_attendance(request, group_id):
     main_offices = MainOffice.objects.filter(admin=user)
     branches = Branch.objects.filter(main_office__in=main_offices)
     branch_logo = Branch.objects.filter(admin_id=user.id)
+    template_sms = SmsTemplates.objects.filter(text_categories='sms для посещаемости').first()
     if request.method == 'POST':
         date_attendance = request.POST.get('date_attendance')
         attendance_status = Attendance_Status.objects.get(name_attendance_status='Отсутствует')
@@ -1010,6 +1041,13 @@ def mark_attendance(request, group_id):
                     branch=group.branch,
                 )
 
+                phone = student.parents_phone_number
+                text = template_sms.text_sms.format(
+                    student_name=student.first_name_s,
+                    date=date_attendance
+                )
+
+                send_sms(phone, text,request)
         return redirect('all_groups')
 
     data = {
@@ -1125,6 +1163,7 @@ def process_payment(request, student_id):
         'form': form,
         'payments': payments,
         'course_price': course_price,
+        'message': messages,
         'last_payment_date': last_payment_date,  # Передаем дату последней оплаты в контекст
         'main_offices': main_offices,
         'branches': branches,
@@ -1138,49 +1177,53 @@ def delete_selected_students(request):
     if request.user.role == 'teacher':
         messages.error(request, 'У вас нет прав доступа.')
         return redirect('all_groups')
-
+    selected_students = request.POST.getlist('selected_students')
+    template_sms = SmsTemplates.objects.filter(text_categories='sms для должников').first()
+    action = request.POST.get('action')
     if request.method == 'POST':
-        selected_students = request.POST.getlist('selected_students')
-        comments = request.POST.get('comments', '')
+        if action == 'delete':
+            comments = request.POST.get('comments', '')
 
-        for student_id in selected_students:
-            try:
-                student = Student.objects.get(id=student_id)
-
-                archived_student = ArchivedStudent.objects.create(
-                    first_name_s=student.first_name_s,
-                    last_name_s=student.last_name_s,
-                    phone_number_s=student.phone_number_s,
-                    parents_phone_number=student.parents_phone_number,
-                    paid_check=student.paid_check,
-                    joined_date=student.joined_date,
-                    comments=comments,
-                    branch=student.branch,
-                    main_office_id=student.main_office_id,
-                )
-
-                payments_to_archive = Payment.objects.filter(student_id=student.id)
-
-                print(payments_to_archive)
-                for payment in payments_to_archive:
-                    ArchivedPayment.objects.create(
-                        student_id=student,
-                        method_pay=payment.method_pay,
-                        date_pay=payment.date_pay,
-                        price=payment.price,
-                        branch=payment.branch,
-                        course=payment.course_id,
-
+            for student_id in selected_students:
+                try:
+                    student = Student.objects.get(id=student_id)
+                    archived_student = ArchivedStudent.objects.create(
+                        first_name_s=student.first_name_s,
+                        last_name_s=student.last_name_s,
+                        phone_number_s=student.phone_number_s,
+                        parents_phone_number=student.parents_phone_number,
+                        paid_check=student.paid_check,
+                        joined_date=student.joined_date,
+                        comments=comments,
+                        branch=student.branch,
+                        main_office_id=student.main_office_id,
                     )
+                    payments_to_archive = Payment.objects.filter(student_id=student.id)
+                    for payment in payments_to_archive:
+                        ArchivedPayment.objects.create(
+                            student_id=student,
+                            method_pay=payment.method_pay,
+                            date_pay=payment.date_pay,
+                            price=payment.price,
+                            branch=payment.branch,
+                            course=payment.course_id,
 
-                payments_to_archive.delete()
+                        )
+                    payments_to_archive.delete()
+                    student.delete()
+                except Student.DoesNotExist:
+                    messages.error(request, f'Студент с ID {student_id} не найден.')
 
-                student.delete()
+        elif action == 'send_sms':
+            for student_id in selected_students:
+                student = get_object_or_404(Student, pk=student_id)
 
-
-            except Student.DoesNotExist:
-                messages.error(request, f'Студент с ID {student_id} не найден.')
-
+                phone = student.phone_number_s
+                text = template_sms.text_sms.format(
+                    student_name=f'{student.first_name_s} {student.last_name_s}',
+                    date=datetime.today(),
+                )
+                send_sms(phone, text,request)
         return redirect('all_students')
 
     else:
@@ -1216,8 +1259,11 @@ def archived_students(request):
             'main_page')
 
     current_year = datetime.today().year
+    paginator = Paginator(archived_students, 10)
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
     data = {
-        'archived_students': archived_students,
+        'archived_students': page_obj,
         'current_year': current_year,
         'selected_main_office_id': selected_main_office_id,
         'selected_branch_id': selected_branch_id,
@@ -1268,6 +1314,7 @@ def delete_archived_students(request):
 def main_page(request):
     user = request.user
     branch_logo = Branch.objects.filter(admin_id=user.id)
+    template_sms = SmsTemplates.objects.filter(text_categories='sms для посещаемости').first()
     if not request.user.is_authenticated:
         return redirect('login_page')
     if request.user.role == 'teacher':
@@ -1286,9 +1333,11 @@ def main_page(request):
         left_students = ArchivedStudent.objects.all().count()
         paid_students = Student.objects.filter(paid_check='Оплатил', main_office_id=main_offices.first()).count()
         no_paid_students = Student.objects.filter(paid_check='Не оплатил', main_office_id=main_offices.first()).count()
+        students_no_paid = Student.objects.filter(paid_check='Не оплатил', main_office_id=main_offices.first())
         other_students = Student.objects.filter(paid_check=None, main_office_id=main_offices.first()).count()
         groups = Group.objects.filter(Q(branch__admin=request.user) | Q(main_office_id__admin=request.user))
         group_data = []
+
         for group in groups:
             students_count = group.students_id.count()
             group_data.append({
@@ -1304,7 +1353,7 @@ def main_page(request):
         current_year = request.GET.get('year', None)
         if current_year:
             students_per_month = QuantityStudent.objects.filter(joined_date__year=current_year,
-                                                        main_office_id__admin=request.user).annotate(
+                                                                main_office_id__admin=request.user).annotate(
                 month=TruncMonth('joined_date')).values('month').annotate(count=Count('id')).order_by('month')
         else:
             students_per_month = QuantityStudent.objects.filter(main_office_id__admin=request.user).annotate(
@@ -1375,7 +1424,7 @@ def main_page(request):
         current_year = request.GET.get('year', None)
         if current_year:
             students_per_month = QuantityStudent.objects.filter(joined_date__year=current_year,
-                                                        branch__admin=request.user).annotate(
+                                                                branch__admin=request.user).annotate(
                 month=TruncMonth('joined_date')).values('month').annotate(count=Count('id')).order_by('month')
         else:
             students_per_month = QuantityStudent.objects.filter(branch__admin=request.user).annotate(
@@ -1514,7 +1563,7 @@ def delete_payment(request, payment_id):
     if request.user.role == 'teacher':
         messages.error(request, 'У вас нет прав доступа.')
         return redirect(
-            'main_page')
+            'all_groups')
     payment = get_object_or_404(Payment, id=payment_id)
     student_id = payment.student_id.id
 
@@ -1548,8 +1597,12 @@ def archived_payments(request):
     branches = Branch.objects.filter(main_office__in=main_offices)
     archived_payments = ArchivedPayment.objects.all()
     branch_logo = Branch.objects.filter(admin_id=user.id)
+
+    paginator = Paginator(archived_payments, 1)
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
     context = {
-        'archived_payments': archived_payments,
+        'archived_payments': page_obj,
         'main_offices': main_offices,
         'branches': branches,
         'branch_logo': branch_logo
@@ -1560,7 +1613,6 @@ def archived_payments(request):
 @login_required(login_url='/login/')
 def restore_payment(request, archived_payment_id):
     archived_payment = get_object_or_404(ArchivedPayment, id=archived_payment_id)
-
     Payment.objects.create(
         student_id=archived_payment.student_id,
         method_pay=archived_payment.method_pay,
@@ -1598,3 +1650,166 @@ def login_page(request):
             login(request, user)
             return redirect('main_page')
     return render(request, 'login/logIn.html')
+
+
+@login_required(login_url='/login/')
+def sms_temp(request):
+    user = request.user
+    main_office = MainOffice.objects.filter(admin=user)
+    branch = Branch.objects.filter(main_office__in=main_office)
+    branch_logo = Branch.objects.filter(admin_id=user.id)
+
+    if request.user.role == 'teacher':
+        messages.error(request, 'У вас нет прав доступа.')
+        return redirect(
+            'all_groups')
+    elif request.user.role == 'super admin':
+        sms_template = SmsTemplates.objects.filter(main_office_id=main_office.first())
+    else:
+        sms_template = SmsTemplates.objects.all()
+
+    data = {
+        'sms_template': sms_template,
+        'main_offices': main_office,
+        'branch': branch,
+        'branch_logo': branch_logo
+    }
+    return render(request, 'sms_templates/all_sms_templates.html', data)
+
+
+@login_required(login_url='/login/')
+def add_sms_template(request):
+    user = request.user
+    main_offices = MainOffice.objects.filter(admin=user)
+    branch = Branch.objects.filter(main_office__in=main_offices)
+    branch_logo = Branch.objects.filter(admin_id=user.id)
+    sms_template_form = SmsTemplateForm()
+    if request.user.role == 'teacher':
+        messages.error(request, 'У вас нет прав доступа.')
+        return redirect(
+            'all_groups')
+    elif request.user.role == 'admin':
+        messages.error(request, 'У вас нет прав доступа.')
+        return redirect(
+            'main_page')
+    elif request.user.role == 'super admin':
+        if request.method == 'POST':
+            sms_template_form = SmsTemplateForm(request.POST, request.FILES)
+            if sms_template_form.is_valid():
+                sms_form = sms_template_form.save(commit=False)
+                sms_form.main_office_id = main_offices.first()
+                sms_form.save()
+                return redirect('sms_temp')
+            else:
+                sms_template_form = SmsTemplateForm(request.POST)
+    data = {
+        'sms_template_form': sms_template_form,
+        'user': user,
+        'main_offices': main_offices,
+        branch: 'branch',
+        branch_logo: 'branch_logo'
+    }
+    return render(request, 'sms_templates/add_sms_template.html', data)
+
+
+@login_required(login_url='/login/')
+def groups_sms(request):
+    if request.user.role == 'teacher':
+        messages.error(request, 'У вас нет прав доступа.')
+        return redirect(
+            'all_groups')
+
+    user = request.user
+    current_year = datetime.today().year
+    main_offices = MainOffice.objects.filter(admin=user)
+    branches = Branch.objects.filter(main_office__in=main_offices)
+    selected_main_office_id = request.GET.get('main_office')
+    selected_branch_id = request.GET.get('branch')
+    branch_logo = Branch.objects.filter(admin_id=user.id)
+    groups = Group.objects.all()
+    if user.role == 'super admin':
+        template_sms = SmsTemplates.objects.filter(text_categories='sms для уведомления групп').first()
+        if selected_main_office_id:
+            groups = groups.filter(main_office_id=selected_main_office_id)
+        elif selected_branch_id:
+            groups = groups.filter(branch_id=selected_branch_id)
+        else:
+            groups = groups.filter(Q(main_office_id__in=main_offices) | Q(branch__in=branches))
+        if request.method == 'POST':
+            selected_groups = request.POST.getlist('selected_groups')
+            for group_id in selected_groups:
+                group = get_object_or_404(Group, pk=group_id)
+                students = group.students_id.all()
+                for student in students:
+                    phone = student.phone_number_s
+                    text = template_sms.text_sms.format(
+                        student_name=student.first_name_s,
+                        date=datetime.today(),
+                    )
+
+                    send_sms(phone, text,request)
+    elif user.role == 'admin':
+        if selected_branch_id:
+            groups = groups.filter(branch_id=selected_branch_id)
+            text_sms = SmsTemplates.objects.filter(text_categories='sms для уведомления групп').first()
+            if request.method == 'POST':
+                selected_groups = request.POST.getlist('selected_groups')
+                print(selected_groups)
+                for group_id in selected_groups:
+                    group = get_object_or_404(Group, pk=group_id)
+                    print(group)
+                    students = group.students_id.all()
+                    for student in students:
+                        phone = student.phone_number_s
+                        text = text_sms.format(
+                            student_name=student.first_name_s,
+                            date=datetime.today(),
+                        )
+                        send_sms(phone, text,request)
+        else:
+            admin_branches = Branch.objects.filter(admin=user)
+            groups = groups.filter(branch__in=admin_branches)
+    data = {
+        'groups': groups,
+        'current_year': current_year,
+        'user': user,
+        'main_offices': main_offices,
+        'branches': branches,
+        'selected_main_office_id': selected_main_office_id,
+        'selected_branch_id': selected_branch_id,
+        'branch_logo': branch_logo
+    }
+
+    return render(request, 'groups/groups_sms.html', data)
+
+
+def edit_sms_template(request, id_template):
+    if request.user.role == 'teacher':
+        messages.error(request, 'У вас нет прав доступа.')
+        return redirect(
+            'all_groups')
+    sms_template = get_object_or_404(SmsTemplates, pk=id_template)
+    user = request.user
+    current_year = datetime.today().year
+    main_offices = MainOffice.objects.filter(admin=user)
+    branches = Branch.objects.filter(main_office__in=main_offices)
+    branch_logo = Branch.objects.filter(admin_id=user.id)
+
+    if request.method == 'POST':
+        sms_form = SmsTemplateForm(request.POST, request.FILES, instance=sms_template)
+        if sms_form.is_valid():
+            sms_form = sms_form.save()
+            return redirect('sms_temp')
+
+    else:
+        sms_form = SmsTemplateForm(instance=sms_template)
+    data = {
+        'sms_form': sms_form,
+        'current_year': current_year,
+        'user': user,
+        'main_offices': main_offices,
+        'branches': branches,
+        'branch_logo': branch_logo
+
+    }
+    return render(request, 'sms_templates/edit_sms_template.html', data)
