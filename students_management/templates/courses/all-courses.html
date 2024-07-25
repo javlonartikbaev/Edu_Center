@@ -85,19 +85,19 @@
         <div class="courses-area" style="padding-bottom:20px">
             <div class="container-fluid">
                 <div class="row">
-                    {% for course in course %}
+                    {% for cr in course %}
                         <div class="col-lg-3 col-md-6 col-sm-6 col-xs-12">
                             <div class="courses-inner res-mg-b-30">
                                 <div class="courses-title">
-                                    <a href="#"><img src="{{ MEDIA_URL }}{{ course.img_course.url }}" alt=""></a>
-                                    <h2><a href="{{ course.get_absolute_url }}">{{ course.name_course }}</a></h2>
+                                    <a href="#"><img src="{{ MEDIA_URL }}{{ cr.img_course.url }}" alt=""></a>
+                                    <h2><a href="{{ cr.get_absolute_url }}">{{ cr.name_course }}</a></h2>
                                 </div>
                                 <div class="course-des">
-                                    <p><span><i class="fa fa-clock"></i></span> <b>Duration:</b> {{ course.duration }}
+                                    <p><span><i class="fa fa-clock"></i></span> <b>Duration:</b> {{ cr.duration }}
                                         Months</p>
-                                    <p><span><i class="fa fa-clock"></i></span> <b>Price:</b> {{ course.price_course }}
+                                    <p><span><i class="fa fa-clock"></i></span> <b>Price:</b> {{ cr.price_course }}
                                         sum</p>
-                                    <a href="{% url 'delete_course' course.id %}">
+                                    <a href="{% url 'delete_course' cr.id %}">
                                         <button type="button" class="btn btn-danger delete-button">Удалить</button>
                                     </a>
                                 </div>

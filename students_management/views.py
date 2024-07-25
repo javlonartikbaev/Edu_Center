@@ -211,6 +211,7 @@ def get_courses(request):
     if user.role == 'super admin':
         if selected_main_office_id:
             courses = courses.filter(main_office_id=selected_main_office_id)
+
         elif selected_branch_id:
             courses = courses.filter(branch_id=selected_branch_id)
         else:
@@ -221,7 +222,7 @@ def get_courses(request):
         else:
             admin_branches = Branch.objects.filter(admin=user)
             courses = courses.filter(branch__in=admin_branches)
-
+    print(courses.values())
     if search.is_valid():
         search_course_name = search.cleaned_data.get('search_input', '')
         if search_course_name:
