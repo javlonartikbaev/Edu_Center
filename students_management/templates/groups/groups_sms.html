@@ -15,12 +15,9 @@
                                 class="mini-sub-pro">Добавить группу</span></a>
                         </button>
 
-
                         <h1>Список групп</h1>
                         <form method="GET" action="{% url 'groups_sms' %}">
                             <div class="form-group">
-
-
                                 <label for="main_office">Главный офис</label>
                                 <select id="main_office" name="main_office" class="form-control"
                                         onchange="this.form.submit()">
@@ -45,6 +42,10 @@
                                 </select>
                             </div>
                         </form>
+                        <div class="form-group">
+                            <label for="sms_date">Дата отправки SMS</label>
+                            <input type="date" id="sms_date" name="sms_date" class="form-control">
+                        </div>
                         {% if groups %}
                             <form method="POST" action="{% url 'groups_sms' %}">
                                 {% csrf_token %}
@@ -104,13 +105,16 @@
                                             </td>
                                         </tr>
                                     {% endfor %}
-                                    <button class="btn btn-lg btn-success"
-                                            style="background-color: #00acee; margin-left: 1000px; margin-top: 30px"><a
-                                            title="Add Courses" style="color:white;" href="{% url 'groups_sms' %}"><span
-                                            class="mini-sub-pro">Отправить смс</span></a>
-                                    </button>
                                     </tbody>
                                 </table>
+
+                                <!-- Add date selection input -->
+
+
+                                <button class="btn btn-lg btn-success"
+                                        style="background-color: #00acee; margin-left: 1000px; margin-top: 30px">
+                                    <span class="mini-sub-pro">Отправить смс</span>
+                                </button>
                             </form>
                         {% endif %}
                     </div>

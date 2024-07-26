@@ -1730,6 +1730,7 @@ def groups_sms(request):
     selected_branch_id = request.GET.get('branch')
     branch_logo = Branch.objects.filter(admin_id=user.id)
     groups = Group.objects.all()
+    sms_date =request.POST.get('sms_date')
     if user.role == 'super admin':
         template_sms = SmsTemplates.objects.filter(text_categories='sms для уведомления групп').first()
         if selected_main_office_id:
@@ -1748,7 +1749,7 @@ def groups_sms(request):
                     text = template_sms.text_sms.format(
                         edu_name=student.main_office_id.name_main_office,
                         student_name=student.first_name_s,
-                        date=datetime.today(),
+                        date=sms_date
                     )
 
                     send_sms(phone, text, request)
