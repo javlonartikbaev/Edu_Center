@@ -38,6 +38,7 @@ def send_sms(phone, text, request):
         'password': login_password.password,
         'data': json.dumps(payload)
     }
+    print(data)
 
     response = requests.post(url, data=data)
     return response.status_code, response.text
@@ -1218,6 +1219,7 @@ def delete_selected_students(request):
 
                 phone = student.phone_number_s
                 text = template_sms.text_sms.format(
+                    edu_name=student.main_office_id.name_main_office,
                     student_name=f'{student.first_name_s} {student.last_name_s}',
                     date=datetime.today(),
                 )
@@ -1741,6 +1743,7 @@ def groups_sms(request):
                 for student in students:
                     phone = student.phone_number_s
                     text = template_sms.text_sms.format(
+                        edu_name=student.main_office_id.name_main_office,
                         student_name=student.first_name_s,
                         date=datetime.today(),
                     )
@@ -1760,6 +1763,7 @@ def groups_sms(request):
                     for student in students:
                         phone = student.phone_number_s
                         text = text_sms.format(
+                            edu_name=student.main_office_id.name_main_office,
                             student_name=student.first_name_s,
                             date=datetime.today(),
                         )
