@@ -872,13 +872,9 @@ def all_groups(request):
         'selected_branch_id': selected_branch_id,
         'branch_logo': branch_logo
     }
-    template = None
-    if request.user.role == 'admin' or request.user.role == 'super admin':
-        template = 'groups/all-groups.html'
-    elif request.user.role == 'teacher':
-        template = 'teachers-group/teachers_group.html'
 
-    return render(request, template, data)
+
+    return render(request, groups/all-groups.html, data)
 
 
 @login_required(login_url='/login/')
