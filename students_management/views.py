@@ -39,8 +39,12 @@ def send_sms(phone, text, request):
         'password': login_password.password,
         'data': json.dumps(payload)
     }
-
     response = requests.post(url, data=data)
+
+    if response.status_code != 200:
+        logger.error(f"Error sending SMS: {response.status_code} {response.text}")
+
+
 
     # Логи для отладки
     logger.debug(f"Sending SMS to {phone} with text: {text}")
