@@ -1040,6 +1040,7 @@ def mark_attendance(request, group_id):
 
                 phone = student.parents_phone_number
                 text = template_sms.text_sms.format(
+                    edu_name = student.main_office_id.name_main_office,
                     student_name=student.first_name_s,
                     date=date_attendance
                 )
