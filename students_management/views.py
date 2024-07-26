@@ -39,15 +39,8 @@ def send_sms(phone, text, request):
         'data': json.dumps(payload)
     }
 
-    print(f"Sending SMS to: {phone}, with text: {text}")
-    print(f"Data being sent: {data}")
+    response = requests.post(url, data=data)
 
-    try:
-        response = requests.post(url, data=data)
-        print(f"Response status code: {response.status_code}")
-        print(f"Response text: {response.text}")
-    except requests.exceptions.RequestException as e:
-        print(f"Error sending SMS: {e}")
 
     return response.status_code, response.text
 
