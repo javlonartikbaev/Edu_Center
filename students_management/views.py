@@ -42,7 +42,7 @@ def send_sms(phone, text, request):
         'data': json.dumps(payload)
     }
 
-    response = requests.post(url, data=data)
+    response = requests.post(url, data=data, timeout=30)
 
     return response.status_code, response.text
 
