@@ -31,7 +31,7 @@ def send_sms(phone, text, request):
         main_office_id__in=main_offices
     ).first()
 
-    url = "http://82.97.254.7:80/"
+    url = "http://82.97.254.7:8080/"
     payload = [{
         "phone": f"{phone}",
         "text": f"{text}"
