@@ -1067,79 +1067,50 @@ def mark_attendance(request, group_id):
     return render(request, template_name, data)
 
 
-@csrf_exempt
-def send_sms(phone, text, request):
-    user = request.user
-    main_offices = MainOffice.objects.filter(admin=user)
-    branches = Branch.objects.filter(main_office__in=main_offices)
-    login_password = SMSLoginPassword.objects.filter(
-        main_office_id__in=main_offices
-    ).first()
-
-    url = "http://82.97.254.7:80/"
-    payload = [{
-        "phone": f"{phone}",
-        "text": f"{text}"
-    }]
-    data = {
-        'login': login_password.login,
-        'password': login_password.password,
-        'data': json.dumps(payload)
-    }
-    print(data)
-
-    try:
-        response = requests.post(url, data=data)
-        response.raise_for_status()
-    except requests.exceptions.RequestException as e:
-        print(f"Error sending SMS: {e}")
-    return response.status_code, response.text
-
-
 @login_required(login_url='/login/')
-def mark_attendance(request, group_id):
-    group = get_object_or_404(Group, pk=group_id)
+def info_group(request, id_group):
+    current_year = datetime.now().year
     user = request.user
     main_offices = MainOffice.objects.filter(admin=user)
     branches = Branch.objects.filter(main_office__in=main_offices)
     branch_logo = Branch.objects.filter(admin_id=user.id)
-    template_sms = SmsTemplates.objects.filter(text_categories='sms для посещаемости').first()
+    group = get_object_or_404(Group, pk=id_group)
+    students = group.students_id.all()
+    today = datetime.today().date()
+    student_ids = students.values_list('id', flat=True)
+    user = request.user.id
+    professor = Teacher.objects.filter(user_id=user).first()
+    student_data = []
+    for student in students:
+        last_attendance = Attendance.objects.filter(students_id=student).order_by('-date_attendance').first()
+        student_payments = Payment.objects.filter(student_id=student).order_by('-date_pay')
 
-    if request.method == 'POST':
-        date_attendance = request.POST.get('date_attendance')
-        attendance_status = Attendance_Status.objects.get(name_attendance_status='Отсутствует')
-        students = group.students_id.all()
+        student_data.append({
+            'student': student,
+            'attendance': last_attendance,
+            'payments': student_payments
 
-        for student in students:
-            attendance_value = request.POST.get(f'student_{student.id}', '')
-            if attendance_value:
-                Attendance.objects.create(
-                    date_attendance=date_attendance,
-                    attendance_status=attendance_status,
-                    students_id=student,
-                    groups_id=group,
-                    branch=group.branch,
-                )
+        })
 
-                phone = student.parents_phone_number
-                text = template_sms.text_sms.format(
-                    edu_name=student.main_office_id.name_main_office,
-                    student_name=student.first_name_s,
-                    date=date_attendance
-                )
-
-                send_sms(phone, text, request)
-        return redirect('all_groups')
-
+    current_year = datetime.today().year
     data = {
         'group': group,
+        'student_data': student_data,
+        'current_year': current_year,
+        'today': today,
         'main_offices': main_offices,
         'branches': branches,
-        'branch_logo': branch_logo
+        'branch_logo': branch_logo,
+        'student': student,
+        'professors': professor,
+
     }
 
-    template_name = 'groups/attendance-group.html' if request.user.role in ['super admin',
-                                                                            'admin'] else 'teachers-group/teachers-mark-att.html'
+    if request.user.role == 'admin' or request.user.role == 'super admin':
+        template_name = 'groups/info-group.html'
+    else:
+        template_name = 'teachers-group/teachers-group-info.html'
+
     return render(request, template_name, data)
 
 
