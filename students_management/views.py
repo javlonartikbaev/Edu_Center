@@ -41,9 +41,13 @@ def send_sms(phone, text, request):
         'password': login_password.password,
         'data': json.dumps(payload)
     }
+    print(data)
 
-    response = requests.post(url, data=data,)
-
+    try:
+        response = requests.post(url, data=data)
+        response.raise_for_status()
+    except requests.exceptions.RequestException as e:
+        print(f"Error sending SMS: {e}")
     return response.status_code, response.text
 
 
