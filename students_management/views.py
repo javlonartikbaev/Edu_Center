@@ -840,6 +840,7 @@ def all_groups(request):
     selected_branch_id = request.GET.get('branch')
     branch_logo = Branch.objects.filter(admin_id=user.id)
     groups = Group.objects.all()
+
     if user.role == 'super admin':
         if selected_main_office_id:
             groups = groups.filter(main_office_id=selected_main_office_id)
@@ -871,7 +872,7 @@ def all_groups(request):
         'selected_branch_id': selected_branch_id,
         'branch_logo': branch_logo
     }
-
+    template = None
     if request.user.role == 'admin' or request.user.role == 'super admin':
         template = 'groups/all-groups.html'
     elif request.user.role == 'teacher':
