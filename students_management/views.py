@@ -38,9 +38,17 @@ def send_sms(phone, text, request):
         'password': login_password.password,
         'data': json.dumps(payload)
     }
-    print(data)
 
-    response = requests.post(url, data=data)
+    print(f"Sending SMS to: {phone}, with text: {text}")
+    print(f"Data being sent: {data}")
+
+    try:
+        response = requests.post(url, data=data)
+        print(f"Response status code: {response.status_code}")
+        print(f"Response text: {response.text}")
+    except requests.exceptions.RequestException as e:
+        print(f"Error sending SMS: {e}")
+
     return response.status_code, response.text
 
 
@@ -1041,7 +1049,7 @@ def mark_attendance(request, group_id):
 
                 phone = student.parents_phone_number
                 text = template_sms.text_sms.format(
-                    edu_name = student.main_office_id.name_main_office,
+                    edu_name=student.main_office_id.name_main_office,
                     student_name=student.first_name_s,
                     date=date_attendance
                 )
