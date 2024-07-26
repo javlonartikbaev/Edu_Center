@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 
 def send_sms(phone, text, request):
     user = request.user
-    main_offices = MainOffice.objects.filter(admin=user)
+    main_offices = MainOffice.objects.all()
     branches = Branch.objects.filter(main_office__in=main_offices)
     login_password = SMSLoginPassword.objects.filter(
         main_office_id__in=main_offices
