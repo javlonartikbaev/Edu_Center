@@ -873,8 +873,7 @@ def all_groups(request):
         'branch_logo': branch_logo
     }
 
-
-    return render(request, groups/all-groups.html, data)
+    return render(request, 'groups/all-groups.html', data)
 
 
 @login_required(login_url='/login/')
@@ -1045,7 +1044,7 @@ def mark_attendance(request, group_id):
                     date=date_attendance
                 )
 
-                send_sms(phone, text,request)
+                send_sms(phone, text, request)
         return redirect('all_groups')
 
     data = {
@@ -1221,7 +1220,7 @@ def delete_selected_students(request):
                     student_name=f'{student.first_name_s} {student.last_name_s}',
                     date=datetime.today(),
                 )
-                send_sms(phone, text,request)
+                send_sms(phone, text, request)
         return redirect('all_students')
 
     else:
@@ -1745,7 +1744,7 @@ def groups_sms(request):
                         date=datetime.today(),
                     )
 
-                    send_sms(phone, text,request)
+                    send_sms(phone, text, request)
     elif user.role == 'admin':
         if selected_branch_id:
             groups = groups.filter(branch_id=selected_branch_id)
@@ -1763,7 +1762,7 @@ def groups_sms(request):
                             student_name=student.first_name_s,
                             date=datetime.today(),
                         )
-                        send_sms(phone, text,request)
+                        send_sms(phone, text, request)
         else:
             admin_branches = Branch.objects.filter(admin=user)
             groups = groups.filter(branch__in=admin_branches)
