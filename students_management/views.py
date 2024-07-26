@@ -31,7 +31,7 @@ def send_sms(phone, text, request):
         main_office_id__in=main_offices
     ).first()
 
-    url = "http://83.69.139.182:8080"
+    url = "http://83.69.139.182:8080/"
     payload = [{
         "phone": f"{phone}",
         "text": f"{text}"
@@ -41,13 +41,9 @@ def send_sms(phone, text, request):
         'password': login_password.password,
         'data': json.dumps(payload)
     }
-    print(data)
 
-    try:
-        response = requests.post(url, data=data)
-        response.raise_for_status()
-    except requests.exceptions.RequestException as e:
-        print(f"Error sending SMS: {e}")
+    response = requests.post(url, data=data)
+
     return response.status_code, response.text
 
 
