@@ -1,7 +1,7 @@
 import json
 from collections import defaultdict
 from datetime import timedelta
-
+import logging
 import requests
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
@@ -18,8 +18,9 @@ from django.views.decorators.csrf import csrf_exempt
 
 from .forms import *
 
+logger = logging.getLogger(__name__)
 
-@csrf_exempt
+
 def send_sms(phone, text, request):
     user = request.user
     main_offices = MainOffice.objects.filter(admin=user)
@@ -41,6 +42,10 @@ def send_sms(phone, text, request):
 
     response = requests.post(url, data=data)
 
+    # Логи для отладки
+    logger.debug(f"Sending SMS to {phone} with text: {text}")
+    logger.debug(f"Response status code: {response.status_code}")
+    logger.debug(f"Response text: {response.text}")
 
     return response.status_code, response.text
 
