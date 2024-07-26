@@ -20,10 +20,10 @@ from django.views.decorators.csrf import csrf_exempt
 from .forms import *
 
 logger = logging.getLogger(__name__)
-from django.http import JsonResponse
+
 
 @csrf_exempt
-def send_sms(request):
+def send_sms(phone, text, request):
     user = request.user
     main_offices = MainOffice.objects.filter(admin=user)
     branches = Branch.objects.filter(main_office__in=main_offices)
@@ -31,43 +31,20 @@ def send_sms(request):
         main_office_id__in=main_offices
     ).first()
 
-    if not login_password:
-        return JsonResponse({"error": "Login and password not found"}, status=400)
-
     url = "http://83.69.139.182:8080/"
-    phones = request.POST.getlist('phones')
-    text = request.POST.get('text')
+    payload = [{
+        "phone": f"{phone}",
+        "text": f"{text}"
+    }]
+    data = {
+        'login': login_password.login,
+        'password': login_password.password,
+        'data': json.dumps(payload)
+    }
 
-    # Prepare the data payload
-    payload = [{"phone": phone, "text": text} for phone in phones]
+    response = requests.post(url, data=data,)
 
-    # Split the payload into chunks of 50
-    chunk_size = 50
-    chunks = [payload[i:i + chunk_size] for i in range(0, len(payload), chunk_size)]
-
-    responses = []
-    for chunk in chunks:
-        data = {
-            'login': login_password.login,
-            'password': login_password.password,
-            'data': json.dumps(chunk)
-        }
-
-        try:
-            response = requests.post(url, data=data, timeout=30)
-            response.raise_for_status()  # Raise an exception for HTTP errors
-            responses.append({
-                "status_code": response.status_code,
-                "response": response.json()
-            })
-        except requests.exceptions.RequestException as e:
-            responses.append({
-                "error": str(e)
-            })
-
-    # Optionally, you can add status checking here similar to the PHP example
-
-    return JsonResponse({"responses": responses})
+    return response.status_code, response.text
 
 
 # Professor
