@@ -1164,22 +1164,23 @@ def count_even_odd_days(start_date):
     month = start_date.month
 
     global total_even_days, total_odd_days, student_even_days, student_odd_days
-    last_day = calendar.monthrange(year, month)[1]
-
     total_even_days = 0
     total_odd_days = 0
     student_even_days = 0
     student_odd_days = 0
 
+    last_day = calendar.monthrange(year, month)[1]
+
     for day in range(1, last_day + 1):
         current_date = datetime(year, month, day)
         weekday = current_date.weekday()
 
-        if weekday == 1 or weekday == 3 or weekday == 5:
+        if weekday in [1, 3, 5]:
             total_even_days += 1
             if day >= start_date.day:
                 student_even_days += 1
-        elif weekday == 0 or weekday == 2 or weekday == 4:
+
+        elif weekday in [0, 2, 4]:
             total_odd_days += 1
             if day >= start_date.day:
                 student_odd_days += 1
@@ -1224,10 +1225,10 @@ def process_payment(request, student_id):
                 payment.price = course_price
             elif student.joined_date.month == datetime.today().month and student.joined_date.year == datetime.today().year:
                 count_even_odd_days(student.joined_date)
-                if student.joined_date.day % 2 == 0:
+                if student.joined_date.day % 2 != 0:
                     payment.price = (int(course_price) // (total_even_days)) * student_even_days
                     print(course_price, total_even_days, student_even_days)
-                elif student.joined_date.day % 2 != 0:
+                elif student.joined_date.day % 2 == 0:
                     payment.price = (int(course_price) // (total_odd_days)) * student_odd_days
                     print(course_price, total_odd_days, student_odd_days)
             else:
