@@ -31,23 +31,30 @@ def send_sms(phone, text, request):
         main_office_id__in=main_offices
     ).first()
 
+    if not login_password:
+        return 400, "Login and password not found"
+
     url = "http://83.69.139.182:8080/"
+    encoded_text = text.encode('utf-8').decode('utf-8')
     payload = [{
-        "phone": f"{phone}",
-        "text": f"{text}"
+        "phone": phone,
+        "text": encoded_text
     }]
     data = {
         'login': login_password.login,
         'password': login_password.password,
         'data': json.dumps(payload)
     }
-    print(data)
+    print("Отправка данных:", data)
 
     try:
-        response = requests.post(url, data=data)
-        response.raise_for_status()
+        response = requests.post(url, data=data,timeout=30)
+        response.raise_for_status()  # проверка на HTTP ошибки
+        print("Ответ сервера:", response.status_code, response.text)
     except requests.exceptions.RequestException as e:
-        print(f"Error sending SMS: {e}")
+        print(f"Ошибка при отправке SMS: {e}")
+        return 500, f"Ошибка при отправке SMS: {e}"
+
     return response.status_code, response.text
 
 
@@ -1730,7 +1737,7 @@ def groups_sms(request):
     selected_branch_id = request.GET.get('branch')
     branch_logo = Branch.objects.filter(admin_id=user.id)
     groups = Group.objects.all()
-    sms_date =request.POST.get('sms_date')
+    sms_date = request.POST.get('sms_date')
     if user.role == 'super admin':
         template_sms = SmsTemplates.objects.filter(text_categories='sms для уведомления групп').first()
         if selected_main_office_id:
