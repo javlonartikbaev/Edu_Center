@@ -25,7 +25,16 @@ logger = logging.getLogger(__name__)
 @csrf_exempt
 def send_sms(phone,text,request):
     user = request.user
-    main_offices = MainOffice.objects.all()
+    if user.role == 'super admin':
+        main_offices = MainOffice.objects.filter(admin=user).first()
+    elif user.role == 'admin':
+        branch = Branch.objects.filter(admin=user).first()
+        main_offices = branch.main_office if branch else None
+    elif user.role == 'teacher':
+        teacher = Teacher.objects.filter(user=user).first()
+        main_offices = teacher.main_office_id if teacher else None
+    else:
+        main_offices = None
     login_password = SMSLoginPassword.objects.filter(
         main_office_id__in=main_offices
     ).first()
