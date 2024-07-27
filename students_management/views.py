@@ -1051,7 +1051,7 @@ def mark_attendance(request, group_id):
                     groups_id=group,
                     branch=group.branch,
                 )
-
+                student_name = unidecode(f'{student.first_name_s} {student.last_name_s}')
                 phone = student.parents_phone_number
                 text = template_sms.text_sms.format(
                     edu_name=student.main_office_id.name_main_office,
@@ -1189,6 +1189,7 @@ def delete_selected_students(request):
     selected_students = request.POST.getlist('selected_students')
     template_sms = SmsTemplates.objects.filter(text_categories='sms для должников').first()
     action = request.POST.get('action')
+
     if request.method == 'POST':
         if action == 'delete':
             comments = request.POST.get('comments', '')
@@ -1226,11 +1227,11 @@ def delete_selected_students(request):
         elif action == 'send_sms':
             for student_id in selected_students:
                 student = get_object_or_404(Student, pk=student_id)
-
+                student_name = unidecode(f'{student.first_name_s} {student.last_name_s}')
                 phone = student.phone_number_s
                 text = template_sms.text_sms.format(
                     edu_name=student.main_office_id.name_main_office,
-                    student_name=unidecode(f'{student.first_name_s} {student.last_name_s}'),
+                    student_name=student_name,
                     date=datetime.today(),
                 )
                 send_sms(phone, text, request)
@@ -1752,14 +1753,15 @@ def groups_sms(request):
                 group = get_object_or_404(Group, pk=group_id)
                 students = group.students_id.all()
                 for student in students:
+                    student_name = unidecode(f'{student.first_name_s} {student.last_name_s}')
                     phone = student.phone_number_s
                     text = template_sms.text_sms.format(
                         edu_name=student.main_office_id.name_main_office,
-                        student_name=unidecode(f'{student.first_name_s} {student.last_name_s}'),
-                        date=sms_date
+                        student_name=student_name,
+                        date=sms_date,
                     )
-
                     send_sms(phone, text, request)
+
     elif user.role == 'admin':
         if selected_branch_id:
             groups = groups.filter(branch_id=selected_branch_id)
