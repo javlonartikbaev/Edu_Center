@@ -18,7 +18,7 @@ from django.shortcuts import render, redirect
 from django.views.decorators.csrf import csrf_exempt
 
 from .forms import *
-
+from unidecode import unidecode
 logger = logging.getLogger(__name__)
 
 
@@ -34,7 +34,7 @@ def send_sms(phone, text, request):
     if not login_password:
         return 400, "Login and password not found"
 
-    url = "http://83.69.139.182:8080/"
+    url = "http://83.69.139.182:8083/"
     encoded_text = text.encode('utf-8').decode('utf-8')
     payload = [{
         "phone": phone,
@@ -45,15 +45,15 @@ def send_sms(phone, text, request):
         'password': login_password.password,
         'data': json.dumps(payload)
     }
-    print("Отправка данных:", data)
 
-    try:
-        response = requests.post(url, data=data,timeout=30)
-        response.raise_for_status()  # проверка на HTTP ошибки
-        print("Ответ сервера:", response.status_code, response.text)
-    except requests.exceptions.RequestException as e:
-        print(f"Ошибка при отправке SMS: {e}")
-        return 500, f"Ошибка при отправке SMS: {e}"
+    response = requests.post(url, data=data, timeout=30)
+    # try:
+    #     response = requests.post(url, data=data,timeout=30)
+    #     response.raise_for_status()  # проверка на HTTP ошибки
+    #     print("Ответ сервера:", response.status_code, response.text)
+    # except requests.exceptions.RequestException as e:
+    #     print(f"Ошибка при отправке SMS: {e}")
+    #     return 500, f"Ошибка при отправке SMS: {e}"
 
     return response.status_code, response.text
 
@@ -1055,7 +1055,7 @@ def mark_attendance(request, group_id):
                 phone = student.parents_phone_number
                 text = template_sms.text_sms.format(
                     edu_name=student.main_office_id.name_main_office,
-                    student_name=student.first_name_s,
+                    student_name=unidecode(f'{student.first_name_s} {student.last_name_s}'),
                     date=date_attendance
                 )
 
@@ -1230,7 +1230,7 @@ def delete_selected_students(request):
                 phone = student.phone_number_s
                 text = template_sms.text_sms.format(
                     edu_name=student.main_office_id.name_main_office,
-                    student_name=f'{student.first_name_s} {student.last_name_s}',
+                    student_name=unidecode(f'{student.first_name_s} {student.last_name_s}'),
                     date=datetime.today(),
                 )
                 send_sms(phone, text, request)
@@ -1755,7 +1755,7 @@ def groups_sms(request):
                     phone = student.phone_number_s
                     text = template_sms.text_sms.format(
                         edu_name=student.main_office_id.name_main_office,
-                        student_name=student.first_name_s,
+                        student_name=unidecode(f'{student.first_name_s} {student.last_name_s}'),
                         date=sms_date
                     )
 
