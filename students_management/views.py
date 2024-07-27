@@ -26,17 +26,6 @@ logger = logging.getLogger(__name__)
 def send_sms(phone,text,request):
     user = request.user
     main_offices = MainOffice.objects.all()
-    if user.role == 'super admin':
-        main_offices = MainOffice.objects.filter(admin=user)
-        branches = Branch.objects.filter(main_office__in=main_offices)
-    elif user.role == 'admin':
-        branches = Branch.objects.filter(admin=user)
-        main_offices = MainOffice.objects.filter(main_branches__in=branches)
-    elif user.role == 'teacher':
-        branches = Branch.objects.filter(teachers__user=user)
-        main_offices = MainOffice.objects.filter(main_offices_teacher__in=[user])
-    else:
-        return 403, "User does not have permission to send SMS"
     login_password = SMSLoginPassword.objects.filter(
         main_office_id__in=main_offices
     ).first()
