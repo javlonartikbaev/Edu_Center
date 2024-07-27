@@ -11,7 +11,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.db.models import Max, Count
 from django.db.models.functions import ExtractYear, TruncMonth
-from django.http import HttpResponseBadRequest
+from django.http import HttpResponseBadRequest, JsonResponse
 # Create your views here.
 from django.shortcuts import get_object_or_404
 from django.shortcuts import render, redirect
@@ -23,50 +23,57 @@ logger = logging.getLogger(__name__)
 
 
 @csrf_exempt
-def send_sms(phone,text,request):
+def send_sms(request):
     user = request.user
-    if user.role == 'super admin':
-        main_offices = MainOffice.objects.filter(admin=user).first()
-        print(main_offices)
-    elif user.role == 'admin':
-        branch = Branch.objects.filter(admin=user).first()
-        main_offices = branch.main_offices.all()
-        print(main_offices)
-    elif user.role == 'teacher':
-        teacher = Teacher.objects.filter(user=user).first()
-        main_offices = teacher.main_office_id.all()
-        print(main_offices)
-    else:
-        main_offices = None
-    login_password = SMSLoginPassword.objects.filter(
-        main_office_id__in=main_offices
-    ).first()
+    main_offices = None
 
-    if not login_password:
-        return 400, "Login and password not found"
+    try:
+        if user.role == 'super admin':
+            main_offices = MainOffice.objects.filter(admin=user).first()
+            print(f"Main Office for super admin: {main_offices}")
+        elif user.role == 'admin':
+            branch = Branch.objects.filter(admin=user).first()
+            if branch:
+                main_offices = branch.main_office
+                print(f"Main Office for admin: {main_offices}")
+        elif user.role == 'teacher':
+            teacher = Teacher.objects.filter(user=user).first()
+            if teacher:
+                main_offices = teacher.main_office_id
+                print(f"Main Office for teacher: {main_offices}")
+        else:
+            print("User does not have permission to send SMS")
+            return JsonResponse({"error": "User does not have permission to send SMS"}, status=403)
 
-    url = "http://83.69.139.182:8083/"
-    encoded_text = text.encode('utf-8').decode('utf-8')
-    payload = [{
-        "phone": phone,
-        "text": encoded_text
-    }]
-    data = {
-        'login': login_password.login,
-        'password': login_password.password,
-        'data': json.dumps(payload)
-    }
+        if not main_offices:
+            print("No main office found")
+            return JsonResponse({"error": "Main office not found"}, status=404)
 
-    response = requests.post(url, data=data, timeout=30)
-    # try:
-    #     response = requests.post(url, data=data,timeout=30)
-    #     response.raise_for_status()  # проверка на HTTP ошибки
-    #     print("Ответ сервера:", response.status_code, response.text)
-    # except requests.exceptions.RequestException as e:
-    #     print(f"Ошибка при отправке SMS: {e}")
-    #     return 500, f"Ошибка при отправке SMS: {e}"
+        login_password = SMSLoginPassword.objects.filter(main_office=main_offices).first()
+        print(f"Login Password: {login_password}")
 
-    return response.status_code, response.text
+        if not login_password:
+            return JsonResponse({"error": "Login and password not found"}, status=400)
+
+        url = "http://83.69.139.182:8083/"
+        encoded_text = request.POST.get('text').encode('utf-8').decode('utf-8')
+        phone = request.POST.get('phone')
+        payload = [{
+            "phone": phone,
+            "text": encoded_text
+        }]
+        data = {
+            'login': login_password.login,
+            'password': login_password.password,
+            'data': json.dumps(payload)
+        }
+
+        response = requests.post(url, data=data, timeout=30)
+        return JsonResponse({"success": "SMS sent successfully", "response": response.json()})
+
+    except Exception as e:
+        print(f"Exception: {e}")
+        return JsonResponse({"error": "An error occurred", "details": str(e)}, status=500)
 
 
 # Professor
