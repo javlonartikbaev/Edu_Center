@@ -26,10 +26,9 @@ logger = logging.getLogger(__name__)
 def send_sms(phone, text, request):
     user = request.user
     main_offices = user.main_offices
-    print(main_offices)
-    # if user.role == 'super admin':
-    #     main_offices = MainOffice.objects.filter(admin=user).first()
-    #     print(main_offices)
+    if user.role == 'super admin':
+        main_offices = MainOffice.objects.filter(admin=user).first()
+        print(main_offices)
 
     login_password = SMSLoginPassword.objects.filter(
         main_office_id__in=main_offices
