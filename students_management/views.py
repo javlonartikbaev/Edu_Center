@@ -27,12 +27,15 @@ def send_sms(phone,text,request):
     user = request.user
     if user.role == 'super admin':
         main_offices = MainOffice.objects.filter(admin=user).first()
+        print(main_offices)
     elif user.role == 'admin':
         branch = Branch.objects.filter(admin=user).first()
         main_offices = branch.main_office if branch else None
+        print(main_offices)
     elif user.role == 'teacher':
         teacher = Teacher.objects.filter(user=user).first()
         main_offices = teacher.main_office_id if teacher else None
+        print(main_offices)
     else:
         main_offices = None
     login_password = SMSLoginPassword.objects.filter(
