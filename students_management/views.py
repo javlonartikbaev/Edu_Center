@@ -23,8 +23,9 @@ logger = logging.getLogger(__name__)
 
 
 @csrf_exempt
-def send_sms(request):
+def send_sms(phone,text,request):
     user = request.user
+    main_offices = MainOffice.objects.all()
     if user.role == 'super admin':
         main_offices = MainOffice.objects.filter(admin=user)
         branches = Branch.objects.filter(main_office__in=main_offices)
