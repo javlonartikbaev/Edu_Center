@@ -23,17 +23,17 @@ logger = logging.getLogger(__name__)
 
 
 @csrf_exempt
-def send_sms(phone, text, request):
+def send_sms(request):
     user = request.user
     if user.role == 'super admin':
         main_offices = MainOffice.objects.filter(admin=user)
         branches = Branch.objects.filter(main_office__in=main_offices)
     elif user.role == 'admin':
-        main_offices = MainOffice.objects.filter(admin=user)
         branches = Branch.objects.filter(admin=user)
+        main_offices = MainOffice.objects.filter(main_branches__in=branches)
     elif user.role == 'teacher':
-        branches = Branch.objects.filter(admin=user)
-        main_offices = MainOffice.objects.filter(branch__in=branches)
+        branches = Branch.objects.filter(teachers__user=user)
+        main_offices = MainOffice.objects.filter(main_offices_teacher__in=[user])
     else:
         return 403, "User does not have permission to send SMS"
     login_password = SMSLoginPassword.objects.filter(
