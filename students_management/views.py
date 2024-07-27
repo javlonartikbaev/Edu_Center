@@ -18,15 +18,24 @@ from django.shortcuts import render, redirect
 from django.views.decorators.csrf import csrf_exempt
 
 from .forms import *
-from unidecode import unidecode
+
 logger = logging.getLogger(__name__)
 
 
 @csrf_exempt
 def send_sms(phone, text, request):
     user = request.user
-    main_offices = MainOffice.objects.filter(admin=user)
-    branches = Branch.objects.filter(main_office__in=main_offices)
+    if user.role == 'super admin':
+        main_offices = MainOffice.objects.filter(admin=user)
+        branches = Branch.objects.filter(main_office__in=main_offices)
+    elif user.role == 'admin':
+        main_offices = MainOffice.objects.filter(admin=user)
+        branches = Branch.objects.filter(admin=user)
+    elif user.role == 'teacher':
+        branches = Branch.objects.filter(admin=user)
+        main_offices = MainOffice.objects.filter(branch__in=branches)
+    else:
+        return 403, "User does not have permission to send SMS"
     login_password = SMSLoginPassword.objects.filter(
         main_office_id__in=main_offices
     ).first()
@@ -1051,11 +1060,11 @@ def mark_attendance(request, group_id):
                     groups_id=group,
                     branch=group.branch,
                 )
-                student_name = unidecode(f'{student.first_name_s} {student.last_name_s}')
+
                 phone = student.parents_phone_number
                 text = template_sms.text_sms.format(
                     edu_name=student.main_office_id.name_main_office,
-                    student_name=unidecode(f'{student.first_name_s} {student.last_name_s}'),
+                    student_name=f'{student.first_name_s} {student.last_name_s}',
                     date=date_attendance
                 )
 
@@ -1227,11 +1236,10 @@ def delete_selected_students(request):
         elif action == 'send_sms':
             for student_id in selected_students:
                 student = get_object_or_404(Student, pk=student_id)
-                student_name = unidecode(f'{student.first_name_s} {student.last_name_s}')
                 phone = student.phone_number_s
                 text = template_sms.text_sms.format(
                     edu_name=student.main_office_id.name_main_office,
-                    student_name=student_name,
+                    student_name=f'{student.first_name_s} {student.last_name_s}',
                     date=datetime.today(),
                 )
                 send_sms(phone, text, request)
@@ -1753,11 +1761,10 @@ def groups_sms(request):
                 group = get_object_or_404(Group, pk=group_id)
                 students = group.students_id.all()
                 for student in students:
-                    student_name = unidecode(f'{student.first_name_s} {student.last_name_s}')
                     phone = student.phone_number_s
                     text = template_sms.text_sms.format(
                         edu_name=student.main_office_id.name_main_office,
-                        student_name=student_name,
+                        student_name=f'{student.first_name_s} {student.last_name_s}',
                         date=sms_date,
                     )
                     send_sms(phone, text, request)
