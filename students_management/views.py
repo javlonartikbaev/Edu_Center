@@ -30,11 +30,11 @@ def send_sms(phone,text,request):
         print(main_offices)
     elif user.role == 'admin':
         branch = Branch.objects.filter(admin=user).first()
-        main_offices = branch.main_office if branch else None
+        main_offices = branch.main_offices.all()
         print(main_offices)
     elif user.role == 'teacher':
         teacher = Teacher.objects.filter(user=user).first()
-        main_offices = teacher.main_office_id if teacher else None
+        main_offices = teacher.main_office_id.all()
         print(main_offices)
     else:
         main_offices = None
