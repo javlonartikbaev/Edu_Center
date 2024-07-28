@@ -25,15 +25,24 @@ logger = logging.getLogger(__name__)
 @csrf_exempt
 def send_sms(phone, text, request):
     user = request.user
-    main_offices = user.main_offices
-    if user.role == 'super admin':
-        main_offices = MainOffice.objects.filter(admin=user).first()
-        print(main_offices)
 
+    main_office = None
+    if user.role == 'super admin':
+        main_office = MainOffice.objects.filter(admin=user).first()
+    elif user.role == 'admin':
+        branch = Branch.objects.filter(admin=user).first()
+        if branch:
+            main_office = branch.main_office
+    elif user.role == 'teacher':
+        teacher = Teacher.objects.filter(user=user).first()
+        if teacher.main_office_id:
+            main_office = teacher.main_office_id
+        elif teacher.branch:
+            main_office = teacher.branch.main_office_id
     login_password = SMSLoginPassword.objects.filter(
-        main_office_id__in=main_offices
+        main_office_id=main_office
     ).first()
-    print(login_password)
+
 
     if not login_password:
         return 400, "Login and password not found"
@@ -49,7 +58,7 @@ def send_sms(phone, text, request):
         'password': login_password.password,
         'data': json.dumps(payload)
     }
-    print(data)
+
 
     response = requests.post(url, data=data, timeout=30)
     # try:
@@ -1041,12 +1050,22 @@ def mark_attendance(request, group_id):
     branch_logo = Branch.objects.filter(admin_id=user.id)
     template_sms = SmsTemplates.objects.filter(text_categories='sms для посещаемости').first()
 
+
     if request.method == 'POST':
         date_attendance = request.POST.get('date_attendance')
         attendance_status = Attendance_Status.objects.get(name_attendance_status='Отсутствует')
         students = group.students_id.all()
 
         for student in students:
+            main_office = None
+            student = get_object_or_404(Student, pk=student.id)
+            user = request.user
+            main_office = None
+
+            if student.main_office_id:
+                main_office = student.main_office_id.name_main_office
+            elif student.branch:
+                main_office = student.branch.main_office.name_main_office
             attendance_value = request.POST.get(f'student_{student.id}', '')
             if attendance_value:
                 Attendance.objects.create(
@@ -1058,12 +1077,13 @@ def mark_attendance(request, group_id):
                 )
 
                 phone = student.parents_phone_number
+                print(phone)
                 text = template_sms.text_sms.format(
-                    edu_name=student.main_office_id.name_main_office,
+                    edu_name=main_office,
                     student_name=f'{student.first_name_s} {student.last_name_s}',
                     date=date_attendance
                 )
-
+                print(text)
                 send_sms(phone, text, request)
         return redirect('all_groups')
 
@@ -1230,11 +1250,19 @@ def delete_selected_students(request):
                     messages.error(request, f'Студент с ID {student_id} не найден.')
 
         elif action == 'send_sms':
+
             for student_id in selected_students:
+                student = get_object_or_404(Student, pk=student_id)
+                user = request.user
+                main_office = None
+                if student.main_office_id:
+                    main_office = student.main_office_id.name_main_office
+                elif student.branch:
+                    main_office = student.branch.main_office.name_main_office
                 student = get_object_or_404(Student, pk=student_id)
                 phone = student.phone_number_s
                 text = template_sms.text_sms.format(
-                    edu_name=student.main_office_id.name_main_office,
+                    edu_name= main_office,
                     student_name=f'{student.first_name_s} {student.last_name_s}',
                     date=datetime.today(),
                 )
@@ -1751,39 +1779,61 @@ def groups_sms(request):
             groups = groups.filter(branch_id=selected_branch_id)
         else:
             groups = groups.filter(Q(main_office_id__in=main_offices) | Q(branch__in=branches))
+
         if request.method == 'POST':
             selected_groups = request.POST.getlist('selected_groups')
             for group_id in selected_groups:
                 group = get_object_or_404(Group, pk=group_id)
+                print(group)
                 students = group.students_id.all()
+
                 for student in students:
+                    student = get_object_or_404(Student, pk=student.id)
+                    print(student)
+                    main_office = None
+
+                    if student.main_office_id:
+                        main_office = student.main_office_id.name_main_office
+                        print(main_office)
+                    elif student.branch:
+                        main_office = student.branch.main_office.name_main_office
+                        print(main_office)
                     phone = student.phone_number_s
                     text = template_sms.text_sms.format(
-                        edu_name=student.main_office_id.name_main_office,
+                        edu_name=main_office,
                         student_name=f'{student.first_name_s} {student.last_name_s}',
                         date=sms_date,
                     )
                     send_sms(phone, text, request)
 
     elif user.role == 'admin':
-        if selected_branch_id:
-            groups = groups.filter(branch_id=selected_branch_id)
-            text_sms = SmsTemplates.objects.filter(text_categories='sms для уведомления групп').first()
-            if request.method == 'POST':
-                selected_groups = request.POST.getlist('selected_groups')
-                print(selected_groups)
-                for group_id in selected_groups:
-                    group = get_object_or_404(Group, pk=group_id)
-                    print(group)
-                    students = group.students_id.all()
-                    for student in students:
-                        phone = student.phone_number_s
-                        text = text_sms.format(
-                            edu_name=student.main_office_id.name_main_office,
-                            student_name=student.first_name_s,
-                            date=datetime.today(),
-                        )
-                        send_sms(phone, text, request)
+        branch = Branch.objects.filter(admin_id=user.id).first()
+        groups = groups.filter(branch_id=branch.id)
+        template_sms = SmsTemplates.objects.filter(text_categories='sms для уведомления групп').first()
+        if request.method == 'POST':
+            selected_groups = request.POST.getlist('selected_groups')
+
+            for group_id in selected_groups:
+                group = get_object_or_404(Group, pk=group_id)
+
+                students = group.students_id.all()
+                for student in students:
+                    student = get_object_or_404(Student, pk=student.id)
+                    main_office = None
+                    if student.main_office_id:
+                        main_office = student.main_office_id.name_main_office
+
+                    elif student.branch:
+                        main_office = student.branch.main_office.name_main_office
+
+                    phone = student.phone_number_s
+
+                    text = template_sms.text_sms.format(
+                        edu_name=main_office,
+                        student_name=student.first_name_s,
+                        date=datetime.today(),
+                    )
+                    send_sms(phone, text, request)
         else:
             admin_branches = Branch.objects.filter(admin=user)
             groups = groups.filter(branch__in=admin_branches)
