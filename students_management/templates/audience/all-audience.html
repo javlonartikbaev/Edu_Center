@@ -6,7 +6,8 @@
         <div class="row">
 
             <div class="col-lg-12">
-                <button class="btn btn-lg btn-success" style="background-color: #00acee; margin-left: 1000px; margin-top: 30px"><a
+                <button class="btn btn-lg btn-success"
+                        style="background-color: #00acee; margin-left: 1000px; margin-top: 30px"><a
                         title="Add Courses" style="color:white;" href="{% url 'add_audience' %}"><span
                         class="mini-sub-pro">Добавить аудиторию</span></a>
                 </button>
@@ -40,26 +41,29 @@
                                 </select>
                             </div>
                         </form>
-                        <table class="table table-striped" style="margin-top: 10px;">
-                            <thead>
-                            <tr>
-                                <th>Номер аудитории</th>
-                                <th>Вместимость</th>
-                                <th>Действие</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            {% for aud in audience %}
+                        <div class='table-responsive' style="margin-top: 10px">
+                            <table class="table table-striped" style="margin-top: 10px;">
+                                <thead>
                                 <tr>
-                                    <td><a href="{{ aud.get_absolute_url }}"
-                                           style="color: #0a6aa1">{{ aud.number_audience }}</a></td>
-                                    <td>{{ aud.capacity }}</td>
-                                    <td><a href="{% url 'delete_audience' aud.id %}" class="btn btn-danger">Удалить</a>
-                                    </td>
+                                    <th>Номер аудитории</th>
+                                    <th>Вместимость</th>
+                                    <th>Действие</th>
                                 </tr>
-                            {% endfor %}
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                {% for aud in audience %}
+                                    <tr>
+                                        <td><a href="{{ aud.get_absolute_url }}"
+                                               style="color: #0a6aa1">{{ aud.number_audience }}</a></td>
+                                        <td>{{ aud.capacity }}</td>
+                                        <td><a href="{% url 'delete_audience' aud.id %}"
+                                               class="btn btn-danger">Удалить</a>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>

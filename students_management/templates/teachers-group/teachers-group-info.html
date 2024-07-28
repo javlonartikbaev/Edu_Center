@@ -13,43 +13,45 @@
                         <h2>Преподаватель: {{ group.teacher_id.first_name }} {{ group.teacher_id.last_name }}</h2>
                         <h2>Сегодня: {{ today }}</h2>
                         <!-- Таблица со списком студентов -->
-                        <table class="table table-striped">
-                            <thead>
-                            <tr>
-                                <th>Имя</th>
-                                <th>Фамилия</th>
-                                <th>Последний день пропуска занятий</th>
-                                <th>Статус оплаты</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            {% for student in student_data %}
+                        <div class='table-responsive' style="margin-top: 10px">
+                            <table class="table table-striped">
+                                <thead>
                                 <tr>
-                                    <td><a href="{% url 'profile_students' student.student.id %}">
-                                        {{ student.student.first_name_s }}</a></td>
-                                    <td>{{ student.student.last_name_s }}</td>
-                                    <td>
-                                        {% if student.attendance %}
-                                            {{ student.attendance.date_attendance }}
-                                        {% else %}
-                                            Нет пропусков
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        {% if student.payments %}
-
-                                            {% for student in student_data %}
-                                            	{{ student.student.paid_check }}
-                                            {% endfor %}
-
-                                        {% else %}
-                                            Нет данных о платежах
-                                        {% endif %}
-                                    </td>
+                                    <th>Имя</th>
+                                    <th>Фамилия</th>
+                                    <th>Последний день пропуска занятий</th>
+                                    <th>Статус оплаты</th>
                                 </tr>
-                            {% endfor %}
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                {% for student in student_data %}
+                                    <tr>
+                                        <td><a href="{% url 'profile_students' student.student.id %}">
+                                            {{ student.student.first_name_s }}</a></td>
+                                        <td>{{ student.student.last_name_s }}</td>
+                                        <td>
+                                            {% if student.attendance %}
+                                                {{ student.attendance.date_attendance }}
+                                            {% else %}
+                                                Нет пропусков
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if student.payments %}
+
+                                                {% for student in student_data %}
+                                                    {{ student.student.paid_check }}
+                                                {% endfor %}
+
+                                            {% else %}
+                                                Нет данных о платежах
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>

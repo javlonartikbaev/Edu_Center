@@ -108,42 +108,44 @@
                         {% endif %}
 
                         <h1>Список групп</h1>
-                        <table class="table table-striped" style="margin-top: 10px;">
-                            <thead>
-                            <tr>
-                                <th>Название группы</th>
-                                <th>Дата начала</th>
-                                <th>Дата окончания</th>
-                                <th>Преподаватель</th>
-                                <th>Аудитория</th>
-                                <th>Количество студентов</th>
-                                <th>Статус</th>
-                                <th>Филиал</th>
-                                <th>Действия</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            {% for group in groups %}
+                        <div class='table-responsive' style="margin-top: 10px">
+                            <table class="table table-striped" style="margin-top: 10px;">
+                                <thead>
                                 <tr>
-                                    <td><a href="{% url 'info_group' group.id %}"
-                                           style="color: #0a6aa1">{{ group.name_group }}</a></td>
-                                    <td>{{ group.start_date }}</td>
-                                    <td>{{ group.end_date }}</td>
-                                    <td>{{ group.teacher_id.first_name }} {{ group.teacher_id.last_name }}</td>
-                                    <td>{{ group.audience_id.number_audience }}</td>
-                                    <td>{{ group.students_id.count }}</td>
-                                    <td>{{ group.status_group.name_status }}</td>
-                                    <td>{{ group.branch.name }}</td>
-                                    <td>
-                                        <a href="{% url 'mark_attendance' group.id %}" style="color: #0a6aa1">
-                                            <img src="{% static 'img/free-icon-attendance-16612795.png' %}"
-                                                 style="width: 30px; height: 30px;">
-                                        </a>
-                                    </td>
+                                    <th>Название группы</th>
+                                    <th>Дата начала</th>
+                                    <th>Дата окончания</th>
+                                    <th>Преподаватель</th>
+                                    <th>Аудитория</th>
+                                    <th>Количество студентов</th>
+                                    <th>Статус</th>
+                                    <th>Филиал</th>
+                                    <th>Действия</th>
                                 </tr>
-                            {% endfor %}
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                {% for group in groups %}
+                                    <tr>
+                                        <td><a href="{% url 'info_group' group.id %}"
+                                               style="color: #0a6aa1">{{ group.name_group }}</a></td>
+                                        <td>{{ group.start_date }}</td>
+                                        <td>{{ group.end_date }}</td>
+                                        <td>{{ group.teacher_id.first_name }} {{ group.teacher_id.last_name }}</td>
+                                        <td>{{ group.audience_id.number_audience }}</td>
+                                        <td>{{ group.students_id.count }}</td>
+                                        <td>{{ group.status_group.name_status }}</td>
+                                        <td>{{ group.branch.name }}</td>
+                                        <td>
+                                            <a href="{% url 'mark_attendance' group.id %}" style="color: #0a6aa1">
+                                                <img src="{% static 'img/free-icon-attendance-16612795.png' %}"
+                                                     style="width: 30px; height: 30px;">
+                                            </a>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>

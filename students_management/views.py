@@ -43,7 +43,6 @@ def send_sms(phone, text, request):
         main_office_id=main_office
     ).first()
 
-
     if not login_password:
         return 400, "Login and password not found"
 
@@ -58,7 +57,6 @@ def send_sms(phone, text, request):
         'password': login_password.password,
         'data': json.dumps(payload)
     }
-
 
     response = requests.post(url, data=data, timeout=30)
     # try:
@@ -1050,7 +1048,6 @@ def mark_attendance(request, group_id):
     branch_logo = Branch.objects.filter(admin_id=user.id)
     template_sms = SmsTemplates.objects.filter(text_categories='sms для посещаемости').first()
 
-
     if request.method == 'POST':
         date_attendance = request.POST.get('date_attendance')
         attendance_status = Attendance_Status.objects.get(name_attendance_status='Отсутствует')
@@ -1110,9 +1107,10 @@ def info_group(request, id_group):
     students = group.students_id.all()
     today = datetime.today().date()
     student_ids = students.values_list('id', flat=True)
-    user = request.user.id
-    professor = Teacher.objects.filter(user_id=user).first()
+    user_id = request.user.id
+    professor = Teacher.objects.filter(user_id=user_id).first()
     student_data = []
+
     for student in students:
         last_attendance = Attendance.objects.filter(students_id=student).order_by('-date_attendance').first()
         student_payments = Payment.objects.filter(student_id=student).order_by('-date_pay')
@@ -1121,7 +1119,6 @@ def info_group(request, id_group):
             'student': student,
             'attendance': last_attendance,
             'payments': student_payments
-
         })
 
     current_year = datetime.today().year
@@ -1133,9 +1130,7 @@ def info_group(request, id_group):
         'main_offices': main_offices,
         'branches': branches,
         'branch_logo': branch_logo,
-        'student': student,
         'professors': professor,
-
     }
 
     if request.user.role == 'admin' or request.user.role == 'super admin':
@@ -1262,7 +1257,7 @@ def delete_selected_students(request):
                 student = get_object_or_404(Student, pk=student_id)
                 phone = student.phone_number_s
                 text = template_sms.text_sms.format(
-                    edu_name= main_office,
+                    edu_name=main_office,
                     student_name=f'{student.first_name_s} {student.last_name_s}',
                     date=datetime.today(),
                 )
