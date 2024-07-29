@@ -4,13 +4,14 @@
 {% block content %}
     <div class="container-fluid" style="margin-top: 30px">
         <div class="row">
-
             <div class="col-lg-12">
-                <button class="btn btn-lg btn-success"
-                        style="background-color: #00acee; margin-left: 1000px; margin-top: 30px"><a
-                        title="Add Courses" style="color:white;" href="{% url 'add_audience' %}"><span
-                        class="mini-sub-pro">Добавить аудиторию</span></a>
-                </button>
+                <div class="d-flex justify-content-end mb-3">
+                    <button class="btn btn-lg btn-success" style="background-color: #00acee;">
+                        <a title="Add Courses" style="color:white;" href="{% url 'add_audience' %}">
+                            <span class="mini-sub-pro">Добавить аудиторию</span>
+                        </a>
+                    </button>
+                </div>
                 <div class="hpanel hblue contact-panel contact-panel-cs responsive-mg-b-10">
                     <div class="panel-body custom-panel-jw">
                         <h1>Список аудиторий</h1>
@@ -41,7 +42,7 @@
                                 </select>
                             </div>
                         </form>
-                        <div class='table-responsive' style="margin-top: 10px">
+                        <div class="table-responsive" style="margin-top: 10px">
                             <table class="table table-striped" style="margin-top: 10px;">
                                 <thead>
                                 <tr>
@@ -57,8 +58,7 @@
                                                style="color: #0a6aa1">{{ aud.number_audience }}</a></td>
                                         <td>{{ aud.capacity }}</td>
                                         <td><a href="{% url 'delete_audience' aud.id %}"
-                                               class="btn btn-danger">Удалить</a>
-                                        </td>
+                                               class="btn btn-danger">Удалить</a></td>
                                     </tr>
                                 {% endfor %}
                                 </tbody>
@@ -70,3 +70,4 @@
         </div>
     </div>
 {% endblock %}
+

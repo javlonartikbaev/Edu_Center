@@ -1,7 +1,6 @@
 {% extends 'professors/all-professors.html' %}
 {% load static %}
 
-
 {% block menu_center %}
 {% endblock %}
 {% block content %}
@@ -10,16 +9,15 @@
             <div class="col-lg-12">
                 <div class="hpanel hblue contact-panel contact-panel-cs responsive-mg-b-10">
                     <div class="panel-body custom-panel-jw">
-                        <button class="btn btn-lg btn-success"
-                                style="background-color: #00acee; margin-left: 1000px; margin-top: 30px"><a
-                                title="Add Courses" style="color:white;" href="{% url 'add_group' %}"><span
-                                class="mini-sub-pro">Добавить группу</span></a>
-                        </button>
+                        <div class="d-flex justify-content-end mb-3">
+                            <a href="{% url 'add_group' %}" class="btn btn-lg btn-success"
+                               title="Add Courses" style="background-color: #00acee; color:white;">
+                                <span class="mini-sub-pro">Добавить группу</span>
+                            </a>
+                        </div>
                         <h1>Список групп</h1>
                         <form method="GET" action="{% url 'all_groups' %}">
                             <div class="form-group">
-
-
                                 <label for="main_office">Главный офис</label>
                                 <select id="main_office" name="main_office" class="form-control"
                                         onchange="this.form.submit()">
@@ -45,7 +43,7 @@
                             </div>
                         </form>
                         {% if groups %}
-                            <div class = 'table-responsive' style="margin-top: 10px">
+                            <div class='table-responsive' style="margin-top: 10px">
                                 <table class="table table-hover" style="margin-top: 10px;">
                                     <thead class="thead-dark">
                                     <tr>
@@ -110,8 +108,8 @@
                                 <div class=""></div>
                             </div>
                         </div>
-                        <canvas id="bar" style="display: block; height: 251px; width: 699px;" width="873"
-                                height="313"
+                        <canvas id="bar" style="display: block; height: 251px; width: 100%;"
+                                width="873" height="313"
                                 class="chartjs-render-monitor"></canvas>
                     </div>
 

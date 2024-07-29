@@ -97,6 +97,9 @@
 
 
 
+
+
+
                                                                              {{ MEDIA_URL }}{{ main_office.short_logo_main.url }}"
                                                                      alt=""/></a></strong>
                     {% endfor %}
@@ -107,6 +110,9 @@
                                                              alt=""/></a>
                         <strong><a href="{% url 'main_page' %}"><img style="height:50px;width: 50px "
                                                                      src="
+
+
+
                                                                              {{ MEDIA_URL }}{{ branch.short_logo_branch.url }}"
                                                                      alt=""/></a></strong>
                     {% endfor %}
@@ -309,7 +315,6 @@
                     <div class="mobile-menu">
                         <nav id="dropdown">
                             <ul class="mobile-menu-nav">
-
                                 <li><a data-toggle="collapse" data-target="#demoevent"
                                        href="{% url 'all_professors' %}">Менторы <span
                                         class=""></span></a>
@@ -324,10 +329,9 @@
                                 <li><a data-toggle="collapse" data-target="#demopro" href="#">Студенты <span
                                         class="admin-project-icon edu-icon edu-down-arrow"></span></a>
                                     <ul id="demopro" class="collapse dropdown-header-top">
-                                        <li><a href="../students/all-students.html">Все студенты</a>
+                                        <li><a href="{% url 'all_students' %}">Все студенты</a>
                                         </li>
-                                        <li><a href="../students/add-student.html">Добавить студента</a>
-                                        </li>
+
 
                                     </ul>
                                 </li>
@@ -356,7 +360,7 @@
                                             class="educate-icon educate-course icon-wrap"></span> <span
                                             class="mini-click-non">Группы</span></a>
                                     <ul class="submenu-angle" aria-expanded="false">
-                                        <li><a title="All Courses" href="#"><span
+                                        <li><a title="All Courses" href="{% url 'all_groups' %}"><span
                                                 class="mini-sub-pro">Все Группы</span></a>
                                         </li>
                                         <
@@ -418,11 +422,7 @@
                 <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
                     <div class="breadcome-list">
                         <div class="row">
-                            <button class="btn btn-lg btn-success"
-                                    style="background-color: #00acee; margin-left: 1000px"><a
-                                    title="Add Professor" style="color: white"
-                                    href="{% url 'add_professor' %}"><span
-                                    class="mini-sub-pro">Добавить Ментора</span></a></button>
+
                             <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
                                 <div class="breadcome-heading">
                                     <form action="{% url 'all_professors' %}" method="GET">
@@ -430,6 +430,13 @@
                                         <button type="submit">Найти</button>
                                     </form>
                                 </div>
+                            </div>
+                            <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+                                <button class="btn btn-lg btn-success w-100 mb-3" style="background-color: #00acee;">
+                                    <a title="Add Professor" style="color: white" href="{% url 'add_professor' %}">
+                                        <span class="mini-sub-pro">Добавить Ментора</span>
+                                    </a>
+                                </button>
                             </div>
 
                         </div>

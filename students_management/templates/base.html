@@ -181,44 +181,49 @@
                                 Показать должников
                             </button>
                         </form>
-                        <div class="row">
-                            <div class="container" style="display: flex">
-                                <div id="students" class="side-by-side"
-                                     style="width: 500px; height: 400px; "></div>
-                                <div id="archived_students" class="side-by-side"
-                                     style="width: 500px; height: 400px;"></div>
-                            </div>
-                            <div>
-                                <form method="get">
-                                    <label for="year">Выберите год:</label>
-                                    <select name="year" id="year" onchange="this.form.submit()">
-                                        <option value="">Все годы</option>
-                                        {% for year in years %}
-                                            <option value="{{ year }}"
-                                                    {% if year == current_year|stringformat:"s" %}selected{% endif %}>{{ year }}</option>
-                                        {% endfor %}
-                                    </select>
-                                </form>
-                            </div>
+                        <div class="container-fluid" style="margin-top: 30px">
+                            <div class="row">
+                                <!-- Годовой выбор -->
+                                <div class="col-md-6 col-xs-12 mb-3">
+                                    <form method="get">
+                                        <label for="year">Выберите год:</label>
+                                        <select name="year" id="year" onchange="this.form.submit()"
+                                                class="form-control">
+                                            <option value="">Все годы</option>
+                                            {% for year in years %}
+                                                <option value="{{ year }}"
+                                                        {% if year == current_year|stringformat:"s" %}selected{% endif %}>{{ year }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </form>
+                                </div>
 
-                            <div id="students_per_month" style="width: 900px; height: 500px;"></div>
-                            <div class="col-md-6">
-                                <div class="panel panel-primary">
-                                    <div class="panel-heading">
-                                        <h3 class="panel-title">Общее количество групп</h3>
-                                    </div>
-                                    <div class="panel-body">
-                                        <h1 class="text-center">{{ total_groups }}</h1>
+                                <!-- График студентов по месяцам -->
+                                <div class="col-md-12 col-xs-12 mb-3">
+                                    <div id="students_per_month" style="width: 100%; height: 500px;"></div>
+                                </div>
+
+                                <!-- Общее количество групп -->
+                                <div class="col-md-6 col-xs-12 mb-3">
+                                    <div class="panel panel-primary">
+                                        <div class="panel-heading">
+                                            <h3 class="panel-title">Общее количество групп</h3>
+                                        </div>
+                                        <div class="panel-body">
+                                            <h1 class="text-center">{{ total_groups }}</h1>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="panel panel-primary">
-                                    <div class="panel-heading">
-                                        <h3 class="panel-title">Общее количество студентов</h3>
-                                    </div>
-                                    <div class="panel-body">
-                                        <h1 class="text-center">{{ total_students }}</h1>
+
+                                <!-- Общее количество студентов -->
+                                <div class="col-md-6 col-xs-12 mb-3">
+                                    <div class="panel panel-primary">
+                                        <div class="panel-heading">
+                                            <h3 class="panel-title">Общее количество студентов</h3>
+                                        </div>
+                                        <div class="panel-body">
+                                            <h1 class="text-center">{{ total_students }}</h1>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
