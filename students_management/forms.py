@@ -84,10 +84,11 @@ class StatusForm(forms.ModelForm):
 class StudentForm(forms.ModelForm):
     class Meta:
         model = Student
-        exclude = ['paid_check', 'joined_date', 'branch', 'main_office_id', 'group_student_id']
+        exclude = ['paid_check', 'branch', 'main_office_id', 'group_student_id']
         widgets = {
             'first_name_s': forms.TextInput(attrs={'class': 'form-control'}),
             'last_name_s': forms.TextInput(attrs={'class': 'form-control'}),
+            'joined_date': forms.DateInput(attrs={'type':'date','class': 'form-control'}),
             'phone_number_s': forms.TextInput(attrs={'class': 'form-control'}),
             'parents_phone_number': forms.TextInput(attrs={'class': 'form-control'}),
 
@@ -122,8 +123,8 @@ class GroupForm(forms.ModelForm):
             'start_date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
             'end_date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
             'lesson_days': forms.Select(attrs={'class': 'form-control'}),
-            'start_time': forms.TimeInput(attrs={'type': 'time', 'class': 'form-control'}),
-            'end_time': forms.TimeInput(attrs={'type': 'time', 'class': 'form-control'}),
+            'start_time': forms.TimeInput(attrs={'type': 'time', 'step': 60, 'class': 'form-control'}),
+            'end_time': forms.TimeInput(attrs={'type': 'time', 'step': 60, 'class': 'form-control'}),
             'teacher_id': forms.Select(attrs={'class': 'form-control'}),
             'audience_id': forms.Select(attrs={'class': 'form-control'}),
             'status_group': forms.Select(attrs={'class': 'form-control'}),
