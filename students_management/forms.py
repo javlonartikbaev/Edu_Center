@@ -88,7 +88,7 @@ class StudentForm(forms.ModelForm):
         widgets = {
             'first_name_s': forms.TextInput(attrs={'class': 'form-control'}),
             'last_name_s': forms.TextInput(attrs={'class': 'form-control'}),
-            'joined_date': forms.DateInput(attrs={'type':'date','class': 'form-control'}),
+            'joined_date': forms.DateInput(format='%Y-%m-%d', attrs={'type': 'date', 'class': 'form-control'}),
             'phone_number_s': forms.TextInput(attrs={'class': 'form-control'}),
             'parents_phone_number': forms.TextInput(attrs={'class': 'form-control'}),
 
@@ -120,8 +120,8 @@ class GroupForm(forms.ModelForm):
                   'audience_id', 'status_group', 'course_id']
         widgets = {
             'name_group': forms.TextInput(attrs={'class': 'form-control'}),
-            'start_date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
-            'end_date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'start_date': forms.DateInput(format='%Y-%m-%d',attrs={'type': 'date', 'class': 'form-control'}),
+            'end_date': forms.DateInput(format='%Y-%m-%d',attrs={'type': 'date', 'class': 'form-control'}),
             'lesson_days': forms.Select(attrs={'class': 'form-control'}),
             'start_time': forms.TimeInput(attrs={'type': 'time', 'step': 60, 'class': 'form-control'}),
             'end_time': forms.TimeInput(attrs={'type': 'time', 'step': 60, 'class': 'form-control'}),

@@ -17,7 +17,7 @@ SECRET_KEY = 'django-insecure-uvpm^m2iq*#z30+2^%f-h!8qtsrt=%&vvz*3iuqupleq(g*h&@
 
 DEBUG = True
 
-ALLOWED_HOSTS = ['localhost', '82.97.254.7',]
+ALLOWED_HOSTS = ['localhost', '82.97.254.7', ]
 
 # Application definition
 
@@ -132,3 +132,10 @@ MESSAGE_TAGS = {
     message_constants.ERROR: 'danger',
 }
 
+DATE_INPUT_FORMATS = ('%d-%m-%Y', '%Y-%m-%d')
+
+USE_I18N = True
+
+USE_L10N = True
+
+USE_TZ = True
