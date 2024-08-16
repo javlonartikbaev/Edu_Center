@@ -1371,7 +1371,7 @@ def main_page(request):
         left_students = ArchivedStudent.objects.all().count()
         paid_students = Student.objects.filter(paid_check='Оплатил', main_office_id=main_offices.first()).count()
         no_paid_students = Student.objects.filter(paid_check='Не оплатил', main_office_id=main_offices.first()).count()
-        students_no_paid = Student.objects.filter(paid_check='Не оплатил', main_office_id=main_offices.first())
+
         other_students = Student.objects.filter(paid_check=None, main_office_id=main_offices.first()).count()
         groups = Group.objects.filter(Q(branch__admin=request.user) | Q(main_office_id__admin=request.user))
         group_data = []
@@ -1390,18 +1390,20 @@ def main_page(request):
 
         current_year = request.GET.get('year', None)
         if current_year:
-            students_per_month = QuantityStudent.objects.filter(joined_date__year=current_year,
+            students_per_month = Student.objects.filter(joined_date__year=current_year,
                                                                 main_office_id__admin=request.user).annotate(
                 month=TruncMonth('joined_date')).values('month').annotate(count=Count('id')).order_by('month')
+            print(students_per_month)
         else:
-            students_per_month = QuantityStudent.objects.filter(main_office_id__admin=request.user).annotate(
+            students_per_month = Student.objects.filter(main_office_id__admin=request.user).annotate(
                 month=TruncMonth('joined_date')).values('month').annotate(
                 count=Count('id')).order_by('month')
+            print(students_per_month)
 
         left_students_per_month = ArchivedStudent.objects.filter(main_office_id__admin=request.user).annotate(
             month=TruncMonth('archived_date')).values('month').annotate(count=Count('id')).order_by('month')
 
-        # Объединение результатов
+
         month_data = defaultdict(lambda: {'joined': 0, 'left': 0})
         for item in students_per_month:
             month_data[item['month'].strftime('%B')]['joined'] += item['count']
@@ -1412,6 +1414,7 @@ def main_page(request):
         all_months = [datetime.strptime(str(month), "%m").strftime("%B") for month in range(1, 13)]
         students_per_month_full = [(month, month_data[month]['joined'], month_data[month]['left']) for month in
                                    all_months]
+        print(students_per_month_full)
 
         data = {
             'group_data': group_data,

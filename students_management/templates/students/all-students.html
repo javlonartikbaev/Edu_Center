@@ -90,7 +90,7 @@
                                         <th>Фамилия</th>
                                         <th>Телефон</th>
                                         <th>Телефон родителей</th>
-                                        <th>Последняя оплата</th>
+
                                         <th>Статус оплаты</th>
                                         <th>Дата присоединения</th>
                                         <th>Группы</th>
@@ -102,6 +102,7 @@
 
                                     {% for student in  student %}
                                         <tr>
+                                        <td></td>
                                             <td>
                                                 <input type="checkbox" name="selected_students" class="student-checkbox"
                                                        value="{{ student.id }}">
@@ -115,13 +116,7 @@
                                             <td>{{ student.last_name_s }}</td>
                                             <td>{{ student.phone_number_s }}</td>
                                             <td>{{ student.parents_phone_number }}</td>
-                                            <td>
-                                                {% if last_payment_date %}
-                                                    {{ last_payment_date }}
-                                                {% else %}
-                                                    Не оплатил
-                                                {% endif %}
-                                            </td>
+
                                             <td>{{ student.paid_check }}</td>
                                             <td>{{ student.joined_date }}</td>
                                             <td>

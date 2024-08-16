@@ -173,7 +173,10 @@
                                 <h2 class="text-center" style="margin-top: 30px">{{ branch.name_branch }}</h2>
                             {% endfor %}
                         {% endif %}
-
+                        <div style="display: flex">
+                            <div id="students" style="width: 500px; height: 400px;"></div>
+                            <div id="archived_students" style="width: 500px; height: 400px;"></div>
+                        </div>
 
                         <form method="GET" action="{% url 'all_students' %}" style="float: right;">
                             {% csrf_token %}
