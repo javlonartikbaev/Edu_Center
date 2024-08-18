@@ -110,7 +110,7 @@ def get_professor(request):
             teachers = teachers.filter(
                 Q(first_name__icontains=search_professor_name) | Q(last_name__icontains=search_professor_name))
 
-    paginator = Paginator(teachers, 10)
+    paginator = Paginator(teachers, 20)
     page_obj = paginator.get_page(page_number)
 
     data = {
@@ -255,7 +255,7 @@ def get_courses(request):
         if search_course_name:
             found_course = Course.objects.filter(name_course__icontains=search_course_name)
 
-    paginator = Paginator(courses, 10)
+    paginator = Paginator(courses, 20)
     page_obj = paginator.get_page(page_number)
 
     data = {
@@ -497,8 +497,8 @@ def all_students(request):
     search = SearchForm(request.GET)
     current_year = datetime.today().year
     page_number = request.GET.get("page")
-    branch_logo = Branch.objects.filter(admin_id=user.id)
 
+    branch_logo = Branch.objects.filter(admin_id=user.id)
     if user.role == 'teacher':
         messages.error(request, 'У вас нет прав доступа.')
         return redirect('all_groups')
@@ -539,7 +539,7 @@ def all_students(request):
     if filter_option == 'not_paid':
         found_student = found_student.filter(paid_check='Не оплатил')
 
-    paginator = Paginator(found_student, 10)
+    paginator = Paginator(found_student, 20)
     page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
 
@@ -557,15 +557,22 @@ def all_students(request):
             student.paid_check = "Не оплатил"
         student.save()
 
+    if filter_option != 'not_paid':
+        paginator = Paginator(found_student, 20)
+        page_number = request.GET.get("page")
+        page_obj = paginator.get_page(page_number)
+    else:
+        page_obj = found_student
+
     if search.is_valid():
         search_professor_name = search.cleaned_data.get('search_input', '')
         if search_professor_name:
             found_student = found_student.filter(
                 Q(first_name__icontains=search_professor_name) | Q(last_name__icontains=search_professor_name))
-
-    paginator = Paginator(found_student, 10)
-    page_obj = paginator.get_page(page_number)
-
+    #
+    # paginator = Paginator(found_student, 10)
+    # page_obj = paginator.get_page(page_number)
+    course = Course.objects.all()
     groups_branch = Group.objects.all()
     data = {
         'search': search,
@@ -579,7 +586,8 @@ def all_students(request):
         'selected_branch_id': selected_branch_id,
         'branch_logo': branch_logo,
         'paid_students': paid_students,
-        'no_paid_students': no_paid_students
+        'no_paid_students': no_paid_students,
+        'course':course
     }
     return render(request, 'students/all-students.html', data)
 
@@ -605,7 +613,7 @@ def add_students(request, group_id=None):
                 group.students_id.add(student)
                 group.save()
                 QuantityStudent.objects.create(first_name_s=student.first_name_s, last_name_s=student.last_name_s,
-                                               joined_date=datetime.today(), branch=student.branch,
+                                               joined_date=student.joined_date, branch=student.branch,
                                                main_office_id=student.main_office_id)
                 return redirect('add_students_to_group', group_id=group_id)
 
@@ -623,7 +631,7 @@ def add_students(request, group_id=None):
                     student.save()
                     group.students_id.add(student)
                     QuantityStudent.objects.create(first_name_s=student.first_name_s, last_name_s=student.last_name_s,
-                                                   joined_date=datetime.today(), branch=student.branch,
+                                                   joined_date=student.joined_date, branch=student.branch,
                                                    main_office_id=student.main_office_id)
                     return redirect('all_groups')
                 else:
@@ -1147,6 +1155,8 @@ def process_payment(request, student_id):
     main_offices = MainOffice.objects.filter(admin=user)
     branches = Branch.objects.filter(main_office__in=main_offices)
     branch_logo = Branch.objects.filter(admin_id=user.id)
+    payment_day = PaymentDay.objects.first()
+
     if request.user.role == 'teacher':
         messages.error(request, 'У вас нет прав доступа.')
         return redirect('all_groups')
@@ -1171,6 +1181,10 @@ def process_payment(request, student_id):
             payment.student_id = student
             payment.course_id = course
             payment.price = course_price
+            if request.user.role == 'super admin':
+                payment.main_office_id = main_offices.first()
+            elif request.user.role == 'admin':
+                payment.branch = branches.first()
             payment.save()
 
             student.paid_check = 'Оплатил'
@@ -1178,8 +1192,11 @@ def process_payment(request, student_id):
                 student.save()
             else:
                 last_payment_date = payments.first().date_pay
+
                 next_month_date = datetime.now().replace(day=1) + timedelta(days=32 - datetime.now().day)
-                if last_payment_date == next_month_date:
+
+                if datetime.today().day == 1:
+
                     student.paid_check = 'Не оплатил'
                     student.save()
 
@@ -1193,7 +1210,7 @@ def process_payment(request, student_id):
         'payments': payments,
         'course_price': course_price,
         'message': messages,
-        'last_payment_date': last_payment_date,  # Передаем дату последней оплаты в контекст
+        'last_payment_date': last_payment_date,
         'main_offices': main_offices,
         'branches': branches,
         'branch_logo': branch_logo
@@ -1297,7 +1314,7 @@ def archived_students(request):
             'main_page')
 
     current_year = datetime.today().year
-    paginator = Paginator(archived_students, 10)
+    paginator = Paginator(archived_students, 20)
     page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
     data = {
@@ -1390,19 +1407,17 @@ def main_page(request):
 
         current_year = request.GET.get('year', None)
         if current_year:
-            students_per_month = Student.objects.filter(joined_date__year=current_year,
-                                                                main_office_id__admin=request.user).annotate(
+            students_per_month = QuantityStudent.objects.filter(joined_date__year=current_year,
+                                                        main_office_id__admin=request.user).annotate(
                 month=TruncMonth('joined_date')).values('month').annotate(count=Count('id')).order_by('month')
-            print(students_per_month)
+
         else:
-            students_per_month = Student.objects.filter(main_office_id__admin=request.user).annotate(
+            students_per_month = QuantityStudent.objects.filter(main_office_id__admin=request.user).annotate(
                 month=TruncMonth('joined_date')).values('month').annotate(
                 count=Count('id')).order_by('month')
-            print(students_per_month)
 
         left_students_per_month = ArchivedStudent.objects.filter(main_office_id__admin=request.user).annotate(
             month=TruncMonth('archived_date')).values('month').annotate(count=Count('id')).order_by('month')
-
 
         month_data = defaultdict(lambda: {'joined': 0, 'left': 0})
         for item in students_per_month:
@@ -1414,7 +1429,6 @@ def main_page(request):
         all_months = [datetime.strptime(str(month), "%m").strftime("%B") for month in range(1, 13)]
         students_per_month_full = [(month, month_data[month]['joined'], month_data[month]['left']) for month in
                                    all_months]
-        print(students_per_month_full)
 
         data = {
             'group_data': group_data,
@@ -1476,7 +1490,7 @@ def main_page(request):
             month=TruncMonth('archived_date')).values(
             'month').annotate(count=Count('id')).order_by('month')
 
-        # Объединение результатов
+
         month_data = defaultdict(lambda: {'joined': 0, 'left': 0})
         for item in students_per_month:
             month_data[item['month'].strftime('%B')]['joined'] += item['count']
@@ -1639,7 +1653,7 @@ def archived_payments(request):
     archived_payments = ArchivedPayment.objects.all()
     branch_logo = Branch.objects.filter(admin_id=user.id)
 
-    paginator = Paginator(archived_payments, 1)
+    paginator = Paginator(archived_payments, 20)
     page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
     context = {
@@ -1879,3 +1893,5 @@ def edit_sms_template(request, id_template):
 
     }
     return render(request, 'sms_templates/edit_sms_template.html', data)
+
+

@@ -79,10 +79,10 @@ class Student(models.Model):
     parents_phone_number = models.CharField(max_length=55, verbose_name='Телефон номер родителей')
     joined_date = models.DateField(default=datetime.today, verbose_name='Дата присоединение')
     branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='students', verbose_name="Филиал",
-                               null=True)
+                               null=True, blank=True)
     group_student_id = models.ForeignKey('Group', on_delete=models.CASCADE, verbose_name='Группа', null=True, related_name='group_student')
     main_office_id = models.ForeignKey(MainOffice, on_delete=models.CASCADE, related_name='main_offices_student',
-                                       null=True)
+                                       null=True, blank=True)
 
     class Meta:
         db_table = 'student'
@@ -142,9 +142,9 @@ class Payment(models.Model):
     price = models.CharField(max_length=69, default='', verbose_name='Цена')
     student_id = models.ForeignKey(Student, on_delete=models.CASCADE, verbose_name='Студент')
     branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='payments', verbose_name="Филиал",
-                               null=True)
+                               null=True, blank=True)
     main_office_id = models.ForeignKey(MainOffice, on_delete=models.CASCADE, related_name='main_offices_payment',
-                                       null=True)
+                                       null=True, blank=True)
     course_id = models.ForeignKey(Course, on_delete=models.CASCADE, verbose_name='Курс')
 
     class Meta:
@@ -232,7 +232,7 @@ class Group(models.Model):
     end_time = models.TimeField(default=datetime.today().time())
     lesson_days = models.CharField(choices=DAYS_CHOICES, default='')
     teacher_id = models.ForeignKey(Teacher, on_delete=models.CASCADE, verbose_name='Преподаватель')
-    audience_id = models.ForeignKey(Audience, on_delete=models.CASCADE, verbose_name='Аудитория')
+    audience_id = models.ForeignKey(Audience, on_delete=models.PROTECT, verbose_name='Аудитория')
     students_id = models.ManyToManyField(Student, related_name='students', verbose_name='Студенты', blank=True)
     status_group = models.ForeignKey(Status, on_delete=models.PROTECT, default='', verbose_name='Статус группы')
     branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='groups', verbose_name="Филиал",
@@ -385,3 +385,16 @@ class SMSLoginPassword(models.Model):
 
     def __str__(self):
         return self.login
+
+
+class PaymentDay(models.Model):
+    day = models.IntegerField()
+
+    class Meta:
+        db_table = 'payment_day'
+        verbose_name = 'День оплаты'
+        verbose_name_plural = 'Дни оплаты'
+
+    def __str__(self):
+
+        return str(self.day)

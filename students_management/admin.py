@@ -88,6 +88,9 @@ class ArchivedPaymentAdmin(admin.ModelAdmin):
     list_filter = ('branch', 'method_pay', 'archived_date')
     ordering = ('-archived_date',)
 
+@admin.register(PaymentDay)
+class PaymentDayAdmin(admin.ModelAdmin):
+    list_display = ('day',)
 
 class ArchivedGroupAdmin(admin.ModelAdmin):
     list_display = (

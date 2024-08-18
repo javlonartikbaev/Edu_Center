@@ -72,7 +72,9 @@
                                     <option value="прекратил(а) обучение">Прекратил(а) обучение</option>
                                 </select>
                             </div>
-                            <button type="submit" class="btn btn-danger" name="action" value="delete">Удалить выбранное</button>
+                            <button type="submit" class="btn btn-danger" name="action" value="delete">Удалить
+                                выбранное
+                            </button>
                             <button class="btn btn-lg btn-success" name="action" value="send_sms"
                                     style="background-color: #00acee; margin-left: 1000px; margin-top: 30px"
                                     type="submit">
@@ -92,6 +94,7 @@
                                         <th>Телефон родителей</th>
 
                                         <th>Статус оплаты</th>
+                                        <th>Долг</th>
                                         <th>Дата присоединения</th>
                                         <th>Группы</th>
                                         <th>Действия</th>
@@ -102,7 +105,7 @@
 
                                     {% for student in  student %}
                                         <tr>
-                                        <td></td>
+                                            <td></td>
                                             <td>
                                                 <input type="checkbox" name="selected_students" class="student-checkbox"
                                                        value="{{ student.id }}">
@@ -118,6 +121,36 @@
                                             <td>{{ student.parents_phone_number }}</td>
 
                                             <td>{{ student.paid_check }}</td>
+                                            <td>{% if student.paid_check == 'Оплатил' %}
+                                                <span style="color: green">
+                                                    {% for group in groups_branch %}
+                                                        {% for st in group.students_id.all %}
+
+
+                                                            {% if student.id == st.id %}
+
+                                                                {{ group.course_id.price_course }}сум
+                                                            {% endif %}
+
+
+                                                        {% endfor %}
+                                                    {% endfor %} </span>
+                                            {% elif student.paid_check == 'Не оплатил' %}
+                                                <span style="color: red">
+                                                    {% for group in groups_branch %}
+                                                        {% for st in group.students_id.all %}
+                                                            {% if student.id == st.id %}
+
+                                                                {{ group.course_id.price_course }}сум
+                                                            {% endif %}
+
+                                                        {% endfor %}
+                                                    {% endfor %} </span>
+
+                                            {% endif %}
+
+
+                                            </td>
                                             <td>{{ student.joined_date }}</td>
                                             <td>
 
