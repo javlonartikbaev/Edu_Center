@@ -68,4 +68,6 @@ urlpatterns = [
     path('add_sms_templates/', views.add_sms_template, name="add_sms_temp"),
     path('edit_sms_template/<int:id_template>', views.edit_sms_template, name='edit_sms_template'),
 
+    path('finance/', views.finance, name = 'finance')
+
 ]

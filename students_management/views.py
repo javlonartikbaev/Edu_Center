@@ -9,7 +9,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 # from django.contrib.sites import requests
 from django.core.paginator import Paginator
-from django.db.models import Max, Count
+from django.db.models import Max, Count, Func, Sum
 from django.db.models.functions import ExtractYear, TruncMonth
 from django.http import HttpResponseBadRequest
 # Create your views here.
@@ -1907,6 +1907,7 @@ def groups_sms(request):
     return render(request, 'groups/groups_sms.html', data)
 
 
+@login_required(login_url='/login/')
 def edit_sms_template(request, id_template):
     if request.user.role == 'teacher':
         messages.error(request, 'У вас нет прав доступа.')
@@ -1937,3 +1938,70 @@ def edit_sms_template(request, id_template):
 
     }
     return render(request, 'sms_templates/edit_sms_template.html', data)
+
+
+class ConvertToInteger(Func):
+    function = 'CAST'
+    template = '%(function)s(%(expressions)s AS INT)'
+
+
+@login_required(login_url='/login/')
+def finance(request):
+    user = request.user
+    branch_logo = Branch.objects.filter(admin_id=user.id)
+
+    main_offices = MainOffice.objects.filter(admin=user)
+    branches = Branch.objects.filter(admin=user)
+    if not request.user.is_authenticated:
+        return redirect('login_page')
+
+    if request.user.role == 'teacher':
+        messages.error(request, 'У вас нет прав доступа.')
+        return redirect('all_groups')
+
+    years = Student.objects.all().annotate(year=ExtractYear('joined_date')).values_list('year',
+                                                                                        flat=True).distinct().order_by(
+        'year')
+    current_year = request.GET.get('year', None)
+
+    if current_year:
+        payments_per_month = Payment.objects.filter(
+            date_pay__year=current_year,
+            main_office_id__admin=user
+        ).annotate(
+            month=TruncMonth('date_pay')
+        ).values('month').annotate(
+            total_sum=Sum(ConvertToInteger('price'))
+        ).order_by('month')
+    else:
+        payments_per_month = Payment.objects.filter(
+            main_office_id__admin=user
+        ).annotate(
+            month=TruncMonth('date_pay')
+        ).values('month').annotate(
+            total_sum=Sum(ConvertToInteger('price'))
+        ).order_by('month')
+
+    # Преобразование данных для отображения
+    month_data = defaultdict(lambda: {'total_sum': 0})
+
+    for item in payments_per_month:
+        month_data[item['month'].strftime('%B')]['total_sum'] += item['total_sum']
+
+    all_months = [datetime.strptime(str(month), "%m").strftime("%B") for month in range(1, 13)]
+    payments_per_month_full = [(month, month_data[month]['total_sum']) for month in all_months]
+
+    data = {
+        'total_students': Student.objects.filter(main_office_id__admin=user).count(),
+        'years': years,
+        'current_year': current_year,
+        'payments_per_month': payments_per_month_full,
+        'archived_students': ArchivedStudent.objects.filter(main_office_id__admin=user).count(),
+        'branch_logo': branch_logo,
+
+        'main_offices': main_offices,
+        'branches': branches,
+        'user': user,
+    }
+
+    return render(request, 'finance/finance.html', data)

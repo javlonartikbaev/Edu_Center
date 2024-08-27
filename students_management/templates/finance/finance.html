@@ -1,0 +1,73 @@
+{% extends 'professors/all-professors.html' %}
+{% load static %}
+
+{% block menu_center %}
+{% endblock %}
+
+{% block content %}
+    {% if user.role == 'super admin' %}
+        {% for main_office in main_offices %}
+            <h2 style="margin-top: 30px" class="text-center"> {{ main_office.name_main_office }}</h2>
+        {% endfor %}
+    {% elif user.role == 'admin' %}
+        {% for branch in branches %}
+            <h2 class="text-center" style="margin-top: 30px">{{ branch.name_branch }}</h2>
+        {% endfor %}
+    {% endif %}
+
+    <style>
+        /* Styles for panel and cards */
+    </style>
+
+    <script src="https://www.gstatic.com/charts/loader.js"></script>
+    <script>
+        google.load("visualization", "1", {packages: ["corechart"]});
+        google.setOnLoadCallback(drawChart);
+
+        function drawChart() {
+            var data = google.visualization.arrayToDataTable([
+                ['Месяц', 'Сумма оплат'],
+                {% for month, total_sum in payments_per_month %}
+                    ['{{ month }}', {{ total_sum }}],
+                {% endfor %}
+            ]);
+
+            var options = {
+                title: 'Оплаченные суммы по месяцам',
+                hAxis: {title: 'Месяц'},
+                vAxis: {title: 'Сумма оплат'},
+                seriesType: 'bars',
+                series: {
+                    0: {color: 'green'}
+                }
+            };
+
+            var chart = new google.visualization.ComboChart(document.getElementById('payments_per_month'));
+            chart.draw(data, options);
+        }
+    </script>
+
+
+    <div class="container-fluid" style="margin-top: 30px">
+        <div class="row">
+            <!-- Year selection -->
+            <div class="col-md-6 col-xs-12 mb-3">
+                <form method="get">
+                    <label for="year">Выберите год:</label>
+                    <select name="year" id="year" onchange="this.form.submit()" class="form-control">
+                        <option value="">Все годы</option>
+                        {% for year in years %}
+                            <option value="{{ year }}"
+                                    {% if year == current_year|stringformat:"s" %}selected{% endif %}>{{ year }}</option>
+                        {% endfor %}
+                    </select>
+                </form>
+            </div>
+
+            <!-- Students per month chart -->
+            <div class="col-md-12 col-xs-12 mb-3">
+                <div id="payments_per_month" style="width: 900px; height: 500px;"></div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

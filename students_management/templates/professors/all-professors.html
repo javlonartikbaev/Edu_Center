@@ -100,6 +100,8 @@
 
 
 
+
+
                                                                              {{ MEDIA_URL }}{{ main_office.short_logo_main.url }}"
                                                                      alt=""/></a></strong>
                     {% endfor %}
@@ -110,6 +112,8 @@
                                                              alt=""/></a>
                         <strong><a href="{% url 'main_page' %}"><img style="height:50px;width: 50px "
                                                                      src="
+
+
 
 
 
@@ -198,6 +202,17 @@
                                         class="mini-sub-pro">Архив оплаты</span></a></li>
                                 <li><a title="Add Courses" href="{% url 'archived_groups' %}"><span
                                         class="mini-sub-pro">Архив групп</span></a></li>
+                                <!-- <li><a title="course Payment" href="course-payment.html"><span class="mini-sub-pro">Courses Payment</span></a></li> -->
+                            </ul>
+
+                        </li>
+                        <li>
+                            <a class="has-arrow" href="{% url 'finance' %}" aria-expanded="false"><span
+                                    class="educate-icon educate-course icon-wrap"></span> <span class="mini-click-non">Финанс</span></a>
+                            <ul class="submenu-angle" aria-expanded="false">
+                                <li><a title="All Courses" href="{% url 'finance' %}"><span
+                                        class="mini-sub-pro">Финанс</span></a>
+                                </li>
                                 <!-- <li><a title="course Payment" href="course-payment.html"><span class="mini-sub-pro">Courses Payment</span></a></li> -->
                             </ul>
 
@@ -384,6 +399,18 @@
                                                 class="mini-sub-pro">Архив групп</span></a></li>
                                         <!-- <li><a title="course Payment" href="course-payment.html"><span class="mini-sub-pro">Courses Payment</span></a></li> -->
                                     </ul>
+                                </li>
+                                <li>
+                                    <a class="has-arrow" href="{% url 'finance' %}" aria-expanded="false"><span
+                                            class="educate-icon educate-course icon-wrap"></span> <span
+                                            class="mini-click-non">Финанс</span></a>
+                                    <ul class="submenu-angle" aria-expanded="false">
+                                        <li><a title="All Courses" href="{% url 'finance' %}"><span
+                                                class="mini-sub-pro">Финанс</span></a>
+                                        </li>
+                                        <!-- <li><a title="course Payment" href="course-payment.html"><span class="mini-sub-pro">Courses Payment</span></a></li> -->
+                                    </ul>
+
                                 </li>
                                 {% if user.role == 'super admin' %}
 
