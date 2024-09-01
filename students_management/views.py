@@ -1,7 +1,7 @@
+import calendar
 import json
 import logging
 from collections import defaultdict
-from datetime import timedelta
 
 import requests
 from django.contrib import messages
@@ -548,8 +548,8 @@ def all_students(request):
         student.last_payment_date = last_payment['last_payment_date']
 
         if student.last_payment_date:
-            next_month_date = student.last_payment_date + timedelta(days=30)
-            if next_month_date <= datetime.today().date():
+            if datetime.today().day == 1 and student.last_payment_date.month != datetime.today().month:
+
                 student.paid_check = "Не оплатил"
             else:
                 student.paid_check = "Оплатил"
@@ -574,6 +574,14 @@ def all_students(request):
     # page_obj = paginator.get_page(page_number)
     course = Course.objects.all()
     groups_branch = Group.objects.all()
+    st = Student.objects.all()
+    # for student in page_obj:
+    #     payment = Payment.objects.filter(student_id=student.id).aggregate(last_payment_date=Max('date_pay'))
+
+    payment = Payment.objects.values('student_id').annotate(last_payment_date=Max('date_pay'),
+                                                            last_payment=Max('price')).order_by('last_payment_date')
+    print(payment)
+
     data = {
         'search': search,
         'groups_branch': groups_branch,
@@ -587,7 +595,9 @@ def all_students(request):
         'branch_logo': branch_logo,
         'paid_students': paid_students,
         'no_paid_students': no_paid_students,
-        'course':course
+        'course': course,
+        'payment': payment,
+
     }
     return render(request, 'students/all-students.html', data)
 
@@ -1149,6 +1159,34 @@ def info_group(request, id_group):
     return render(request, template_name, data)
 
 
+def count_even_odd_days(start_date):
+    year = start_date.year
+    month = start_date.month
+
+    global total_even_days, total_odd_days, student_even_days, student_odd_days
+    last_day = calendar.monthrange(year, month)[1]
+
+    total_even_days = 0
+    total_odd_days = 0
+    student_even_days = 0
+    student_odd_days = 0
+
+    for day in range(1, last_day + 1):
+        current_date = datetime(year, month, day)
+        weekday = current_date.weekday()
+
+        if weekday == 1 or weekday == 3 or weekday == 5:
+            total_even_days += 1
+            if day >= start_date.day:
+                student_even_days += 1
+        elif weekday == 0 or weekday == 2 or weekday == 4:
+            total_odd_days += 1
+            if day >= start_date.day:
+                student_odd_days += 1
+
+    return total_even_days, total_odd_days, student_even_days, student_odd_days
+
+
 @login_required(login_url='/login/')
 def process_payment(request, student_id):
     user = request.user
@@ -1180,7 +1218,21 @@ def process_payment(request, student_id):
             payment = form.save(commit=False)
             payment.student_id = student
             payment.course_id = course
-            payment.price = course_price
+
+            if student.joined_date.day == 1 or student.joined_date.day == 2:
+                print(student.joined_date.day)
+                payment.price = course_price
+            elif student.joined_date.month == datetime.today().month and student.joined_date.year == datetime.today().year:
+                count_even_odd_days(student.joined_date)
+                if student.joined_date.day % 2 == 0:
+                    payment.price = (int(course_price) // (total_even_days)) * student_even_days
+                    print(course_price, total_even_days, student_even_days)
+                elif student.joined_date.day % 2 != 0:
+                    payment.price = (int(course_price) // (total_odd_days)) * student_odd_days
+                    print(course_price, total_odd_days, student_odd_days)
+            else:
+                payment.price = course_price
+
             if request.user.role == 'super admin':
                 payment.main_office_id = main_offices.first()
             elif request.user.role == 'admin':
@@ -1192,13 +1244,6 @@ def process_payment(request, student_id):
                 student.save()
             else:
                 last_payment_date = payments.first().date_pay
-
-                next_month_date = datetime.now().replace(day=1) + timedelta(days=32 - datetime.now().day)
-
-                if datetime.today().day == 1:
-
-                    student.paid_check = 'Не оплатил'
-                    student.save()
 
             return redirect('profile_students', student.id)
     else:
@@ -1408,7 +1453,7 @@ def main_page(request):
         current_year = request.GET.get('year', None)
         if current_year:
             students_per_month = QuantityStudent.objects.filter(joined_date__year=current_year,
-                                                        main_office_id__admin=request.user).annotate(
+                                                                main_office_id__admin=request.user).annotate(
                 month=TruncMonth('joined_date')).values('month').annotate(count=Count('id')).order_by('month')
 
         else:
@@ -1489,7 +1534,6 @@ def main_page(request):
         left_students_per_month = ArchivedStudent.objects.filter(branch__admin=request.user).annotate(
             month=TruncMonth('archived_date')).values(
             'month').annotate(count=Count('id')).order_by('month')
-
 
         month_data = defaultdict(lambda: {'joined': 0, 'left': 0})
         for item in students_per_month:
@@ -1893,5 +1937,3 @@ def edit_sms_template(request, id_template):
 
     }
     return render(request, 'sms_templates/edit_sms_template.html', data)
-
-

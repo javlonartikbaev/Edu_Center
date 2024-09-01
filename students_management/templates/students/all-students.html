@@ -61,9 +61,7 @@
             <div class="col-lg-12">
                 <div class="hpanel hblue contact-panel contact-panel-cs responsive-mg-b-10">
                     <div class="panel-body custom-panel-jw">
-
                         <form method="POST" action="{% url 'delete_selected_students' %}">
-
                             {% csrf_token %}
                             <div class="form-group">
                                 <label for="comments">Комментарии</label>
@@ -92,7 +90,6 @@
                                         <th>Фамилия</th>
                                         <th>Телефон</th>
                                         <th>Телефон родителей</th>
-
                                         <th>Статус оплаты</th>
                                         <th>Сумма</th>
                                         <th>Дата присоединения</th>
@@ -101,8 +98,6 @@
                                     </tr>
                                     </thead>
                                     <tbody>
-
-
                                     {% for student in  student %}
                                         <tr>
                                             <td></td>
@@ -119,42 +114,37 @@
                                             <td>{{ student.last_name_s }}</td>
                                             <td>{{ student.phone_number_s }}</td>
                                             <td>{{ student.parents_phone_number }}</td>
-
                                             <td>{{ student.paid_check }}</td>
                                             <td>{% if student.paid_check == 'Оплатил' %}
                                                 <span style="color: green">
-                                                    {% for group in groups_branch %}
-                                                        {% for st in group.students_id.all %}
+                                                {% for pt in payment %}
+
+                                                    {% if student.id == pt.student_id %}
+                                                        {{ pt.last_payment }} сум
+
+                                                    {% endif %}
 
 
-                                                            {% if student.id == st.id %}
 
-                                                                {{ group.course_id.price_course }}сум
-                                                            {% endif %}
+                                                {% endfor %}
 
 
-                                                        {% endfor %}
-                                                    {% endfor %} </span>
+
+
+                                                </span>
                                             {% elif student.paid_check == 'Не оплатил' %}
                                                 <span style="color: red">
                                                     {% for group in groups_branch %}
                                                         {% for st in group.students_id.all %}
                                                             {% if student.id == st.id %}
-
-                                                                {{ group.course_id.price_course }}сум
+                                                                {{ group.course_id.price_course }} сум
                                                             {% endif %}
-
                                                         {% endfor %}
                                                     {% endfor %} </span>
-
                                             {% endif %}
-
-
                                             </td>
                                             <td>{{ student.joined_date }}</td>
                                             <td>
-
-
                                                 {% for group in groups_branch %}
                                                     {% for st in group.students_id.all %}
                                                         {% if student.id == st.id %}
@@ -162,14 +152,11 @@
                                                         {% endif %}
                                                     {% endfor %}
                                                 {% endfor %}
-
-
                                             </td>
                                             <td>
                                                 <a href="{{ student.get_absolute_url }}" class="btn btn-warning">
                                                     Редактировать
                                                 </a>
-
                                             </td>
                                         </tr>
                                     {% endfor %}
@@ -177,8 +164,6 @@
                                 </table>
                             </div>
                         </form>
-
-
                         <div class="pagination">
                             <div class="pagination-second">
                                 <span class="step-links">
