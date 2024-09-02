@@ -557,18 +557,17 @@ def all_students(request):
             student.paid_check = "Не оплатил"
         student.save()
 
+    if search.is_valid():
+        search_student_name = search.cleaned_data.get('search_input', '')
+        if search_student_name:
+            found_student = found_student.filter(
+                Q(first_name_s__icontains=search_student_name) | Q(last_name_s__icontains=search_student_name))
     if filter_option != 'not_paid':
         paginator = Paginator(found_student, 20)
         page_number = request.GET.get("page")
         page_obj = paginator.get_page(page_number)
     else:
         page_obj = found_student
-
-    if search.is_valid():
-        search_professor_name = search.cleaned_data.get('search_input', '')
-        if search_professor_name:
-            found_student = found_student.filter(
-                Q(first_name__icontains=search_professor_name) | Q(last_name__icontains=search_professor_name))
     #
     # paginator = Paginator(found_student, 10)
     # page_obj = paginator.get_page(page_number)
@@ -597,6 +596,7 @@ def all_students(request):
         'no_paid_students': no_paid_students,
         'course': course,
         'payment': payment,
+        'found_student': found_student
 
     }
     return render(request, 'students/all-students.html', data)
